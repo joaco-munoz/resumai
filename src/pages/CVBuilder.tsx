@@ -302,8 +302,8 @@ const CVBuilder = () => {
                         </div>
                       </div>
                     </CardContent>
-                    <button> Passar</button>
                   </Card>
+                  <button> Pasar</button>
                 </TabsContent>
 
                 <TabsContent value="summary" className="space-y-4">
