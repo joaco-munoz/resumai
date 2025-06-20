@@ -12,6 +12,7 @@ import { Progress } from "@/components/ui/progress";
 import { Sparkles, Download, FileText, Plus, Trash2, ArrowRight, Check, Circle } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 
 interface CVData {
   personalInfo: {
@@ -223,12 +224,57 @@ const CVBuilder = () => {
 
   const improveWithAI = async (section: string) => {
     setIsImproving(section);
-    // TODO: Connect to OpenAI when Supabase integration is set up
+    
     try {
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      toast.success(`Sección ${section} mejorada con IA`);
+      let content = '';
+      let context = '';
+      
+      if (section === 'summary') {
+        content = cvData.summary;
+        context = `Profesional: ${cvData.personalInfo.fullName}, Experiencia: ${cvData.experience.map(exp => `${exp.position} en ${exp.company}`).join(', ')}`;
+      } else if (section === 'experience') {
+        // Mejora la experiencia actualmente visible o la primera
+        const expToImprove = cvData.experience[0]; // Por simplicidad, mejora la primera
+        if (expToImprove) {
+          content = expToImprove.description;
+          context = `Posición: ${expToImprove.position} en ${expToImprove.company}`;
+        }
+      }
+
+      console.log('Calling improve-cv-content function...');
+      
+      const { data, error } = await supabase.functions.invoke('improve-cv-content', {
+        body: {
+          content,
+          type: section,
+          context
+        }
+      });
+
+      if (error) {
+        throw error;
+      }
+
+      if (data?.improvedContent) {
+        if (section === 'summary') {
+          setCvData(prev => ({
+            ...prev,
+            summary: data.improvedContent
+          }));
+        } else if (section === 'experience' && cvData.experience[0]) {
+          setCvData(prev => ({
+            ...prev,
+            experience: prev.experience.map((exp, index) => 
+              index === 0 ? { ...exp, description: data.improvedContent } : exp
+            )
+          }));
+        }
+        
+        toast.success(`Sección ${section} mejorada con IA`);
+      }
     } catch (error) {
-      toast.error("Error al mejorar con IA");
+      console.error('Error improving with AI:', error);
+      toast.error("Error al mejorar con IA. Verifica tu conexión.");
     } finally {
       setIsImproving(null);
     }
@@ -429,8 +475,9 @@ const CVBuilder = () => {
                           variant="ghost"
                           onClick={() => improveWithAI('summary')}
                           disabled={isImproving === 'summary'}
+                          className="ml-auto"
                         >
-                          <Sparkles className="h-4 w-4" />
+                          <Sparkles className="h-4 w-4 mr-1" />
                           {isImproving === 'summary' ? 'Mejorando...' : 'Mejorar con IA'}
                         </Button>
                       </CardTitle>
@@ -472,7 +519,7 @@ const CVBuilder = () => {
                               onClick={() => improveWithAI('experience')}
                               disabled={isImproving === 'experience'}
                             >
-                              <Sparkles className="h-4 w-4" />
+                              <Sparkles className="h-4 w-4 mr-1" />
                               {isImproving === 'experience' ? 'Mejorando...' : 'Mejorar con IA'}
                             </Button>
                           </CardTitle>
