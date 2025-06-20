@@ -298,24 +298,6 @@ const CVBuilder = () => {
               </div>
               
               <div className="flex items-center gap-4">
-                {/* Progress Circle */}
-                <div className="flex items-center gap-2">
-                  <div className="relative w-12 h-12">
-                    <Circle className="w-12 h-12 text-gray-200" strokeWidth={2} />
-                    <Circle 
-                      className="w-12 h-12 text-brand-500 absolute top-0 left-0 transform -rotate-90 origin-center" 
-                      strokeWidth={2}
-                      strokeDasharray={`${2 * Math.PI * 20}`}
-                      strokeDashoffset={`${2 * Math.PI * 20 * (1 - progress / 100)}`}
-                      fill="none"
-                    />
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <span className="text-xs font-medium">{Math.round(progress)}%</span>
-                    </div>
-                  </div>
-                  <span className="text-sm text-gray-600">Progreso</span>
-                </div>
-                
                 <div className="flex gap-3">
                   <Button variant="outline" onClick={exportPDF}>
                     <Download className="h-4 w-4 mr-2" />
