@@ -250,15 +250,6 @@ const CVBuilder = () => {
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
                         Información Personal
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => improveWithAI('personal')}
-                          disabled={isImproving === 'personal'}
-                        >
-                          <Sparkles className="h-4 w-4" />
-                          {isImproving === 'personal' ? 'Mejorando...' : 'Mejorar con IA'}
-                        </Button>
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
