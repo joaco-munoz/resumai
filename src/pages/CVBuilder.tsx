@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
@@ -9,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Sparkles, Download, FileText, Plus, Trash2 } from "lucide-react";
+import { Sparkles, Download, FileText, Plus, Trash2, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 
 interface CVData {
@@ -77,6 +76,7 @@ const CVBuilder = () => {
 
   const [newSkill, setNewSkill] = useState('');
   const [isImproving, setIsImproving] = useState<string | null>(null);
+  const [activeTab, setActiveTab] = useState('personal');
 
   const handlePersonalInfoChange = (field: string, value: string) => {
     setCvData(prev => ({
@@ -192,6 +192,14 @@ const CVBuilder = () => {
     toast.success("CV exportado como PDF");
   };
 
+  const goToNextTab = () => {
+    const tabOrder = ['personal', 'summary', 'experience', 'education', 'skills'];
+    const currentIndex = tabOrder.indexOf(activeTab);
+    if (currentIndex < tabOrder.length - 1) {
+      setActiveTab(tabOrder[currentIndex + 1]);
+    }
+  };
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-gray-50">
@@ -220,7 +228,7 @@ const CVBuilder = () => {
           <div className="flex h-[calc(100vh-80px)]">
             {/* Editor Panel */}
             <div className="w-2/5 p-6 overflow-y-auto bg-white border-r">
-              <Tabs defaultValue="personal" className="space-y-6">
+              <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
                 <TabsList className="grid w-full grid-cols-5">
                   <TabsTrigger value="personal" className="text-xs">Personal</TabsTrigger>
                   <TabsTrigger value="summary" className="text-xs">Resumen</TabsTrigger>
@@ -301,9 +309,15 @@ const CVBuilder = () => {
                           />
                         </div>
                       </div>
+                      
+                      <div className="flex justify-end pt-4">
+                        <Button onClick={goToNextTab}>
+                          Siguiente
+                          <ArrowRight className="h-4 w-4 ml-2" />
+                        </Button>
+                      </div>
                     </CardContent>
                   </Card>
-                  <button> Pasar</button>
                 </TabsContent>
 
                 <TabsContent value="summary" className="space-y-4">
@@ -325,13 +339,20 @@ const CVBuilder = () => {
                         Un resumen conciso que destaque tus fortalezas principales
                       </CardDescription>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="space-y-4">
                       <Textarea
                         value={cvData.summary}
                         onChange={(e) => handleSummaryChange(e.target.value)}
                         rows={4}
                         placeholder="Describe tu perfil profesional, experiencia clave y objetivos..."
                       />
+                      
+                      <div className="flex justify-end pt-4">
+                        <Button onClick={goToNextTab}>
+                          Siguiente
+                          <ArrowRight className="h-4 w-4 ml-2" />
+                        </Button>
+                      </div>
                     </CardContent>
                   </Card>
                 </TabsContent>
@@ -437,6 +458,13 @@ const CVBuilder = () => {
                           </div>
                         </div>
                       ))}
+                      
+                      <div className="flex justify-end pt-4">
+                        <Button onClick={goToNextTab}>
+                          Siguiente
+                          <ArrowRight className="h-4 w-4 ml-2" />
+                        </Button>
+                      </div>
                     </CardContent>
                   </Card>
                 </TabsContent>
@@ -504,6 +532,13 @@ const CVBuilder = () => {
                           </div>
                         </div>
                       ))}
+                      
+                      <div className="flex justify-end pt-4">
+                        <Button onClick={goToNextTab}>
+                          Siguiente
+                          <ArrowRight className="h-4 w-4 ml-2" />
+                        </Button>
+                      </div>
                     </CardContent>
                   </Card>
                 </TabsContent>
@@ -550,6 +585,12 @@ const CVBuilder = () => {
                             <span className="ml-2 text-red-500">×</span>
                           </Badge>
                         ))}
+                      </div>
+                      
+                      <div className="flex justify-center pt-4">
+                        <Badge variant="outline" className="text-green-600 border-green-600">
+                          ¡CV Completado!
+                        </Badge>
                       </div>
                     </CardContent>
                   </Card>
