@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,11 +7,13 @@ import AuthModal from "@/components/AuthModal";
 import { Sparkles, Target, FileText, CheckCircle, Users, Zap, Star, ArrowRight, Calendar, MoreHorizontal } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Index = () => {
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [email, setEmail] = useState("");
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const handleWaitlistSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,6 +24,10 @@ const Index = () => {
 
   const handleTestAccess = () => {
     navigate("/app");
+  };
+
+  const handleLoginClick = () => {
+    setAuthModalOpen(true);
   };
 
   const features = [{
@@ -69,7 +74,7 @@ const Index = () => {
               <ArrowRight className="h-4 w-4 mr-2" />
               Acceso Directo (Test)
             </Button>
-            <Button size="sm" className="bg-slate-600 hover:bg-slate-700 text-white border border-slate-500">
+            <Button onClick={handleLoginClick} size="sm" className="bg-slate-600 hover:bg-slate-700 text-white border border-slate-500">
               Iniciar Sesión
             </Button>
             <Button onClick={() => setAuthModalOpen(true)} size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">

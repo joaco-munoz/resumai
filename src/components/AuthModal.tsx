@@ -96,6 +96,8 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
       
       if (error) {
         toast.error(`Error al conectar con ${provider}: ${error.message}`);
+      } else {
+        onOpenChange(false);
       }
     } catch (error: any) {
       toast.error(`Error al conectar con ${provider}`);
