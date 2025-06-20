@@ -13,7 +13,9 @@ import {
   useSidebar,
   SidebarFooter,
 } from "@/components/ui/sidebar";
-import { Sparkles, FileText, Target, User, CheckCircle, House, FolderOpen } from "lucide-react";
+import { Sparkles, FileText, Target, User, CheckCircle, House, FolderOpen, LogOut } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@/components/ui/button";
 
 const mainMenuItems = [
   { title: "Dashboard", url: "/app", icon: House },
@@ -28,6 +30,7 @@ const profileItem = { title: "Mi Perfil", url: "/app/profile", icon: User };
 export function AppSidebar() {
   const { state } = useSidebar();
   const location = useLocation();
+  const { signOut, user } = useAuth();
   const currentPath = location.pathname;
   
   const isCollapsed = state === "collapsed";
@@ -60,6 +63,11 @@ export function AppSidebar() {
             <span className="font-bold text-lg gradient-text">ResumAI</span>
           )}
         </div>
+        {!isCollapsed && user && (
+          <div className="mt-2 text-xs text-gray-500 truncate">
+            {user.email}
+          </div>
+        )}
       </div>
 
       <SidebarTrigger className="m-2 self-start" />
@@ -108,6 +116,18 @@ export function AppSidebar() {
                 <profileItem.icon className="h-4 w-4" />
                 {!isCollapsed && <span>{profileItem.title}</span>}
               </NavLink>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild>
+              <Button
+                variant="ghost"
+                onClick={signOut}
+                className="w-full justify-start h-10 px-2 text-gray-700 hover:bg-gray-100"
+              >
+                <LogOut className="h-4 w-4" />
+                {!isCollapsed && <span>Cerrar Sesión</span>}
+              </Button>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

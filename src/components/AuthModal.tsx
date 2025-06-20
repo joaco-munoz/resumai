@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -8,6 +7,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { Sparkles, Mail, Linkedin } from "lucide-react";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 interface AuthModalProps {
   open: boolean;
@@ -19,20 +20,36 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState("signup");
+  const { signUp, signIn } = useAuth();
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     
-    // TODO: Connect to Supabase when integration is set up
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      toast.success("¡Cuenta creada exitosamente!");
-      onOpenChange(false);
-      // TODO: Redirect to dashboard
-    } catch (error) {
-      toast.error("Error al crear la cuenta");
+      const { error } = await signUp(email, password, name);
+      
+      if (error) {
+        if (error.message.includes("User already registered")) {
+          toast.error("Este email ya está registrado. Intenta iniciar sesión.");
+        } else if (error.message.includes("Password should be at least")) {
+          toast.error("La contraseña debe tener al menos 6 caracteres");
+        } else if (error.message.includes("Invalid email")) {
+          toast.error("Por favor ingresa un email válido");
+        } else {
+          toast.error("Error al crear la cuenta: " + error.message);
+        }
+      } else {
+        toast.success("¡Cuenta creada exitosamente! Revisa tu email para confirmar tu cuenta.");
+        onOpenChange(false);
+        setEmail("");
+        setPassword("");
+        setName("");
+      }
+    } catch (error: any) {
+      toast.error("Error inesperado al crear la cuenta");
+      console.error("SignUp error:", error);
     } finally {
       setLoading(false);
     }
@@ -42,23 +59,58 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
     e.preventDefault();
     setLoading(true);
     
-    // TODO: Connect to Supabase when integration is set up
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      toast.success("¡Bienvenido de nuevo!");
-      onOpenChange(false);
-      // TODO: Redirect to dashboard
-    } catch (error) {
-      toast.error("Error al iniciar sesión");
+      const { error } = await signIn(email, password);
+      
+      if (error) {
+        if (error.message.includes("Invalid login credentials")) {
+          toast.error("Email o contraseña incorrectos");
+        } else if (error.message.includes("Email not confirmed")) {
+          toast.error("Por favor confirma tu email antes de iniciar sesión");
+        } else {
+          toast.error("Error al iniciar sesión: " + error.message);
+        }
+      } else {
+        toast.success("¡Bienvenido de nuevo!");
+        onOpenChange(false);
+        setEmail("");
+        setPassword("");
+      }
+    } catch (error: any) {
+      toast.error("Error inesperado al iniciar sesión");
+      console.error("SignIn error:", error);
     } finally {
       setLoading(false);
     }
   };
 
-  const handleSocialAuth = (provider: 'google' | 'linkedin') => {
-    // TODO: Connect to Supabase when integration is set up
-    toast.info(`Conexión con ${provider} estará disponible pronto`);
+  const handleSocialAuth = async (provider: 'google' | 'linkedin') => {
+    try {
+      setLoading(true);
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: provider === 'linkedin' ? 'linkedin_oidc' : provider,
+        options: {
+          redirectTo: `${window.location.origin}/app`
+        }
+      });
+      
+      if (error) {
+        toast.error(`Error al conectar con ${provider}: ${error.message}`);
+      }
+    } catch (error: any) {
+      toast.error(`Error al conectar con ${provider}`);
+      console.error(`${provider} auth error:`, error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const switchToSignIn = () => {
+    setActiveTab("signin");
+  };
+
+  const switchToSignUp = () => {
+    setActiveTab("signup");
   };
 
   return (
@@ -75,7 +127,7 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
           </DialogTitle>
         </DialogHeader>
 
-        <Tabs defaultValue="signup" className="w-full">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2 bg-slate-800 border-slate-700">
             <TabsTrigger value="signup" className="data-[state=active]:bg-slate-700 data-[state=active]:text-white text-slate-300">
               Crear Cuenta
@@ -180,7 +232,7 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
               <p className="text-sm text-slate-400">
                 ¿Ya tienes una cuenta?{" "}
                 <button 
-                  onClick={() => {}} 
+                  onClick={switchToSignIn}
                   className="text-blue-400 hover:text-blue-300 underline font-medium"
                 >
                   Inicia sesión
@@ -277,7 +329,7 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
               <p className="text-sm text-slate-400">
                 ¿No tienes una cuenta?{" "}
                 <button 
-                  onClick={() => {}} 
+                  onClick={switchToSignUp}
                   className="text-blue-400 hover:text-blue-300 underline font-medium"
                 >
                   Crear cuenta
