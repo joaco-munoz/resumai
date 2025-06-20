@@ -9,7 +9,6 @@ import Dashboard from "./pages/Dashboard";
 import CVBuilder from "./pages/CVBuilder";
 import JobMatcher from "./pages/JobMatcher";
 import Profile from "./pages/Profile";
-import Billing from "./pages/Billing";
 import Kanban from "./pages/Kanban";
 import NotFound from "./pages/NotFound";
 
@@ -28,7 +27,6 @@ const App = () => (
           <Route path="/app/cv/:id" element={<CVBuilder />} />
           <Route path="/app/match" element={<JobMatcher />} />
           <Route path="/app/profile" element={<Profile />} />
-          <Route path="/app/billing" element={<Billing />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

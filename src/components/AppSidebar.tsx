@@ -13,13 +13,12 @@ import {
   useSidebar,
   SidebarFooter,
 } from "@/components/ui/sidebar";
-import { Sparkles, FileText, Target, User, CheckCircle, CreditCard, House } from "lucide-react";
+import { Sparkles, FileText, Target, User, CheckCircle, House } from "lucide-react";
 
 const mainMenuItems = [
   { title: "Dashboard", url: "/app/kanban", icon: House },
   { title: "Editor de CVs", url: "/app/cv/new", icon: FileText },
   { title: "Job Matcher", url: "/app/match", icon: Target },
-  { title: "Facturación", url: "/app/billing", icon: CreditCard },
 ];
 
 const profileItem = { title: "Mi Perfil", url: "/app/profile", icon: User };
