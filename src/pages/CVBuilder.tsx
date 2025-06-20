@@ -200,6 +200,14 @@ const CVBuilder = () => {
     }
   };
 
+  const goToPreviousTab = () => {
+    const tabOrder = ['personal', 'summary', 'experience', 'education', 'skills'];
+    const currentIndex = tabOrder.indexOf(activeTab);
+    if (currentIndex > 0) {
+      setActiveTab(tabOrder[currentIndex - 1]);
+    }
+  };
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-gray-50">
@@ -347,7 +355,10 @@ const CVBuilder = () => {
                         placeholder="Describe tu perfil profesional, experiencia clave y objetivos..."
                       />
                       
-                      <div className="flex justify-end pt-4">
+                      <div className="flex justify-between pt-4">
+                        <Button variant="outline" onClick={goToPreviousTab}>
+                          Atrás
+                        </Button>
                         <Button onClick={goToNextTab}>
                           Siguiente
                           <ArrowRight className="h-4 w-4 ml-2" />
@@ -459,7 +470,10 @@ const CVBuilder = () => {
                         </div>
                       ))}
                       
-                      <div className="flex justify-end pt-4">
+                      <div className="flex justify-between pt-4">
+                        <Button variant="outline" onClick={goToPreviousTab}>
+                          Atrás
+                        </Button>
                         <Button onClick={goToNextTab}>
                           Siguiente
                           <ArrowRight className="h-4 w-4 ml-2" />
@@ -533,7 +547,10 @@ const CVBuilder = () => {
                         </div>
                       ))}
                       
-                      <div className="flex justify-end pt-4">
+                      <div className="flex justify-between pt-4">
+                        <Button variant="outline" onClick={goToPreviousTab}>
+                          Atrás
+                        </Button>
                         <Button onClick={goToNextTab}>
                           Siguiente
                           <ArrowRight className="h-4 w-4 ml-2" />
@@ -587,7 +604,10 @@ const CVBuilder = () => {
                         ))}
                       </div>
                       
-                      <div className="flex justify-center pt-4">
+                      <div className="flex justify-between items-center pt-4">
+                        <Button variant="outline" onClick={goToPreviousTab}>
+                          Atrás
+                        </Button>
                         <Badge variant="outline" className="text-green-600 border-green-600">
                           ¡CV Completado!
                         </Badge>
