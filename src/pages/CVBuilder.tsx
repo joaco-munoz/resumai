@@ -11,6 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Sparkles, Download, FileText, Plus, Trash2, ArrowRight, Check, Circle } from "lucide-react";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 interface CVData {
   personalInfo: {
@@ -42,6 +43,8 @@ interface CVData {
 }
 
 const CVBuilder = () => {
+  const navigate = useNavigate();
+  
   const [cvData, setCvData] = useState<CVData>({
     personalInfo: {
       fullName: 'Andrés Hernandez',
@@ -238,6 +241,18 @@ const CVBuilder = () => {
     toast.success("CV exportado como PDF");
   };
 
+  const saveCV = () => {
+    // TODO: Implement save CV functionality
+    toast.success("CV guardado exitosamente");
+    navigate("/app/cvs");
+  };
+
+  const saveAndAdapt = () => {
+    // TODO: Implement save CV functionality
+    toast.success("CV guardado exitosamente");
+    navigate("/app/match");
+  };
+
   const goToNextTab = () => {
     const tabOrder = ['personal', 'summary', 'experience', 'education', 'skills'];
     const currentIndex = tabOrder.indexOf(activeTab);
@@ -321,23 +336,23 @@ const CVBuilder = () => {
               <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
                 <TabsList className="grid w-full grid-cols-5">
                   <TabsTrigger value="personal" className="text-xs flex items-center gap-1">
-                    {validations.personal && <Check className="h-3 w-3 text-green-500" />}
+                    {completedSections.includes('personal') && <Check className="h-4 w-4 text-green-500" />}
                     Personal
                   </TabsTrigger>
                   <TabsTrigger value="summary" className="text-xs flex items-center gap-1">
-                    {validations.summary && <Check className="h-3 w-3 text-green-500" />}
+                    {completedSections.includes('summary') && <Check className="h-4 w-4 text-green-500" />}
                     Resumen
                   </TabsTrigger>
                   <TabsTrigger value="experience" className="text-xs flex items-center gap-1">
-                    {validations.experience && <Check className="h-3 w-3 text-green-500" />}
+                    {completedSections.includes('experience') && <Check className="h-4 w-4 text-green-500" />}
                     Experiencia
                   </TabsTrigger>
                   <TabsTrigger value="education" className="text-xs flex items-center gap-1">
-                    {validations.education && <Check className="h-3 w-3 text-green-500" />}
+                    {completedSections.includes('education') && <Check className="h-4 w-4 text-green-500" />}
                     Educación
                   </TabsTrigger>
                   <TabsTrigger value="skills" className="text-xs flex items-center gap-1">
-                    {validations.skills && <Check className="h-3 w-3 text-green-500" />}
+                    {completedSections.includes('skills') && <Check className="h-4 w-4 text-green-500" />}
                     Habilidades
                   </TabsTrigger>
                 </TabsList>
@@ -705,9 +720,14 @@ const CVBuilder = () => {
                         <Button variant="outline" onClick={goToPreviousTab}>
                           Atrás
                         </Button>
-                        <Badge variant="outline" className="text-green-600 border-green-600">
-                          ¡CV Completado!
-                        </Badge>
+                        <div className="flex gap-2">
+                          <Button variant="outline" onClick={saveCV}>
+                            Guardar
+                          </Button>
+                          <Button onClick={saveAndAdapt}>
+                            Guardar y adaptar
+                          </Button>
+                        </div>
                       </div>
                     </CardContent>
                   </Card>
