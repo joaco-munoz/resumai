@@ -13,11 +13,12 @@ import {
   useSidebar,
   SidebarFooter,
 } from "@/components/ui/sidebar";
-import { Sparkles, FileText, Target, User, CheckCircle, House } from "lucide-react";
+import { Sparkles, FileText, Target, User, CheckCircle, House, FolderOpen } from "lucide-react";
 
 const mainMenuItems = [
   { title: "Dashboard", url: "", icon: House },
   { title: "Seguimiento Postulaciones", url: "/app/kanban", icon: CheckCircle },
+  { title: "Mis CVs", url: "/app/cvs", icon: FolderOpen },
   { title: "Editor de CVs", url: "/app/cv/new", icon: FileText },
   { title: "Job Matcher", url: "/app/match", icon: Target },
 ];
@@ -33,6 +34,9 @@ export function AppSidebar() {
 
   const isActive = (path: string) => {
     if (path === "/app/cv/new" && currentPath.startsWith("/app/cv/")) {
+      return true;
+    }
+    if (path === "/app/cvs" && currentPath === "/app/cvs") {
       return true;
     }
     return currentPath === path;
