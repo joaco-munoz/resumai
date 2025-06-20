@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
@@ -11,6 +10,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, Calendar, ExternalLink, Edit } from "lucide-react";
 import { toast } from "sonner";
+import { DragDropContext, Droppable, Draggable, DropResult } from "react-beautiful-dnd";
 
 interface Interview {
   id: string;
@@ -142,6 +142,31 @@ const Kanban = () => {
     }
   };
 
+  const handleDragEnd = (result: DropResult) => {
+    if (!result.destination) {
+      return;
+    }
+
+    const { source, destination, draggableId } = result;
+
+    // Si se mueve a la misma columna y posición, no hacer nada
+    if (source.droppableId === destination.droppableId && source.index === destination.index) {
+      return;
+    }
+
+    // Actualizar el estado de la entrevista
+    const updatedInterviews = interviews.map(interview =>
+      interview.id === draggableId
+        ? { ...interview, status: destination.droppableId as Interview['status'] }
+        : interview
+    );
+
+    setInterviews(updatedInterviews);
+    
+    const columnTitle = columns.find(col => col.id === destination.droppableId)?.title;
+    toast.success(`Aplicación movida a ${columnTitle}`);
+  };
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-gray-50">
@@ -243,85 +268,99 @@ const Kanban = () => {
           </header>
 
           <div className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-              {columns.map((column) => (
-                <div key={column.id} className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <h3 className="font-semibold text-lg">{column.title}</h3>
-                    <Badge variant="secondary">
-                      {interviews.filter(interview => interview.status === column.id).length}
-                    </Badge>
+            <DragDropContext onDragEnd={handleDragEnd}>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+                {columns.map((column) => (
+                  <div key={column.id} className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <h3 className="font-semibold text-lg">{column.title}</h3>
+                      <Badge variant="secondary">
+                        {interviews.filter(interview => interview.status === column.id).length}
+                      </Badge>
+                    </div>
+                    
+                    <Droppable droppableId={column.id}>
+                      {(provided, snapshot) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.droppableProps}
+                          className={`space-y-3 min-h-[200px] p-2 rounded-lg transition-colors ${
+                            snapshot.isDraggingOver ? 'bg-gray-100' : ''
+                          }`}
+                        >
+                          {interviews
+                            .filter(interview => interview.status === column.id)
+                            .map((interview, index) => (
+                              <Draggable key={interview.id} draggableId={interview.id} index={index}>
+                                {(provided, snapshot) => (
+                                  <Card
+                                    ref={provided.innerRef}
+                                    {...provided.draggableProps}
+                                    {...provided.dragHandleProps}
+                                    className={`${column.color} cursor-pointer hover:shadow-md transition-all duration-200 ${
+                                      snapshot.isDragging ? 'shadow-lg rotate-2' : ''
+                                    }`}
+                                  >
+                                    <CardHeader className="pb-2">
+                                      <div className="flex items-start justify-between">
+                                        <div className="flex-1">
+                                          <CardTitle className="text-sm font-medium">{interview.position}</CardTitle>
+                                          <CardDescription className="text-xs">{interview.company}</CardDescription>
+                                        </div>
+                                        <Button
+                                          variant="ghost"
+                                          size="sm"
+                                          onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleEditInterview(interview);
+                                          }}
+                                          className="h-6 w-6 p-0"
+                                        >
+                                          <Edit className="h-3 w-3" />
+                                        </Button>
+                                      </div>
+                                    </CardHeader>
+                                    <CardContent className="pt-0">
+                                      <div className="space-y-2">
+                                        {interview.notes && (
+                                          <p className="text-xs text-gray-600 line-clamp-2">{interview.notes}</p>
+                                        )}
+                                        
+                                        {interview.date && (
+                                          <div className="flex items-center gap-1 text-xs text-gray-500">
+                                            <Calendar className="h-3 w-3" />
+                                            {new Date(interview.date).toLocaleDateString('es-ES')}
+                                          </div>
+                                        )}
+                                        
+                                        {interview.link && (
+                                          <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="h-6 text-xs p-1"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              window.open(interview.link, '_blank');
+                                            }}
+                                          >
+                                            <ExternalLink className="h-3 w-3 mr-1" />
+                                            Ver enlace
+                                          </Button>
+                                        )}
+                                      </div>
+                                    </CardContent>
+                                  </Card>
+                                )}
+                              </Draggable>
+                            ))}
+                          {provided.placeholder}
+                        </div>
+                      )}
+                    </Droppable>
                   </div>
-                  
-                  <div className="space-y-3">
-                    {interviews
-                      .filter(interview => interview.status === column.id)
-                      .map((interview) => (
-                        <Card key={interview.id} className={`${column.color} cursor-pointer hover:shadow-md transition-all duration-200`}>
-                          <CardHeader className="pb-2">
-                            <div className="flex items-start justify-between">
-                              <div className="flex-1">
-                                <CardTitle className="text-sm font-medium">{interview.position}</CardTitle>
-                                <CardDescription className="text-xs">{interview.company}</CardDescription>
-                              </div>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleEditInterview(interview)}
-                                className="h-6 w-6 p-0"
-                              >
-                                <Edit className="h-3 w-3" />
-                              </Button>
-                            </div>
-                          </CardHeader>
-                          <CardContent className="pt-0">
-                            <div className="space-y-2">
-                              {interview.notes && (
-                                <p className="text-xs text-gray-600 line-clamp-2">{interview.notes}</p>
-                              )}
-                              
-                              {interview.date && (
-                                <div className="flex items-center gap-1 text-xs text-gray-500">
-                                  <Calendar className="h-3 w-3" />
-                                  {new Date(interview.date).toLocaleDateString('es-ES')}
-                                </div>
-                              )}
-                              
-                              {interview.link && (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-6 text-xs p-1"
-                                  onClick={() => window.open(interview.link, '_blank')}
-                                >
-                                  <ExternalLink className="h-3 w-3 mr-1" />
-                                  Ver enlace
-                                </Button>
-                              )}
-
-                              <div className="flex gap-1 pt-2">
-                                {columns.map((col) => (
-                                  col.id !== interview.status && (
-                                    <Button
-                                      key={col.id}
-                                      variant="ghost"
-                                      size="sm"
-                                      className="h-6 text-xs p-1"
-                                      onClick={() => moveInterview(interview.id, col.id)}
-                                    >
-                                      → {col.title}
-                                    </Button>
-                                  )
-                                ))}
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            </DragDropContext>
           </div>
         </main>
       </div>
