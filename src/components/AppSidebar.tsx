@@ -17,10 +17,10 @@ import { Sparkles, FileText, Target, User, CheckCircle, House, FolderOpen } from
 
 const mainMenuItems = [
   { title: "Dashboard", url: "", icon: House },
+  { title: "Seguimiento Postulaciones", url: "/app/kanban", icon: CheckCircle },
   { title: "Mis CVs", url: "/app/cvs", icon: FolderOpen },
   { title: "Editor de CVs", url: "/app/cv/new", icon: FileText },
   { title: "Job Matcher", url: "/app/match", icon: Target },
-  { title: "Seguimiento Postulaciones", url: "/app/kanban", icon: CheckCircle }
 ];
 
 const profileItem = { title: "Mi Perfil", url: "/app/profile", icon: User };
