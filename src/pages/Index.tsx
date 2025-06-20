@@ -153,8 +153,8 @@ const Index = () => {
                         </Button>
                       </div>
                       <div className="text-center">
-                        <div className="font-bold text-slate-800">Michael Scott</div>
-                        <div className="text-sm text-slate-500">DM Sales Rep | michael@gmail.com</div>
+                        <div className="font-bold text-slate-800">Andrés Hernández</div>
+                        <div className="text-sm text-slate-500">DM Sales Rep | andres.hndz@gmail.com</div>
                         <div className="w-full bg-cyan-500 h-2 rounded-full mt-2"></div>
                       </div>
                     </div>
@@ -213,7 +213,7 @@ const Index = () => {
               <CardContent className="space-y-4">
                 <div className="flex items-center gap-3">
                   <CheckCircle className="h-5 w-5 text-cyan-400" />
-                  <span className="text-slate-300">1 CV con IA</span>
+                  <span className="text-slate-300">1 CV optimizado con IA</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <CheckCircle className="h-5 w-5 text-cyan-400" />
