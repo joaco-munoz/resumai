@@ -16,7 +16,7 @@ import {
 import { Sparkles, FileText, Target, User, CheckCircle, House, FolderOpen } from "lucide-react";
 
 const mainMenuItems = [
-  { title: "Dashboard", url: "", icon: House },
+  { title: "Dashboard", url: "/app", icon: House },
   { title: "Seguimiento Postulaciones", url: "/app/kanban", icon: CheckCircle },
   { title: "Mis CVs", url: "/app/cvs", icon: FolderOpen },
   { title: "Editor de CVs", url: "/app/cv/new", icon: FileText },
@@ -33,6 +33,9 @@ export function AppSidebar() {
   const isCollapsed = state === "collapsed";
 
   const isActive = (path: string) => {
+    if (path === "/app" && currentPath === "/app") {
+      return true;
+    }
     if (path === "/app/cv/new" && currentPath.startsWith("/app/cv/")) {
       return true;
     }
