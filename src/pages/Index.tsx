@@ -236,16 +236,16 @@ Ahorra horas adaptando tu currículum: nuestra plataforma usa IA para convertir 
               <CardHeader className="text-center">
                 <CardTitle className="text-2xl text-white">Pro</CardTitle>
                 <div className="text-4xl font-bold text-blue-400 mt-4">$29</div>
-                <CardDescription className="text-slate-300">Para profesionales serios</CardDescription>
+                <CardDescription className="text-slate-300">CVs sin límites, inscríbete hoy</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center gap-3">
                   <CheckCircle className="h-5 w-5 text-cyan-400" />
-                  <span className="text-slate-300">CVs ilimitados con IA</span>
+                  <span className="text-slate-300">Genera CVs sin límite, impulsados por IA</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <CheckCircle className="h-5 w-5 text-cyan-400" />
-                  <span className="text-slate-300">Exportaciones ilimitadas</span>
+                  <span className="text-slate-300">Exporta sin limites</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <CheckCircle className="h-5 w-5 text-cyan-400" />
@@ -307,11 +307,11 @@ Ahorra horas adaptando tu currículum: nuestra plataforma usa IA para convertir 
           <div className="flex items-center justify-center gap-8 mt-12 text-blue-200">
             <div className="flex items-center gap-2">
               <Users className="h-5 w-5" />
-              <span>10,000+ usuarios</span>
+              <span>Plataforma Beta</span>
             </div>
             <div className="flex items-center gap-2">
               <Star className="h-5 w-5" />
-              <span>4.9/5 estrellas</span>
+              <span>5/5 estrellas</span>
             </div>
           </div>
         </div>
@@ -333,7 +333,7 @@ Ahorra horas adaptando tu currículum: nuestra plataforma usa IA para convertir 
             </div>
             
             <div className="text-slate-400">
-              resumai@semen.com
+              resumai.support@gmail.com
             </div>
           </div>
         </div>
