@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,7 +12,8 @@ import {
   Eye,
   Edit,
   Download,
-  Trash2
+  Trash2,
+  Home
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -82,13 +82,23 @@ export default function CVsList() {
               Una lista de todos tus currículums, mostrando título, puntuación y fecha de creación.
             </p>
           </div>
-          <Button 
-            onClick={() => navigate("/app/cv/new")}
-            className="bg-blue-600 hover:bg-blue-700 text-white"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Crear CV
-          </Button>
+          <div className="flex items-center gap-3">
+            <Button 
+              onClick={() => navigate("/")}
+              variant="outline"
+              className="text-gray-600 border-gray-300"
+            >
+              <Home className="h-4 w-4 mr-2" />
+              Landing (Test)
+            </Button>
+            <Button 
+              onClick={() => navigate("/app/cv/new")}
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              <Plus className="h-4 w-4 mr-2" />
+              Crear CV
+            </Button>
+          </div>
         </div>
 
         {/* Search */}
