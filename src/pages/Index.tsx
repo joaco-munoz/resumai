@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -7,53 +6,39 @@ import { Badge } from "@/components/ui/badge";
 import AuthModal from "@/components/AuthModal";
 import { Sparkles, Target, FileText, CheckCircle, Users, Zap, Star } from "lucide-react";
 import { toast } from "sonner";
-
 const Index = () => {
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [email, setEmail] = useState("");
-
   const handleWaitlistSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // TODO: Connect to Supabase when integration is set up
     toast.success("¡Te hemos añadido a la lista de espera!");
     setEmail("");
   };
-
-  const features = [
-    {
-      icon: <Sparkles className="h-8 w-8 text-brand-500" />,
-      title: "IA Generativa",
-      description: "Mejora automáticamente tu CV con sugerencias de IA basadas en ofertas específicas"
-    },
-    {
-      icon: <Target className="h-8 w-8 text-success-500" />,
-      title: "ATS Optimizer",
-      description: "Supera los filtros automáticos con nuestro formato optimizado para sistemas ATS"
-    },
-    {
-      icon: <FileText className="h-8 w-8 text-brand-500" />,
-      title: "Múltiples Formatos",
-      description: "Exporta en PDF, DOCX y JSON. Compatible con todas las plataformas de empleo"
-    }
-  ];
-
-  const faqItems = [
-    {
-      question: "¿Cómo funciona el optimizador ATS?",
-      answer: "Analizamos más de 10,000 descripciones de trabajo para crear CVs que superen filtros automáticos."
-    },
-    {
-      question: "¿Puedo usar mi propio contenido?",
-      answer: "¡Por supuesto! La IA mejora tu información existente sin cambiar tu experiencia real."
-    },
-    {
-      question: "¿Qué incluye el plan Pro?",
-      answer: "Exportaciones ilimitadas, análisis avanzado de compatibilidad y plantillas premium."
-    }
-  ];
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
+  const features = [{
+    icon: <Sparkles className="h-8 w-8 text-brand-500" />,
+    title: "IA Generativa",
+    description: "Mejora automáticamente tu CV con sugerencias de IA basadas en ofertas específicas"
+  }, {
+    icon: <Target className="h-8 w-8 text-success-500" />,
+    title: "ATS Optimizer",
+    description: "Supera los filtros automáticos con nuestro formato optimizado para sistemas ATS"
+  }, {
+    icon: <FileText className="h-8 w-8 text-brand-500" />,
+    title: "Múltiples Formatos",
+    description: "Exporta en PDF, DOCX y JSON. Compatible con todas las plataformas de empleo"
+  }];
+  const faqItems = [{
+    question: "¿Cómo funciona el optimizador ATS?",
+    answer: "Analizamos más de 10,000 descripciones de trabajo para crear CVs que superen filtros automáticos."
+  }, {
+    question: "¿Puedo usar mi propio contenido?",
+    answer: "¡Por supuesto! La IA mejora tu información existente sin cambiar tu experiencia real."
+  }, {
+    question: "¿Qué incluye el plan Pro?",
+    answer: "Exportaciones ilimitadas, análisis avanzado de compatibilidad y plantillas premium."
+  }];
+  return <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
       {/* Header */}
       <header className="border-b bg-white/80 backdrop-blur-md sticky top-0 z-50">
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
@@ -61,7 +46,7 @@ const Index = () => {
             <div className="w-8 h-8 bg-gradient-to-br from-brand-500 to-brand-700 rounded-lg flex items-center justify-center">
               <Sparkles className="h-5 w-5 text-white" />
             </div>
-            <span className="font-bold text-xl gradient-text">CVMaster AI</span>
+            <span className="font-bold text-xl gradient-text">ResumAI</span>
           </div>
           
           <div className="flex items-center gap-4">
@@ -95,11 +80,7 @@ const Index = () => {
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12 animate-fade-in">
-            <Button 
-              size="lg" 
-              className="bg-gradient-to-r from-brand-500 to-brand-700 hover:from-brand-600 hover:to-brand-800 text-lg px-8 py-4"
-              onClick={() => setAuthModalOpen(true)}
-            >
+            <Button size="lg" className="bg-gradient-to-r from-brand-500 to-brand-700 hover:from-brand-600 hover:to-brand-800 text-lg px-8 py-4" onClick={() => setAuthModalOpen(true)}>
               <Sparkles className="h-5 w-5 mr-2" />
               Empezar Gratis
             </Button>
@@ -137,8 +118,7 @@ const Index = () => {
           </div>
           
           <div className="grid md:grid-cols-3 gap-8">
-            {features.map((feature, index) => (
-              <Card key={index} className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-2">
+            {features.map((feature, index) => <Card key={index} className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-2">
                 <CardHeader className="text-center">
                   <div className="mx-auto mb-4 p-3 bg-gradient-to-br from-slate-50 to-blue-50 rounded-2xl w-fit">
                     {feature.icon}
@@ -150,8 +130,7 @@ const Index = () => {
                     {feature.description}
                   </CardDescription>
                 </CardContent>
-              </Card>
-            ))}
+              </Card>)}
           </div>
         </div>
       </section>
@@ -217,11 +196,7 @@ const Index = () => {
                   <CheckCircle className="h-5 w-5 text-success-500" />
                   <span>Análisis básico ATS</span>
                 </div>
-                <Button 
-                  className="w-full mt-6" 
-                  variant="outline"
-                  onClick={() => setAuthModalOpen(true)}
-                >
+                <Button className="w-full mt-6" variant="outline" onClick={() => setAuthModalOpen(true)}>
                   Empezar Gratis
                 </Button>
               </CardContent>
@@ -258,10 +233,7 @@ const Index = () => {
                   <CheckCircle className="h-5 w-5 text-success-500" />
                   <span>Soporte prioritario</span>
                 </div>
-                <Button 
-                  className="w-full mt-6 bg-gradient-to-r from-brand-500 to-brand-700 hover:from-brand-600 hover:to-brand-800"
-                  onClick={() => setAuthModalOpen(true)}
-                >
+                <Button className="w-full mt-6 bg-gradient-to-r from-brand-500 to-brand-700 hover:from-brand-600 hover:to-brand-800" onClick={() => setAuthModalOpen(true)}>
                   <Zap className="h-4 w-4 mr-2" />
                   Empezar Pro
                 </Button>
@@ -279,16 +251,14 @@ const Index = () => {
           </div>
           
           <div className="max-w-3xl mx-auto space-y-6">
-            {faqItems.map((item, index) => (
-              <Card key={index} className="border-0 shadow-md">
+            {faqItems.map((item, index) => <Card key={index} className="border-0 shadow-md">
                 <CardHeader>
                   <CardTitle className="text-lg">{item.question}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-gray-600">{item.answer}</p>
                 </CardContent>
-              </Card>
-            ))}
+              </Card>)}
           </div>
         </div>
       </section>
@@ -302,14 +272,7 @@ const Index = () => {
           </p>
           
           <form onSubmit={handleWaitlistSubmit} className="max-w-md mx-auto flex gap-4">
-            <Input
-              type="email"
-              placeholder="tu@email.com"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="bg-white/10 border-white/20 text-white placeholder:text-white/60"
-              required
-            />
+            <Input type="email" placeholder="tu@email.com" value={email} onChange={e => setEmail(e.target.value)} className="bg-white/10 border-white/20 text-white placeholder:text-white/60" required />
             <Button type="submit" variant="secondary">
               Únete
             </Button>
@@ -347,8 +310,6 @@ const Index = () => {
       </footer>
 
       <AuthModal open={authModalOpen} onOpenChange={setAuthModalOpen} />
-    </div>
-  );
+    </div>;
 };
-
 export default Index;
