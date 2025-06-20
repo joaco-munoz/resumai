@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
@@ -8,7 +9,8 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Plus, Calendar, ExternalLink, Edit } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Plus, Calendar, ExternalLink, Edit, Search, Filter, Download, Upload, MoreHorizontal } from "lucide-react";
 import { toast } from "sonner";
 import { DragDropContext, Droppable, Draggable, DropResult } from "react-beautiful-dnd";
 
@@ -16,11 +18,13 @@ interface Interview {
   id: string;
   position: string;
   company: string;
-  status: 'applied' | 'interview' | 'offer' | 'hired' | 'rejected';
+  status: 'saved' | 'applied' | 'interviewing' | 'offer' | 'rejected';
   notes: string;
   date?: string;
   link?: string;
   appliedDate: string;
+  jobType?: string;
+  location?: string;
 }
 
 const Kanban = () => {
@@ -31,28 +35,36 @@ const Kanban = () => {
       company: 'TechCorp',
       status: 'applied',
       notes: 'Aplicado a través de LinkedIn',
-      appliedDate: '2024-01-15'
+      appliedDate: '2024-01-15',
+      jobType: 'Full-time',
+      location: 'Remote'
     },
     {
       id: '2',
       position: 'Full Stack Engineer',
       company: 'StartupXYZ',
-      status: 'interview',
+      status: 'interviewing',
       notes: 'Primera entrevista técnica programada',
       date: '2024-01-20',
       link: 'https://meet.google.com/xyz',
-      appliedDate: '2024-01-10'
+      appliedDate: '2024-01-10',
+      jobType: 'Full-time',
+      location: 'Hybrid'
     }
   ]);
 
   const [selectedInterview, setSelectedInterview] = useState<Interview | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
   const [formData, setFormData] = useState({
     position: '',
     company: '',
     notes: '',
     date: '',
-    link: ''
+    link: '',
+    jobType: '',
+    location: ''
   });
   const [isClient, setIsClient] = useState(false);
 
@@ -62,11 +74,11 @@ const Kanban = () => {
   }, []);
 
   const columns = [
-    { id: 'applied', title: 'Aplicado', color: 'bg-blue-100 border-blue-200' },
-    { id: 'interview', title: 'Entrevista', color: 'bg-yellow-100 border-yellow-200' },
-    { id: 'offer', title: 'Oferta', color: 'bg-green-100 border-green-200' },
-    { id: 'hired', title: 'Contratado', color: 'bg-emerald-100 border-emerald-200' },
-    { id: 'rejected', title: 'Rechazado', color: 'bg-red-100 border-red-200' }
+    { id: 'saved', title: 'SAVED', count: interviews.filter(i => i.status === 'saved').length },
+    { id: 'applied', title: 'APPLIED', count: interviews.filter(i => i.status === 'applied').length },
+    { id: 'interviewing', title: 'INTERVIEWING', count: interviews.filter(i => i.status === 'interviewing').length },
+    { id: 'offer', title: 'OFFER', count: interviews.filter(i => i.status === 'offer').length },
+    { id: 'rejected', title: 'REJECTED', count: interviews.filter(i => i.status === 'rejected').length }
   ];
 
   const handleAddInterview = () => {
@@ -79,15 +91,17 @@ const Kanban = () => {
       id: Date.now().toString(),
       position: formData.position,
       company: formData.company,
-      status: 'applied',
+      status: 'saved',
       notes: formData.notes,
       date: formData.date,
       link: formData.link,
+      jobType: formData.jobType,
+      location: formData.location,
       appliedDate: new Date().toISOString().split('T')[0]
     };
 
     setInterviews([...interviews, newInterview]);
-    setFormData({ position: '', company: '', notes: '', date: '', link: '' });
+    setFormData({ position: '', company: '', notes: '', date: '', link: '', jobType: '', location: '' });
     setIsModalOpen(false);
     toast.success("Aplicación añadida al tablero");
   };
@@ -99,7 +113,9 @@ const Kanban = () => {
       company: interview.company,
       notes: interview.notes,
       date: interview.date || '',
-      link: interview.link || ''
+      link: interview.link || '',
+      jobType: interview.jobType || '',
+      location: interview.location || ''
     });
     setIsModalOpen(true);
   };
@@ -115,37 +131,18 @@ const Kanban = () => {
             company: formData.company,
             notes: formData.notes,
             date: formData.date,
-            link: formData.link
+            link: formData.link,
+            jobType: formData.jobType,
+            location: formData.location
           }
         : interview
     );
 
     setInterviews(updatedInterviews);
     setSelectedInterview(null);
-    setFormData({ position: '', company: '', notes: '', date: '', link: '' });
+    setFormData({ position: '', company: '', notes: '', date: '', link: '', jobType: '', location: '' });
     setIsModalOpen(false);
     toast.success("Aplicación actualizada");
-  };
-
-  const moveInterview = (interviewId: string, newStatus: string) => {
-    const updatedInterviews = interviews.map(interview =>
-      interview.id === interviewId
-        ? { ...interview, status: newStatus as Interview['status'] }
-        : interview
-    );
-    setInterviews(updatedInterviews);
-    toast.success("Estado actualizado");
-  };
-
-  const getStatusBadgeColor = (status: string) => {
-    switch (status) {
-      case 'applied': return 'bg-blue-100 text-blue-800';
-      case 'interview': return 'bg-yellow-100 text-yellow-800';
-      case 'offer': return 'bg-green-100 text-green-800';
-      case 'hired': return 'bg-emerald-100 text-emerald-800';
-      case 'rejected': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
   };
 
   const handleDragEnd = (result: DropResult) => {
@@ -155,12 +152,10 @@ const Kanban = () => {
 
     const { source, destination, draggableId } = result;
 
-    // Si se mueve a la misma columna y posición, no hacer nada
     if (source.droppableId === destination.droppableId && source.index === destination.index) {
       return;
     }
 
-    // Actualizar el estado de la entrevista
     const updatedInterviews = interviews.map(interview =>
       interview.id === draggableId
         ? { ...interview, status: destination.droppableId as Interview['status'] }
@@ -173,6 +168,13 @@ const Kanban = () => {
     toast.success(`Aplicación movida a ${columnTitle}`);
   };
 
+  const filteredInterviews = interviews.filter(interview => {
+    const matchesSearch = interview.position.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         interview.company.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || interview.status === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
+
   if (!isClient) {
     return <div>Loading...</div>;
   }
@@ -182,111 +184,243 @@ const Kanban = () => {
       <div className="min-h-screen flex w-full bg-gray-50">
         <AppSidebar />
         <main className="flex-1">
+          {/* Header */}
           <header className="bg-white border-b px-6 py-4">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-4">
                 <SidebarTrigger />
                 <div>
-                  <h1 className="text-2xl font-bold gradient-text">Tablero de Aplicaciones</h1>
-                  <p className="text-gray-600">Gestiona tu proceso de búsqueda de empleo</p>
+                  <h1 className="text-2xl font-bold text-gray-900">Your Job Tracker</h1>
+                  <p className="text-sm text-gray-600 mt-1">
+                    <span className="font-semibold">{interviews.length} TOTAL JOBS</span>
+                  </p>
                 </div>
               </div>
-              
-              <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-                <DialogTrigger asChild>
-                  <Button className="bg-gradient-to-r from-brand-500 to-brand-700">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Nueva Aplicación
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>
-                      {selectedInterview ? 'Editar Aplicación' : 'Adding Nueva Aplicación'}
-                    </DialogTitle>
-                    <DialogDescription>
-                      {selectedInterview ? 'Actualiza los detalles de tu aplicación' : 'Agrega una nueva aplicación de trabajo a tu tablero'}
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="position">Posición *</Label>
-                        <Input
-                          id="position"
-                          value={formData.position}
-                          onChange={(e) => setFormData({ ...formData, position: e.target.value })}
-                          placeholder="ej. Frontend Developer"
-                        />
+
+              <div className="flex items-center gap-3">
+                <Button variant="outline" size="sm" className="text-blue-600 border-blue-200">
+                  <Download className="h-4 w-4 mr-2" />
+                  Export CSV
+                </Button>
+                <Button variant="outline" size="sm" className="text-blue-600 border-blue-200">
+                  <Upload className="h-4 w-4 mr-2" />
+                  Import CSV
+                </Button>
+                <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+                  <DialogTrigger asChild>
+                    <Button className="bg-blue-600 hover:bg-blue-700">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Add Application
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-2xl">
+                    <DialogHeader>
+                      <DialogTitle>
+                        {selectedInterview ? 'Editar Aplicación' : 'Nueva Aplicación'}
+                      </DialogTitle>
+                      <DialogDescription>
+                        {selectedInterview ? 'Actualiza los detalles de tu aplicación' : 'Agrega una nueva aplicación de trabajo a tu tablero'}
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="position">Posición *</Label>
+                          <Input
+                            id="position"
+                            value={formData.position}
+                            onChange={(e) => setFormData({ ...formData, position: e.target.value })}
+                            placeholder="ej. Frontend Developer"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="company">Empresa *</Label>
+                          <Input
+                            id="company"
+                            value={formData.company}
+                            onChange={(e) => setFormData({ ...formData, company: e.target.value })}
+                            placeholder="ej. TechCorp"
+                          />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="jobType">Tipo de Trabajo</Label>
+                          <Select value={formData.jobType} onValueChange={(value) => setFormData({ ...formData, jobType: value })}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Seleccionar tipo" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="full-time">Full-time</SelectItem>
+                              <SelectItem value="part-time">Part-time</SelectItem>
+                              <SelectItem value="contract">Contract</SelectItem>
+                              <SelectItem value="internship">Internship</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="location">Ubicación</Label>
+                          <Input
+                            id="location"
+                            value={formData.location}
+                            onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                            placeholder="ej. Remote, Madrid, etc."
+                          />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="date">Fecha Entrevista</Label>
+                          <Input
+                            id="date"
+                            type="date"
+                            value={formData.date}
+                            onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="link">Enlace Entrevista</Label>
+                          <Input
+                            id="link"
+                            value={formData.link}
+                            onChange={(e) => setFormData({ ...formData, link: e.target.value })}
+                            placeholder="https://meet.google.com/..."
+                          />
+                        </div>
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="company">Empresa *</Label>
-                        <Input
-                          id="company"
-                          value={formData.company}
-                          onChange={(e) => setFormData({ ...formData, company: e.target.value })}
-                          placeholder="ej. TechCorp"
+                        <Label htmlFor="notes">Notas</Label>
+                        <Textarea
+                          id="notes"
+                          value={formData.notes}
+                          onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                          placeholder="Notas sobre la aplicación, contactos, etc."
+                          rows={3}
                         />
                       </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="date">Fecha Entrevista</Label>
-                        <Input
-                          id="date"
-                          type="date"
-                          value={formData.date}
-                          onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="link">Enlace Entrevista</Label>
-                        <Input
-                          id="link"
-                          value={formData.link}
-                          onChange={(e) => setFormData({ ...formData, link: e.target.value })}
-                          placeholder="https://meet.google.com/..."
-                        />
+                      <div className="flex gap-2 justify-end">
+                        <Button variant="outline" onClick={() => {
+                          setIsModalOpen(false);
+                          setSelectedInterview(null);
+                          setFormData({ position: '', company: '', notes: '', date: '', link: '', jobType: '', location: '' });
+                        }}>
+                          Cancelar
+                        </Button>
+                        <Button onClick={selectedInterview ? handleUpdateInterview : handleAddInterview}>
+                          {selectedInterview ? 'Actualizar' : 'Agregar'} Aplicación
+                        </Button>
                       </div>
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="notes">Notas</Label>
-                      <Textarea
-                        id="notes"
-                        value={formData.notes}
-                        onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                        placeholder="Notas sobre la aplicación, contactos, etc."
-                        rows={3}
-                      />
-                    </div>
-                    <div className="flex gap-2 justify-end">
-                      <Button variant="outline" onClick={() => {
-                        setIsModalOpen(false);
-                        setSelectedInterview(null);
-                        setFormData({ position: '', company: '', notes: '', date: '', link: '' });
-                      }}>
-                        Cancelar
-                      </Button>
-                      <Button onClick={selectedInterview ? handleUpdateInterview : handleAddInterview}>
-                        {selectedInterview ? 'Actualizar' : 'Agregar'} Aplicación
-                      </Button>
-                    </div>
-                  </div>
-                </DialogContent>
-              </Dialog>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            </div>
+
+            {/* Status Tabs */}
+            <div className="flex items-center gap-6 mb-4">
+              <button
+                className={`pb-2 px-1 border-b-2 font-medium text-sm ${
+                  statusFilter === 'all' 
+                    ? 'border-blue-500 text-blue-600' 
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                }`}
+                onClick={() => setStatusFilter('all')}
+              >
+                Active
+              </button>
+              <button
+                className={`pb-2 px-1 border-b-2 font-medium text-sm ${
+                  statusFilter === 'archived' 
+                    ? 'border-blue-500 text-blue-600' 
+                    : 'border-transparent text-gray-500 hover:text-gray-700'
+                }`}
+                onClick={() => setStatusFilter('archived')}
+              >
+                Archived
+              </button>
+            </div>
+
+            {/* Search and Filters */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input
+                    placeholder="Search for roles or companies"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10 w-80"
+                  />
+                </div>
+                <Select>
+                  <SelectTrigger className="w-40">
+                    <SelectValue placeholder="Applied from" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All sources</SelectItem>
+                    <SelectItem value="linkedin">LinkedIn</SelectItem>
+                    <SelectItem value="direct">Direct</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select>
+                  <SelectTrigger className="w-40">
+                    <SelectValue placeholder="Applied until" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="week">This week</SelectItem>
+                    <SelectItem value="month">This month</SelectItem>
+                    <SelectItem value="quarter">This quarter</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select>
+                  <SelectTrigger className="w-32">
+                    <SelectValue placeholder="Job Type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All types</SelectItem>
+                    <SelectItem value="full-time">Full-time</SelectItem>
+                    <SelectItem value="part-time">Part-time</SelectItem>
+                    <SelectItem value="contract">Contract</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Select>
+                  <SelectTrigger className="w-32">
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All status</SelectItem>
+                    <SelectItem value="saved">Saved</SelectItem>
+                    <SelectItem value="applied">Applied</SelectItem>
+                    <SelectItem value="interviewing">Interviewing</SelectItem>
+                    <SelectItem value="offer">Offer</SelectItem>
+                    <SelectItem value="rejected">Rejected</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-gray-500">0 Jobs Selected</span>
+                <Button variant="ghost" size="sm">
+                  <span className="text-sm text-gray-600">Visible Columns (5)</span>
+                </Button>
+                <Button variant="ghost" size="sm">
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </header>
 
+          {/* Kanban Board */}
           <div className="p-6">
             <DragDropContext onDragEnd={handleDragEnd}>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+              <div className="grid grid-cols-5 gap-4">
                 {columns.map((column) => (
-                  <div key={column.id} className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <h3 className="font-semibold text-lg">{column.title}</h3>
-                      <Badge variant="secondary">
-                        {interviews.filter(interview => interview.status === column.id).length}
-                      </Badge>
+                  <div key={column.id} className="bg-white rounded-lg">
+                    <div className="p-4 border-b border-gray-100">
+                      <div className="flex items-center justify-between">
+                        <h3 className="font-medium text-sm text-gray-900 tracking-wide">{column.title}</h3>
+                        <span className="text-sm text-gray-500">({column.count})</span>
+                      </div>
                     </div>
                     
                     <Droppable droppableId={column.id}>
@@ -294,11 +428,11 @@ const Kanban = () => {
                         <div
                           ref={provided.innerRef}
                           {...provided.droppableProps}
-                          className={`space-y-3 min-h-[200px] p-2 rounded-lg transition-colors ${
-                            snapshot.isDraggingOver ? 'bg-gray-100' : ''
+                          className={`p-4 min-h-[400px] transition-colors ${
+                            snapshot.isDraggingOver ? 'bg-gray-50' : ''
                           }`}
                         >
-                          {interviews
+                          {filteredInterviews
                             .filter(interview => interview.status === column.id)
                             .map((interview, index) => (
                               <Draggable key={interview.id} draggableId={interview.id} index={index}>
@@ -307,15 +441,28 @@ const Kanban = () => {
                                     ref={provided.innerRef}
                                     {...provided.draggableProps}
                                     {...provided.dragHandleProps}
-                                    className={`${column.color} cursor-pointer hover:shadow-md transition-all duration-200 ${
-                                      snapshot.isDragging ? 'shadow-lg rotate-2' : ''
+                                    className={`mb-3 cursor-pointer hover:shadow-md transition-all duration-200 border-l-4 border-l-blue-500 ${
+                                      snapshot.isDragging ? 'shadow-lg rotate-1' : ''
                                     }`}
                                   >
                                     <CardHeader className="pb-2">
                                       <div className="flex items-start justify-between">
                                         <div className="flex-1">
-                                          <CardTitle className="text-sm font-medium">{interview.position}</CardTitle>
-                                          <CardDescription className="text-xs">{interview.company}</CardDescription>
+                                          <div className="flex items-center gap-2 mb-1">
+                                            <div className="w-8 h-8 bg-gray-100 rounded-md flex items-center justify-center">
+                                              <span className="text-xs font-medium text-gray-600">
+                                                {interview.company.charAt(0)}
+                                              </span>
+                                            </div>
+                                            <div>
+                                              <CardTitle className="text-sm font-medium text-gray-900">
+                                                {interview.position}
+                                              </CardTitle>
+                                              <CardDescription className="text-xs text-blue-600">
+                                                {interview.company}
+                                              </CardDescription>
+                                            </div>
+                                          </div>
                                         </div>
                                         <Button
                                           variant="ghost"
@@ -332,6 +479,10 @@ const Kanban = () => {
                                     </CardHeader>
                                     <CardContent className="pt-0">
                                       <div className="space-y-2">
+                                        {interview.location && (
+                                          <p className="text-xs text-gray-500">{interview.location}</p>
+                                        )}
+                                        
                                         {interview.notes && (
                                           <p className="text-xs text-gray-600 line-clamp-2">{interview.notes}</p>
                                         )}
