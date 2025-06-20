@@ -49,7 +49,7 @@ export function AppSidebar() {
             <Sparkles className="h-5 w-5 text-white" />
           </div>
           {!isCollapsed && (
-            <span className="font-bold text-lg gradient-text">CVMaster AI</span>
+            <span className="font-bold text-lg gradient-text">ResumAI</span>
           )}
         </div>
       </div>
