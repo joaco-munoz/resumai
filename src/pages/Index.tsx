@@ -89,7 +89,7 @@ const Index = () => {
           </Badge>
           
           <h1 className="text-5xl md:text-7xl font-bold mb-6 animate-fade-in text-white">
-            Crea CVs que se adaptan como
+            Crea CVs que se adaptan como tú
             <br />
             <span className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">🧬</span>
           </h1>
