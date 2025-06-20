@@ -302,6 +302,7 @@ const CVBuilder = () => {
                         </div>
                       </div>
                     </CardContent>
+                    <button> Passar</button>
                   </Card>
                 </TabsContent>
 
