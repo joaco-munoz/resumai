@@ -69,7 +69,7 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
             <div className="w-8 h-8 bg-gradient-to-br from-brand-500 to-brand-700 rounded-lg flex items-center justify-center">
               <Sparkles className="h-5 w-5 text-white" />
             </div>
-            <DialogTitle className="text-xl gradient-text">CVMaster AI</DialogTitle>
+            <DialogTitle className="text-xl gradient-text">ResumAI</DialogTitle>
           </div>
           <DialogDescription className="text-center">
             Crea tu cuenta y comienza a generar CVs profesionales con IA
