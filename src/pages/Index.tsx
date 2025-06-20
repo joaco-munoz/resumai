@@ -4,17 +4,26 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import AuthModal from "@/components/AuthModal";
-import { Sparkles, Target, FileText, CheckCircle, Users, Zap, Star } from "lucide-react";
+import { Sparkles, Target, FileText, CheckCircle, Users, Zap, Star, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
+
 const Index = () => {
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [email, setEmail] = useState("");
+  const navigate = useNavigate();
+
   const handleWaitlistSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // TODO: Connect to Supabase when integration is set up
     toast.success("¡Te hemos añadido a la lista de espera!");
     setEmail("");
   };
+
+  const handleTestAccess = () => {
+    navigate("/app");
+  };
+
   const features = [{
     icon: <Sparkles className="h-8 w-8 text-brand-500" />,
     title: "IA Generativa",
@@ -28,6 +37,7 @@ const Index = () => {
     title: "Múltiples Formatos",
     description: "Exporta en PDF, DOCX y JSON. Compatible con todas las plataformas de empleo"
   }];
+
   const faqItems = [{
     question: "¿Cómo funciona el optimizador ATS?",
     answer: "Analizamos más de 10,000 descripciones de trabajo para crear CVs que superen filtros automáticos."
@@ -38,6 +48,7 @@ const Index = () => {
     question: "¿Qué incluye el plan Pro?",
     answer: "Exportaciones ilimitadas, análisis avanzado de compatibilidad y plantillas premium."
   }];
+
   return <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
       {/* Header */}
       <header className="border-b bg-white/80 backdrop-blur-md sticky top-0 z-50">
@@ -52,6 +63,10 @@ const Index = () => {
           <div className="flex items-center gap-4">
             <Button variant="ghost" size="sm">Características</Button>
             <Button variant="ghost" size="sm">Precios</Button>
+            <Button onClick={handleTestAccess} variant="outline" size="sm" className="border-orange-500 text-orange-600 hover:bg-orange-50">
+              <ArrowRight className="h-4 w-4 mr-2" />
+              Acceso Directo (Test)
+            </Button>
             <Button onClick={() => setAuthModalOpen(true)} size="sm">
               Crear Cuenta
             </Button>
