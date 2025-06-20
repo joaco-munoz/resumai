@@ -5,8 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Sparkles, Mail, User } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
+import { Sparkles, Mail, Linkedin } from "lucide-react";
 import { toast } from "sonner";
 
 interface AuthModalProps {
@@ -63,183 +63,227 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <div className="flex items-center gap-2 justify-center mb-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-brand-500 to-brand-700 rounded-lg flex items-center justify-center">
-              <Sparkles className="h-5 w-5 text-white" />
+      <DialogContent className="sm:max-w-md bg-slate-900 border-slate-800 text-white">
+        <DialogHeader className="space-y-4">
+          <div className="flex items-center justify-center">
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-xl flex items-center justify-center">
+              <Sparkles className="h-6 w-6 text-white" />
             </div>
-            <DialogTitle className="text-xl gradient-text">ResumAI</DialogTitle>
           </div>
-          <DialogDescription className="text-center">
-            Crea tu cuenta y comienza a generar CVs profesionales con IA
-          </DialogDescription>
+          <DialogTitle className="text-2xl font-bold text-center text-white">
+            {/* Will be set by tabs */}
+          </DialogTitle>
         </DialogHeader>
 
         <Tabs defaultValue="signup" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="signup">Crear Cuenta</TabsTrigger>
-            <TabsTrigger value="signin">Iniciar Sesión</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-2 bg-slate-800 border-slate-700">
+            <TabsTrigger value="signup" className="data-[state=active]:bg-slate-700 data-[state=active]:text-white text-slate-300">
+              Crear Cuenta
+            </TabsTrigger>
+            <TabsTrigger value="signin" className="data-[state=active]:bg-slate-700 data-[state=active]:text-white text-slate-300">
+              Iniciar Sesión
+            </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="signup">
-            <Card className="border-0 shadow-none">
-              <CardHeader className="space-y-1 pb-4">
-                <CardTitle className="text-xl">Crear cuenta</CardTitle>
-                <CardDescription>
-                  Regístrate gratis y comienza en minutos
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <form onSubmit={handleSignUp} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-name">Nombre completo</Label>
-                    <Input
-                      id="signup-name"
-                      type="text"
-                      placeholder="Tu nombre"
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-email">Email</Label>
-                    <Input
-                      id="signup-email"
-                      type="email"
-                      placeholder="tu@email.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signup-password">Contraseña</Label>
-                    <Input
-                      id="signup-password"
-                      type="password"
-                      placeholder="Mínimo 6 caracteres"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                      minLength={6}
-                    />
-                  </div>
-                  <Button 
-                    type="submit" 
-                    className="w-full bg-gradient-to-r from-brand-500 to-brand-700 hover:from-brand-600 hover:to-brand-800"
-                    disabled={loading}
-                  >
-                    {loading ? "Creando cuenta..." : "Crear cuenta gratis"}
-                  </Button>
-                </form>
+          <TabsContent value="signup" className="space-y-6 mt-6">
+            <div className="text-center">
+              <h2 className="text-xl font-semibold text-white mb-1">Crear cuenta</h2>
+              <p className="text-sm text-slate-400">Regístrate gratis y comienza en minutos</p>
+            </div>
 
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t" />
-                  </div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-background px-2 text-muted-foreground">
-                      O continúa con
-                    </span>
-                  </div>
-                </div>
+            {/* Social Login Buttons */}
+            <div className="space-y-3">
+              <Button 
+                variant="outline" 
+                className="w-full bg-slate-800 border-slate-700 text-white hover:bg-slate-700 hover:border-slate-600"
+                onClick={() => handleSocialAuth('google')}
+                disabled={loading}
+              >
+                <Mail className="h-5 w-5 mr-3" />
+                Continuar con Google
+              </Button>
+              <Button 
+                variant="outline" 
+                className="w-full bg-slate-800 border-slate-700 text-white hover:bg-slate-700 hover:border-slate-600"
+                onClick={() => handleSocialAuth('linkedin')}
+                disabled={loading}
+              >
+                <Linkedin className="h-5 w-5 mr-3" />
+                Continuar con LinkedIn
+              </Button>
+            </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <Button 
-                    variant="outline" 
-                    onClick={() => handleSocialAuth('google')}
-                    disabled={loading}
-                  >
-                    <Mail className="h-4 w-4 mr-2" />
-                    Google
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    onClick={() => handleSocialAuth('linkedin')}
-                    disabled={loading}
-                  >
-                    <User className="h-4 w-4 mr-2" />
-                    LinkedIn
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
+            <div className="relative">
+              <Separator className="bg-slate-700" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="bg-slate-900 px-3 text-sm text-slate-400 uppercase tracking-wider">
+                  Or
+                </span>
+              </div>
+            </div>
+
+            {/* Email Signup Form */}
+            <form onSubmit={handleSignUp} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="signup-name" className="text-sm font-medium text-slate-300">
+                  Nombre completo
+                </Label>
+                <Input
+                  id="signup-name"
+                  type="text"
+                  placeholder="Tu nombre"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 focus:border-blue-500 focus:ring-blue-500"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="signup-email" className="text-sm font-medium text-slate-300">
+                  Email
+                </Label>
+                <Input
+                  id="signup-email"
+                  type="email"
+                  placeholder="tu@email.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 focus:border-blue-500 focus:ring-blue-500"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="signup-password" className="text-sm font-medium text-slate-300">
+                  Contraseña
+                </Label>
+                <Input
+                  id="signup-password"
+                  type="password"
+                  placeholder="Mínimo 6 caracteres"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 focus:border-blue-500 focus:ring-blue-500"
+                  required
+                  minLength={6}
+                />
+              </div>
+              <Button 
+                type="submit" 
+                className="w-full bg-white text-slate-900 hover:bg-slate-100 font-medium"
+                disabled={loading}
+              >
+                {loading ? "Creando cuenta..." : "Crear cuenta"}
+              </Button>
+            </form>
+
+            <div className="text-center">
+              <p className="text-sm text-slate-400">
+                ¿Ya tienes una cuenta?{" "}
+                <button 
+                  onClick={() => {}} 
+                  className="text-blue-400 hover:text-blue-300 underline font-medium"
+                >
+                  Inicia sesión
+                </button>
+              </p>
+            </div>
           </TabsContent>
 
-          <TabsContent value="signin">
-            <Card className="border-0 shadow-none">
-              <CardHeader className="space-y-1 pb-4">
-                <CardTitle className="text-xl">Iniciar sesión</CardTitle>
-                <CardDescription>
-                  Accede a tu cuenta de CVMaster AI
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <form onSubmit={handleSignIn} className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="signin-email">Email</Label>
-                    <Input
-                      id="signin-email"
-                      type="email"
-                      placeholder="tu@email.com"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="signin-password">Contraseña</Label>
-                    <Input
-                      id="signin-password"
-                      type="password"
-                      placeholder="Tu contraseña"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                    />
-                  </div>
-                  <Button 
-                    type="submit" 
-                    className="w-full bg-gradient-to-r from-brand-500 to-brand-700 hover:from-brand-600 hover:to-brand-800"
-                    disabled={loading}
-                  >
-                    {loading ? "Iniciando sesión..." : "Iniciar sesión"}
-                  </Button>
-                </form>
+          <TabsContent value="signin" className="space-y-6 mt-6">
+            <div className="text-center">
+              <h2 className="text-xl font-semibold text-white mb-1">Iniciar sesión</h2>
+              <p className="text-sm text-slate-400">Accede a tu cuenta de ResumAI</p>
+            </div>
 
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <span className="w-full border-t" />
-                  </div>
-                  <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-background px-2 text-muted-foreground">
-                      O continúa con
-                    </span>
-                  </div>
-                </div>
+            {/* Social Login Buttons */}
+            <div className="space-y-3">
+              <Button 
+                variant="outline" 
+                className="w-full bg-slate-800 border-slate-700 text-white hover:bg-slate-700 hover:border-slate-600"
+                onClick={() => handleSocialAuth('google')}
+                disabled={loading}
+              >
+                <Mail className="h-5 w-5 mr-3" />
+                Continuar con Google
+              </Button>
+              <Button 
+                variant="outline" 
+                className="w-full bg-slate-800 border-slate-700 text-white hover:bg-slate-700 hover:border-slate-600"
+                onClick={() => handleSocialAuth('linkedin')}
+                disabled={loading}
+              >
+                <Linkedin className="h-5 w-5 mr-3" />
+                Continuar con LinkedIn
+              </Button>
+            </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <Button 
-                    variant="outline" 
-                    onClick={() => handleSocialAuth('google')}
-                    disabled={loading}
+            <div className="relative">
+              <Separator className="bg-slate-700" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="bg-slate-900 px-3 text-sm text-slate-400 uppercase tracking-wider">
+                  Or
+                </span>
+              </div>
+            </div>
+
+            {/* Email Login Form */}
+            <form onSubmit={handleSignIn} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="signin-email" className="text-sm font-medium text-slate-300">
+                  Email
+                </Label>
+                <Input
+                  id="signin-email"
+                  type="email"
+                  placeholder="tu@email.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 focus:border-blue-500 focus:ring-blue-500"
+                  required
+                />
+              </div>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="signin-password" className="text-sm font-medium text-slate-300">
+                    Contraseña
+                  </Label>
+                  <button 
+                    type="button"
+                    className="text-sm text-blue-400 hover:text-blue-300 underline"
                   >
-                    <Mail className="h-4 w-4 mr-2" />
-                    Google
-                  </Button>
-                  <Button 
-                    variant="outline" 
-                    onClick={() => handleSocialAuth('linkedin')}
-                    disabled={loading}
-                  >
-                    <User className="h-4 w-4 mr-2" />
-                    LinkedIn
-                  </Button>
+                    ¿Olvidaste tu contraseña?
+                  </button>
                 </div>
-              </CardContent>
-            </Card>
+                <Input
+                  id="signin-password"
+                  type="password"
+                  placeholder="Tu contraseña"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-500 focus:border-blue-500 focus:ring-blue-500"
+                  required
+                />
+              </div>
+              <Button 
+                type="submit" 
+                className="w-full bg-white text-slate-900 hover:bg-slate-100 font-medium"
+                disabled={loading}
+              >
+                {loading ? "Iniciando sesión..." : "Iniciar sesión"}
+              </Button>
+            </form>
+
+            <div className="text-center">
+              <p className="text-sm text-slate-400">
+                ¿No tienes una cuenta?{" "}
+                <button 
+                  onClick={() => {}} 
+                  className="text-blue-400 hover:text-blue-300 underline font-medium"
+                >
+                  Crear cuenta
+                </button>
+              </p>
+            </div>
           </TabsContent>
         </Tabs>
       </DialogContent>
