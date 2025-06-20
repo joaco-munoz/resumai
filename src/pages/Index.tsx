@@ -41,13 +41,13 @@ const Index = () => {
 
   const faqItems = [{
     question: "¿Cómo funciona el optimizador ATS?",
-    answer: "Analizamos más de 10,000 descripciones de trabajo para crear CVs que superen filtros automáticos."
+    answer: "Los filtros no leen cualquier CV, por eso creamos uno que sí entienden."
   }, {
     question: "¿Puedo usar mi propio contenido?",
     answer: "¡Por supuesto! La IA mejora tu información existente sin cambiar tu experiencia real."
   }, {
     question: "¿Qué incluye el plan Pro?",
-    answer: "Exportaciones ilimitadas, análisis avanzado de compatibilidad y plantillas premium."
+    answer: "Exportaciones ilimitadas y análisis avanzado de compatibilidad."
   }];
 
   return <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
