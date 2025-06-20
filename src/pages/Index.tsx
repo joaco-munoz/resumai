@@ -41,10 +41,10 @@ const Index = () => {
 
   const faqItems = [{
     question: "¿Cómo funciona el optimizador ATS?",
-    answer: "Analizamos más de 10,000 descripciones de trabajo para crear CVs que superen filtros automáticos."
+    answer: "Transformamos tu CV en el formato que el algoritmo ATS entiende y prioriza, acercándote directo al reclutador."
   }, {
     question: "¿Puedo usar mi propio contenido?",
-    answer: "¡Por supuesto! La IA mejora tu información existente sin cambiar tu experiencia real."
+    answer: "Tu experiencia se mantiene; la IA solo la hace brillar."
   }, {
     question: "¿Qué incluye el plan Pro?",
     answer: "Exportaciones ilimitadas, análisis avanzado de compatibilidad y plantillas premium."
