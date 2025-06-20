@@ -16,7 +16,7 @@ import {
 import { Sparkles, FileText, Target, User, CheckCircle, House } from "lucide-react";
 
 const mainMenuItems = [
-  { title: "Seguimiento Postulaciones", url: "/app/kanban", icon: House },
+  { title: "Seguimiento Postulaciones", url: "/app/kanban", icon: CheckCircle },
   { title: "Editor de CVs", url: "/app/cv/new", icon: FileText },
   { title: "Job Matcher", url: "/app/match", icon: Target },
 ];
