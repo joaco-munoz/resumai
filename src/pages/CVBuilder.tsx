@@ -44,11 +44,11 @@ interface CVData {
 const CVBuilder = () => {
   const [cvData, setCvData] = useState<CVData>({
     personalInfo: {
-      fullName: 'Juan Pérez',
-      email: 'juan.perez@email.com',
-      phone: '+34 600 123 456',
-      location: 'Madrid, España',
-      linkedin: 'linkedin.com/in/juanperez',
+      fullName: 'Andrés Hernandez',
+      email: 'andres.hernandez@gmail.com',
+      phone: '+569 9876 5432',
+      location: 'Valparaíso, Chile',
+      linkedin: 'linkedin.com/in/andreshernandez',
       website: 'juanperez.dev'
     },
     summary: 'Desarrollador Frontend con 3+ años de experiencia en React, TypeScript y Node.js. Especializado en crear aplicaciones web modernas y escalables.',
