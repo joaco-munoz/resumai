@@ -16,11 +16,11 @@ import {
 import { Sparkles, FileText, Target, User, CheckCircle, House, FolderOpen } from "lucide-react";
 
 const mainMenuItems = [
-  { title: "Dashboard", url: "/app", icon: House },
-  { title: "Seguimiento Postulaciones", url: "/app/kanban", icon: CheckCircle },
+  { title: "Dashboard", url: "", icon: House },
   { title: "Mis CVs", url: "/app/cvs", icon: FolderOpen },
   { title: "Editor de CVs", url: "/app/cv/new", icon: FileText },
   { title: "Job Matcher", url: "/app/match", icon: Target },
+  { title: "Seguimiento Postulaciones", url: "/app/kanban", icon: CheckCircle }
 ];
 
 const profileItem = { title: "Mi Perfil", url: "/app/profile", icon: User };
@@ -32,22 +32,18 @@ export function AppSidebar() {
   
   const isCollapsed = state === "collapsed";
 
-  console.log("Current path:", currentPath); // Debug log
-
   const isActive = (path: string) => {
-    console.log(`Checking if ${path} is active. Current: ${currentPath}`); // Debug log
-    
-    if (path === "/app" && currentPath === "/app") {
-      return true;
-    }
     if (path === "/app/cv/new" && currentPath.startsWith("/app/cv/")) {
       return true;
     }
-    if (path !== "/app" && currentPath === path) {
+    if (path === "/app/cvs" && currentPath === "/app/cvs") {
       return true;
     }
-    return false;
+    return currentPath === path;
   };
+
+  const getNavCls = ({ isActive }: { isActive: boolean }) =>
+    isActive ? "bg-brand-100 text-brand-700 font-medium border-r-2 border-brand-500" : "hover:bg-gray-100";
 
   return (
     <Sidebar
@@ -70,27 +66,19 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {mainMenuItems.map((item) => {
-                const itemIsActive = isActive(item.url);
-                console.log(`Item ${item.title} active:`, itemIsActive); // Debug log
-                
-                return (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild>
-                      <NavLink 
-                        to={item.url}
-                        className={itemIsActive 
-                          ? "bg-blue-500 text-white font-medium hover:bg-blue-600 rounded-lg mx-2" 
-                          : "hover:bg-gray-100 text-gray-700 rounded-lg mx-2"
-                        }
-                      >
-                        <item.icon className="h-4 w-4" />
-                        {!isCollapsed && <span>{item.title}</span>}
-                      </NavLink>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
+              {mainMenuItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild>
+                    <NavLink 
+                      to={item.url} 
+                      className={({ isActive: linkIsActive }) => getNavCls({ isActive: linkIsActive || isActive(item.url) })}
+                    >
+                      <item.icon className="h-4 w-4" />
+                      {!isCollapsed && <span>{item.title}</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -101,11 +89,8 @@ export function AppSidebar() {
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
               <NavLink 
-                to={profileItem.url}
-                className={isActive(profileItem.url)
-                  ? "bg-blue-500 text-white font-medium hover:bg-blue-600 rounded-lg mx-2" 
-                  : "hover:bg-gray-100 text-gray-700 rounded-lg mx-2"
-                }
+                to={profileItem.url} 
+                className={({ isActive: linkIsActive }) => getNavCls({ isActive: linkIsActive || isActive(profileItem.url) })}
               >
                 <profileItem.icon className="h-4 w-4" />
                 {!isCollapsed && <span>{profileItem.title}</span>}
