@@ -9,39 +9,701 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      profiles: {
+      business_metrics: {
+        Row: {
+          active_users: number | null
+          arr: number | null
+          avg_revenue_per_user: number | null
+          churn_rate: number | null
+          churned_users: number | null
+          conversion_rate: number | null
+          created_at: string
+          date: string
+          id: string
+          mrr: number | null
+          new_signups: number | null
+          total_cvs_created: number | null
+          total_jobs_matched: number | null
+          total_revenue: number | null
+          total_users: number | null
+        }
+        Insert: {
+          active_users?: number | null
+          arr?: number | null
+          avg_revenue_per_user?: number | null
+          churn_rate?: number | null
+          churned_users?: number | null
+          conversion_rate?: number | null
+          created_at?: string
+          date: string
+          id?: string
+          mrr?: number | null
+          new_signups?: number | null
+          total_cvs_created?: number | null
+          total_jobs_matched?: number | null
+          total_revenue?: number | null
+          total_users?: number | null
+        }
+        Update: {
+          active_users?: number | null
+          arr?: number | null
+          avg_revenue_per_user?: number | null
+          churn_rate?: number | null
+          churned_users?: number | null
+          conversion_rate?: number | null
+          created_at?: string
+          date?: string
+          id?: string
+          mrr?: number | null
+          new_signups?: number | null
+          total_cvs_created?: number | null
+          total_jobs_matched?: number | null
+          total_revenue?: number | null
+          total_users?: number | null
+        }
+        Relationships: []
+      }
+      cv_job_matches: {
         Row: {
           created_at: string
-          email: string | null
-          full_name: string | null
+          cv_id: string
           id: string
-          updated_at: string
+          job_id: string
+          match_details: Json | null
+          match_score: number | null
         }
         Insert: {
           created_at?: string
-          email?: string | null
-          full_name?: string | null
-          id: string
-          updated_at?: string
+          cv_id: string
+          id?: string
+          job_id: string
+          match_details?: Json | null
+          match_score?: number | null
         }
         Update: {
           created_at?: string
+          cv_id?: string
+          id?: string
+          job_id?: string
+          match_details?: Json | null
+          match_score?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cv_job_matches_cv_id_fkey"
+            columns: ["cv_id"]
+            isOneToOne: false
+            referencedRelation: "cvs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cv_job_matches_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "job_descriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      cvs: {
+        Row: {
+          ai_feedback: Json | null
+          ai_score: number | null
+          content: Json | null
+          created_at: string
+          download_count: number | null
+          id: string
+          is_public: boolean | null
+          last_updated: string | null
+          pdf_url: string | null
+          status: Database["public"]["Enums"]["cv_status"] | null
+          target_industry: string | null
+          target_job_title: string | null
+          template_name: string | null
+          title: string
+          user_id: string
+          view_count: number | null
+        }
+        Insert: {
+          ai_feedback?: Json | null
+          ai_score?: number | null
+          content?: Json | null
+          created_at?: string
+          download_count?: number | null
+          id?: string
+          is_public?: boolean | null
+          last_updated?: string | null
+          pdf_url?: string | null
+          status?: Database["public"]["Enums"]["cv_status"] | null
+          target_industry?: string | null
+          target_job_title?: string | null
+          template_name?: string | null
+          title: string
+          user_id: string
+          view_count?: number | null
+        }
+        Update: {
+          ai_feedback?: Json | null
+          ai_score?: number | null
+          content?: Json | null
+          created_at?: string
+          download_count?: number | null
+          id?: string
+          is_public?: boolean | null
+          last_updated?: string | null
+          pdf_url?: string | null
+          status?: Database["public"]["Enums"]["cv_status"] | null
+          target_industry?: string | null
+          target_job_title?: string | null
+          template_name?: string | null
+          title?: string
+          user_id?: string
+          view_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cvs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      feature_usage: {
+        Row: {
+          created_at: string
+          feature_name: string
+          id: string
+          last_used: string | null
+          usage_count: number | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          feature_name: string
+          id?: string
+          last_used?: string | null
+          usage_count?: number | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          feature_name?: string
+          id?: string
+          last_used?: string | null
+          usage_count?: number | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feature_usage_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      job_applications: {
+        Row: {
+          applied_date: string | null
+          cover_letter: string | null
+          created_at: string
+          cv_id: string | null
+          id: string
+          interview_date: string | null
+          job_id: string
+          notes: string | null
+          status: Database["public"]["Enums"]["application_status"] | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          applied_date?: string | null
+          cover_letter?: string | null
+          created_at?: string
+          cv_id?: string | null
+          id?: string
+          interview_date?: string | null
+          job_id: string
+          notes?: string | null
+          status?: Database["public"]["Enums"]["application_status"] | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          applied_date?: string | null
+          cover_letter?: string | null
+          created_at?: string
+          cv_id?: string | null
+          id?: string
+          interview_date?: string | null
+          job_id?: string
+          notes?: string | null
+          status?: Database["public"]["Enums"]["application_status"] | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_applications_cv_id_fkey"
+            columns: ["cv_id"]
+            isOneToOne: false
+            referencedRelation: "cvs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_applications_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "job_descriptions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_applications_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      job_descriptions: {
+        Row: {
+          benefits: Json | null
+          company: string | null
+          created_at: string
+          currency: string | null
+          description: string
+          experience_level: string | null
+          expires_date: string | null
+          id: string
+          is_active: boolean | null
+          job_type: string | null
+          job_url: string | null
+          location: string | null
+          posted_date: string | null
+          remote_allowed: boolean | null
+          requirements: Json | null
+          salary_max: number | null
+          salary_min: number | null
+          skills_required: Json | null
+          source: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          benefits?: Json | null
+          company?: string | null
+          created_at?: string
+          currency?: string | null
+          description: string
+          experience_level?: string | null
+          expires_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          job_type?: string | null
+          job_url?: string | null
+          location?: string | null
+          posted_date?: string | null
+          remote_allowed?: boolean | null
+          requirements?: Json | null
+          salary_max?: number | null
+          salary_min?: number | null
+          skills_required?: Json | null
+          source?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          benefits?: Json | null
+          company?: string | null
+          created_at?: string
+          currency?: string | null
+          description?: string
+          experience_level?: string | null
+          expires_date?: string | null
+          id?: string
+          is_active?: boolean | null
+          job_type?: string | null
+          job_url?: string | null
+          location?: string | null
+          posted_date?: string | null
+          remote_allowed?: boolean | null
+          requirements?: Json | null
+          salary_max?: number | null
+          salary_min?: number | null
+          skills_required?: Json | null
+          source?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_descriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payments: {
+        Row: {
+          amount: number
+          created_at: string
+          currency: string | null
+          description: string | null
+          failed_at: string | null
+          failure_reason: string | null
+          id: string
+          invoice_url: string | null
+          payment_method: Database["public"]["Enums"]["payment_method"]
+          processed_at: string | null
+          refund_amount: number | null
+          refunded_at: string | null
+          status: Database["public"]["Enums"]["payment_status"]
+          stripe_payment_id: string | null
+          subscription_id: string | null
+          user_id: string
+        }
+        Insert: {
+          amount: number
+          created_at?: string
+          currency?: string | null
+          description?: string | null
+          failed_at?: string | null
+          failure_reason?: string | null
+          id?: string
+          invoice_url?: string | null
+          payment_method: Database["public"]["Enums"]["payment_method"]
+          processed_at?: string | null
+          refund_amount?: number | null
+          refunded_at?: string | null
+          status: Database["public"]["Enums"]["payment_status"]
+          stripe_payment_id?: string | null
+          subscription_id?: string | null
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          created_at?: string
+          currency?: string | null
+          description?: string | null
+          failed_at?: string | null
+          failure_reason?: string | null
+          id?: string
+          invoice_url?: string | null
+          payment_method?: Database["public"]["Enums"]["payment_method"]
+          processed_at?: string | null
+          refund_amount?: number | null
+          refunded_at?: string | null
+          status?: Database["public"]["Enums"]["payment_status"]
+          stripe_payment_id?: string | null
+          subscription_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payments_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          acquisition_channel:
+            | Database["public"]["Enums"]["acquisition_channel"]
+            | null
+          acquisition_date: string | null
+          avatar_url: string | null
+          bio: string | null
+          churn_reason: string | null
+          churned_at: string | null
+          city: string | null
+          company: string | null
+          country: string | null
+          created_at: string
+          email: string | null
+          first_login_date: string | null
+          full_name: string | null
+          id: string
+          industry: string | null
+          is_premium: boolean | null
+          job_title: string | null
+          last_login_date: string | null
+          last_payment_date: string | null
+          linkedin_url: string | null
+          phone: string | null
+          premium_expires_at: string | null
+          referral_code: string | null
+          referred_by_user_id: string | null
+          subscription_tier:
+            | Database["public"]["Enums"]["subscription_tier"]
+            | null
+          total_logins: number | null
+          total_revenue: number | null
+          trial_expires_at: string | null
+          trial_started_at: string | null
+          updated_at: string
+          user_status: Database["public"]["Enums"]["user_status"] | null
+          website_url: string | null
+          years_experience: number | null
+        }
+        Insert: {
+          acquisition_channel?:
+            | Database["public"]["Enums"]["acquisition_channel"]
+            | null
+          acquisition_date?: string | null
+          avatar_url?: string | null
+          bio?: string | null
+          churn_reason?: string | null
+          churned_at?: string | null
+          city?: string | null
+          company?: string | null
+          country?: string | null
+          created_at?: string
           email?: string | null
+          first_login_date?: string | null
+          full_name?: string | null
+          id: string
+          industry?: string | null
+          is_premium?: boolean | null
+          job_title?: string | null
+          last_login_date?: string | null
+          last_payment_date?: string | null
+          linkedin_url?: string | null
+          phone?: string | null
+          premium_expires_at?: string | null
+          referral_code?: string | null
+          referred_by_user_id?: string | null
+          subscription_tier?:
+            | Database["public"]["Enums"]["subscription_tier"]
+            | null
+          total_logins?: number | null
+          total_revenue?: number | null
+          trial_expires_at?: string | null
+          trial_started_at?: string | null
+          updated_at?: string
+          user_status?: Database["public"]["Enums"]["user_status"] | null
+          website_url?: string | null
+          years_experience?: number | null
+        }
+        Update: {
+          acquisition_channel?:
+            | Database["public"]["Enums"]["acquisition_channel"]
+            | null
+          acquisition_date?: string | null
+          avatar_url?: string | null
+          bio?: string | null
+          churn_reason?: string | null
+          churned_at?: string | null
+          city?: string | null
+          company?: string | null
+          country?: string | null
+          created_at?: string
+          email?: string | null
+          first_login_date?: string | null
           full_name?: string | null
           id?: string
+          industry?: string | null
+          is_premium?: boolean | null
+          job_title?: string | null
+          last_login_date?: string | null
+          last_payment_date?: string | null
+          linkedin_url?: string | null
+          phone?: string | null
+          premium_expires_at?: string | null
+          referral_code?: string | null
+          referred_by_user_id?: string | null
+          subscription_tier?:
+            | Database["public"]["Enums"]["subscription_tier"]
+            | null
+          total_logins?: number | null
+          total_revenue?: number | null
+          trial_expires_at?: string | null
+          trial_started_at?: string | null
           updated_at?: string
+          user_status?: Database["public"]["Enums"]["user_status"] | null
+          website_url?: string | null
+          years_experience?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_referred_by_user_id_fkey"
+            columns: ["referred_by_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      subscriptions: {
+        Row: {
+          cancel_reason: string | null
+          cancelled_at: string | null
+          created_at: string
+          currency: string | null
+          current_period_end: string | null
+          current_period_start: string | null
+          id: string
+          price_per_month: number | null
+          status: string
+          stripe_customer_id: string | null
+          stripe_subscription_id: string | null
+          tier: Database["public"]["Enums"]["subscription_tier"]
+          trial_end: string | null
+          trial_start: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          cancel_reason?: string | null
+          cancelled_at?: string | null
+          created_at?: string
+          currency?: string | null
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          price_per_month?: number | null
+          status: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          tier: Database["public"]["Enums"]["subscription_tier"]
+          trial_end?: string | null
+          trial_start?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          cancel_reason?: string | null
+          cancelled_at?: string | null
+          created_at?: string
+          currency?: string | null
+          current_period_end?: string | null
+          current_period_start?: string | null
+          id?: string
+          price_per_month?: number | null
+          status?: string
+          stripe_customer_id?: string | null
+          stripe_subscription_id?: string | null
+          tier?: Database["public"]["Enums"]["subscription_tier"]
+          trial_end?: string | null
+          trial_start?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      user_activity_logs: {
+        Row: {
+          action: string
+          created_at: string
+          id: string
+          ip_address: unknown | null
+          metadata: Json | null
+          resource_id: string | null
+          resource_type: string | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: string
+          ip_address?: unknown | null
+          metadata?: Json | null
+          resource_id?: string | null
+          resource_type?: string | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: string
+          ip_address?: unknown | null
+          metadata?: Json | null
+          resource_id?: string | null
+          resource_type?: string | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "user_activity_logs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      calculate_churn_rate: {
+        Args: { period_days?: number }
+        Returns: number
+      }
+      calculate_mrr: {
+        Args: Record<PropertyKey, never>
+        Returns: number
+      }
+      update_daily_metrics: {
+        Args: Record<PropertyKey, never>
+        Returns: undefined
+      }
     }
     Enums: {
-      [_ in never]: never
+      acquisition_channel:
+        | "organic"
+        | "google_ads"
+        | "facebook_ads"
+        | "referral"
+        | "direct"
+        | "linkedin"
+        | "other"
+      application_status:
+        | "pending"
+        | "applied"
+        | "interview"
+        | "rejected"
+        | "accepted"
+      cv_status: "draft" | "completed" | "published" | "archived"
+      payment_method: "stripe" | "paypal" | "bank_transfer" | "other"
+      payment_status:
+        | "pending"
+        | "completed"
+        | "failed"
+        | "refunded"
+        | "cancelled"
+      subscription_tier: "free" | "basic" | "premium" | "enterprise"
+      user_status: "active" | "inactive" | "churned" | "at_risk"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -156,6 +818,34 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      acquisition_channel: [
+        "organic",
+        "google_ads",
+        "facebook_ads",
+        "referral",
+        "direct",
+        "linkedin",
+        "other",
+      ],
+      application_status: [
+        "pending",
+        "applied",
+        "interview",
+        "rejected",
+        "accepted",
+      ],
+      cv_status: ["draft", "completed", "published", "archived"],
+      payment_method: ["stripe", "paypal", "bank_transfer", "other"],
+      payment_status: [
+        "pending",
+        "completed",
+        "failed",
+        "refunded",
+        "cancelled",
+      ],
+      subscription_tier: ["free", "basic", "premium", "enterprise"],
+      user_status: ["active", "inactive", "churned", "at_risk"],
+    },
   },
 } as const
