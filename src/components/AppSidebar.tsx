@@ -32,23 +32,22 @@ export function AppSidebar() {
   
   const isCollapsed = state === "collapsed";
 
+  console.log("Current path:", currentPath); // Debug log
+
   const isActive = (path: string) => {
+    console.log(`Checking if ${path} is active. Current: ${currentPath}`); // Debug log
+    
     if (path === "/app" && currentPath === "/app") {
       return true;
     }
     if (path === "/app/cv/new" && currentPath.startsWith("/app/cv/")) {
       return true;
     }
-    if (path === "/app/cvs" && currentPath === "/app/cvs") {
+    if (path !== "/app" && currentPath === path) {
       return true;
     }
-    return currentPath === path;
+    return false;
   };
-
-  const getNavCls = ({ isActive }: { isActive: boolean }) =>
-    isActive 
-      ? "bg-blue-500 text-white font-medium hover:bg-blue-600 rounded-lg mx-2" 
-      : "hover:bg-gray-100 text-gray-700 rounded-lg mx-2";
 
   return (
     <Sidebar
@@ -71,19 +70,27 @@ export function AppSidebar() {
         <SidebarGroup>
           <SidebarGroupContent>
             <SidebarMenu>
-              {mainMenuItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild>
-                    <NavLink 
-                      to={item.url} 
-                      className={({ isActive: linkIsActive }) => getNavCls({ isActive: linkIsActive || isActive(item.url) })}
-                    >
-                      <item.icon className="h-4 w-4" />
-                      {!isCollapsed && <span>{item.title}</span>}
-                    </NavLink>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
+              {mainMenuItems.map((item) => {
+                const itemIsActive = isActive(item.url);
+                console.log(`Item ${item.title} active:`, itemIsActive); // Debug log
+                
+                return (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild>
+                      <NavLink 
+                        to={item.url}
+                        className={itemIsActive 
+                          ? "bg-blue-500 text-white font-medium hover:bg-blue-600 rounded-lg mx-2" 
+                          : "hover:bg-gray-100 text-gray-700 rounded-lg mx-2"
+                        }
+                      >
+                        <item.icon className="h-4 w-4" />
+                        {!isCollapsed && <span>{item.title}</span>}
+                      </NavLink>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                );
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
@@ -94,8 +101,11 @@ export function AppSidebar() {
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
               <NavLink 
-                to={profileItem.url} 
-                className={({ isActive: linkIsActive }) => getNavCls({ isActive: linkIsActive || isActive(profileItem.url) })}
+                to={profileItem.url}
+                className={isActive(profileItem.url)
+                  ? "bg-blue-500 text-white font-medium hover:bg-blue-600 rounded-lg mx-2" 
+                  : "hover:bg-gray-100 text-gray-700 rounded-lg mx-2"
+                }
               >
                 <profileItem.icon className="h-4 w-4" />
                 {!isCollapsed && <span>{profileItem.title}</span>}
