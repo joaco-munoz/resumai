@@ -300,7 +300,6 @@ const CVBuilder = () => {
                             onChange={(e) => handlePersonalInfoChange('website', e.target.value)}
                           />
                         </div>
-                        <Button variant="outline" onClick={}>
                       </div>
                     </CardContent>
                   </Card>
