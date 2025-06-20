@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -8,7 +9,6 @@ import { Separator } from "@/components/ui/separator";
 import { Sparkles, Mail, Linkedin } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
 
 interface AuthModalProps {
   open: boolean;
@@ -21,7 +21,7 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("signup");
-  const { signUp, signIn } = useAuth();
+  const { signUp, signIn, signInWithGoogle } = useAuth();
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -84,24 +84,20 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
     }
   };
 
-  const handleSocialAuth = async (provider: 'google' | 'linkedin') => {
+  const handleGoogleAuth = async () => {
     try {
       setLoading(true);
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: provider === 'linkedin' ? 'linkedin_oidc' : provider,
-        options: {
-          redirectTo: `${window.location.origin}/app`
-        }
-      });
+      const { error } = await signInWithGoogle();
       
       if (error) {
-        toast.error(`Error al conectar con ${provider}: ${error.message}`);
+        toast.error(`Error al conectar con Google: ${error.message}`);
       } else {
-        onOpenChange(false);
+        // Don't close modal here, let the auth state change handle it
+        toast.success("Conectando con Google...");
       }
     } catch (error: any) {
-      toast.error(`Error al conectar con ${provider}`);
-      console.error(`${provider} auth error:`, error);
+      toast.error("Error al conectar con Google");
+      console.error("Google auth error:", error);
     } finally {
       setLoading(false);
     }
@@ -145,27 +141,16 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
               <p className="text-sm text-slate-400">Regístrate gratis y comienza en minutos</p>
             </div>
 
-            {/* Social Login Buttons */}
-            <div className="space-y-3">
-              <Button 
-                variant="outline" 
-                className="w-full bg-slate-800 border-slate-700 text-white hover:bg-slate-700 hover:border-slate-600"
-                onClick={() => handleSocialAuth('google')}
-                disabled={loading}
-              >
-                <Mail className="h-5 w-5 mr-3" />
-                Continuar con Google
-              </Button>
-              <Button 
-                variant="outline" 
-                className="w-full bg-slate-800 border-slate-700 text-white hover:bg-slate-700 hover:border-slate-600"
-                onClick={() => handleSocialAuth('linkedin')}
-                disabled={loading}
-              >
-                <Linkedin className="h-5 w-5 mr-3" />
-                Continuar con LinkedIn
-              </Button>
-            </div>
+            {/* Google Login Button */}
+            <Button 
+              variant="outline" 
+              className="w-full bg-slate-800 border-slate-700 text-white hover:bg-slate-700 hover:border-slate-600"
+              onClick={handleGoogleAuth}
+              disabled={loading}
+            >
+              <Mail className="h-5 w-5 mr-3" />
+              Continuar con Google
+            </Button>
 
             <div className="relative">
               <Separator className="bg-slate-700" />
@@ -249,27 +234,16 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
               <p className="text-sm text-slate-400">Accede a tu cuenta de ResumAI</p>
             </div>
 
-            {/* Social Login Buttons */}
-            <div className="space-y-3">
-              <Button 
-                variant="outline" 
-                className="w-full bg-slate-800 border-slate-700 text-white hover:bg-slate-700 hover:border-slate-600"
-                onClick={() => handleSocialAuth('google')}
-                disabled={loading}
-              >
-                <Mail className="h-5 w-5 mr-3" />
-                Continuar con Google
-              </Button>
-              <Button 
-                variant="outline" 
-                className="w-full bg-slate-800 border-slate-700 text-white hover:bg-slate-700 hover:border-slate-600"
-                onClick={() => handleSocialAuth('linkedin')}
-                disabled={loading}
-              >
-                <Linkedin className="h-5 w-5 mr-3" />
-                Continuar con LinkedIn
-              </Button>
-            </div>
+            {/* Google Login Button */}
+            <Button 
+              variant="outline" 
+              className="w-full bg-slate-800 border-slate-700 text-white hover:bg-slate-700 hover:border-slate-600"
+              onClick={handleGoogleAuth}
+              disabled={loading}
+            >
+              <Mail className="h-5 w-5 mr-3" />
+              Continuar con Google
+            </Button>
 
             <div className="relative">
               <Separator className="bg-slate-700" />
