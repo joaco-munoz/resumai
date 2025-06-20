@@ -12,10 +12,10 @@ import {
   SidebarTrigger,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { Sparkles, FileText, Target, User, CheckCircle, CreditCard } from "lucide-react";
+import { Sparkles, FileText, Target, User, CheckCircle, CreditCard, House } from "lucide-react";
 
 const menuItems = [
-  { title: "Tablero Kanban", url: "/app/kanban", icon: CheckCircle },
+  { title: "Dashboard", url: "/app/kanban", icon: House },
   { title: "Editor de CVs", url: "/app/cv/new", icon: FileText },
   { title: "Job Matcher", url: "/app/match", icon: Target },
   { title: "Mi Perfil", url: "/app/profile", icon: User },
