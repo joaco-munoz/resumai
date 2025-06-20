@@ -120,11 +120,9 @@ const CVBuilder = () => {
     };
   };
 
-  // Calculate progress percentage
+  // Calculate progress percentage based only on completed sections
   const getProgress = () => {
-    const validations = getSectionValidation();
-    const completedCount = Object.values(validations).filter(Boolean).length;
-    return (completedCount / 5) * 100;
+    return completedSections.length * 20; // Each section is worth 20%
   };
 
   const handlePersonalInfoChange = (field: string, value: string) => {
@@ -264,7 +262,7 @@ const CVBuilder = () => {
       return;
     }
 
-    // Mark current section as completed
+    // Mark current section as completed ONLY when validation passes AND "Siguiente" is pressed
     if (!completedSections.includes(activeTab)) {
       setCompletedSections(prev => [...prev, activeTab]);
     }
@@ -282,7 +280,6 @@ const CVBuilder = () => {
     }
   };
 
-  const validations = getSectionValidation();
   const progress = getProgress();
 
   return (
