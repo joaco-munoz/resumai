@@ -23,9 +23,11 @@ const menuItems = [
 ];
 
 export function AppSidebar() {
-  const { collapsed } = useSidebar();
+  const { state } = useSidebar();
   const location = useLocation();
   const currentPath = location.pathname;
+  
+  const isCollapsed = state === "collapsed";
 
   const isActive = (path: string) => {
     if (path === "/app/cv/new" && currentPath.startsWith("/app/cv/")) {
@@ -39,15 +41,14 @@ export function AppSidebar() {
 
   return (
     <Sidebar
-      className={collapsed ? "w-14" : "w-64"}
-      collapsible
+      className={isCollapsed ? "w-14" : "w-64"}
     >
       <div className="p-4 border-b">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 bg-gradient-to-br from-brand-500 to-brand-700 rounded-lg flex items-center justify-center">
             <Sparkles className="h-5 w-5 text-white" />
           </div>
-          {!collapsed && (
+          {!isCollapsed && (
             <span className="font-bold text-lg gradient-text">CVMaster AI</span>
           )}
         </div>
@@ -65,10 +66,10 @@ export function AppSidebar() {
                   <SidebarMenuButton asChild>
                     <NavLink 
                       to={item.url} 
-                      className={({ isActive }) => getNavCls({ isActive: isActive || isActive(item.url) })}
+                      className={({ isActive: linkIsActive }) => getNavCls({ isActive: linkIsActive || isActive(item.url) })}
                     >
                       <item.icon className="h-4 w-4" />
-                      {!collapsed && <span>{item.title}</span>}
+                      {!isCollapsed && <span>{item.title}</span>}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
