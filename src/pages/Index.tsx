@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import AuthModal from "@/components/AuthModal";
-import { Sparkles, Target, FileText, CheckCircle, Users, Zap, Star, ArrowRight } from "lucide-react";
+import { Sparkles, Target, FileText, CheckCircle, Users, Zap, Star, ArrowRight, Calendar, MoreHorizontal } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 
@@ -104,8 +104,8 @@ Ahorra horas adaptando tu currículum: nuestra plataforma usa IA para convertir 
             </Button>
           </div>
 
-          {/* App Preview Mockup */}
-          <div className="max-w-4xl mx-auto mb-12">
+          {/* App Preview Mockup - Updated to match uploaded image */}
+          <div className="max-w-5xl mx-auto mb-12">
             <div className="bg-slate-800 rounded-3xl p-8 shadow-2xl border border-slate-700">
               <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
                 <div className="bg-slate-100 p-4 flex items-center gap-2">
@@ -114,48 +114,117 @@ Ahorra horas adaptando tu currículum: nuestra plataforma usa IA para convertir 
                     <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
                     <div className="w-3 h-3 bg-green-400 rounded-full"></div>
                   </div>
-                  <div className="flex-1 bg-white rounded mx-4 px-3 py-1 text-sm text-slate-600">resumai.com</div>
+                  <div className="flex-1 bg-white rounded mx-4 px-3 py-1 text-sm text-slate-600">resumai.com/app/cvs</div>
                 </div>
                 <div className="p-8 bg-white">
-                  <div className="grid grid-cols-2 gap-8">
-                    <div className="space-y-4">
+                  {/* Header with title and icon */}
+                  <div className="flex items-center gap-3 mb-8">
+                    <FileText className="h-8 w-8 text-slate-600" />
+                    <h2 className="text-2xl font-bold text-slate-800">Currículums</h2>
+                  </div>
+
+                  {/* Table header */}
+                  <div className="grid grid-cols-5 gap-4 py-4 border-b border-slate-200 text-sm font-medium text-slate-600">
+                    <div>CV</div>
+                    <div className="text-center">Puntuación</div>
+                    <div className="text-center">Estado</div>
+                    <div className="text-center">Actualizado</div>
+                    <div></div>
+                  </div>
+
+                  {/* CV List Items */}
+                  <div className="space-y-4 mt-4">
+                    {/* CV 1 */}
+                    <div className="grid grid-cols-5 gap-4 py-4 items-center hover:bg-slate-50 rounded-lg transition-colors">
                       <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                          <span className="text-blue-600 font-bold text-sm">75</span>
+                        <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                          <FileText className="h-6 w-6 text-blue-600" />
                         </div>
                         <div>
-                          <div className="font-semibold text-slate-800">Resume Score</div>
-                          <div className="text-sm text-slate-500">View 12 issues found</div>
-                        </div>
-                        <div className="ml-auto w-6 h-6 bg-blue-100 rounded-full flex items-center justify-center">
-                          <span className="text-blue-600 text-xs">?</span>
+                          <div className="font-semibold text-slate-800">CV - Desarrollador Frontend</div>
+                          <div className="text-sm text-slate-500">Creado hace 5 días</div>
                         </div>
                       </div>
-                      <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 bg-cyan-100 rounded-full flex items-center justify-center">
-                          <span className="text-cyan-600 font-bold text-sm">6</span>
-                        </div>
-                        <div>
-                          <div className="font-semibold text-slate-800">Keyword Match</div>
-                          <div className="text-sm text-slate-500">Strong: 6 out of 9</div>
-                        </div>
-                        <div className="ml-auto w-6 h-6 bg-cyan-100 rounded-full flex items-center justify-center">
-                          <span className="text-cyan-600 text-xs">?</span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="space-y-4">
                       <div className="text-center">
-                        <div className="font-semibold text-slate-800 mb-2">Resume Builder</div>
-                        <Button size="sm" className="bg-cyan-500 hover:bg-cyan-600 text-white text-xs px-4">
-                          Tailor Resume
+                        <Badge className="bg-green-100 text-green-700 hover:bg-green-100">85%</Badge>
+                      </div>
+                      <div className="text-center">
+                        <Badge className="bg-green-100 text-green-700 hover:bg-green-100">Activo</Badge>
+                      </div>
+                      <div className="text-center flex items-center justify-center gap-2">
+                        <Calendar className="h-4 w-4 text-slate-400" />
+                        <span className="text-sm text-slate-600">hace 2 días</span>
+                      </div>
+                      <div className="text-center">
+                        <Button variant="ghost" size="sm">
+                          <MoreHorizontal className="h-4 w-4" />
                         </Button>
                       </div>
-                      <div className="text-center">
-                        <div className="font-bold text-slate-800">Andrés Hernández</div>
-                        <div className="text-sm text-slate-500">DM Sales Rep | andres.hndz@gmail.com</div>
-                        <div className="w-full bg-cyan-500 h-2 rounded-full mt-2"></div>
+                    </div>
+
+                    {/* CV 2 */}
+                    <div className="grid grid-cols-5 gap-4 py-4 items-center hover:bg-slate-50 rounded-lg transition-colors">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                          <FileText className="h-6 w-6 text-blue-600" />
+                        </div>
+                        <div>
+                          <div className="font-semibold text-slate-800">CV - Data Analyst</div>
+                          <div className="text-sm text-slate-500">Creado hace 12 días</div>
+                        </div>
                       </div>
+                      <div className="text-center">
+                        <Badge className="bg-green-100 text-green-700 hover:bg-green-100">92%</Badge>
+                      </div>
+                      <div className="text-center">
+                        <Badge className="bg-green-100 text-green-700 hover:bg-green-100">Activo</Badge>
+                      </div>
+                      <div className="text-center flex items-center justify-center gap-2">
+                        <Calendar className="h-4 w-4 text-slate-400" />
+                        <span className="text-sm text-slate-600">hace 8 días</span>
+                      </div>
+                      <div className="text-center">
+                        <Button variant="ghost" size="sm">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+
+                    {/* CV 3 */}
+                    <div className="grid grid-cols-5 gap-4 py-4 items-center hover:bg-slate-50 rounded-lg transition-colors">
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                          <FileText className="h-6 w-6 text-blue-600" />
+                        </div>
+                        <div>
+                          <div className="font-semibold text-slate-800">CV - Product Manager</div>
+                          <div className="text-sm text-slate-500">Creado hace 20 días</div>
+                        </div>
+                      </div>
+                      <div className="text-center">
+                        <Badge className="bg-yellow-100 text-yellow-700 hover:bg-yellow-100">78%</Badge>
+                      </div>
+                      <div className="text-center">
+                        <Badge className="bg-slate-100 text-slate-600 hover:bg-slate-100">Borrador</Badge>
+                      </div>
+                      <div className="text-center flex items-center justify-center gap-2">
+                        <Calendar className="h-4 w-4 text-slate-400" />
+                        <span className="text-sm text-slate-600">hace 15 días</span>
+                      </div>
+                      <div className="text-center">
+                        <Button variant="ghost" size="sm">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Footer pagination */}
+                  <div className="flex items-center justify-between mt-8 pt-4 border-t border-slate-200">
+                    <div className="text-sm text-slate-600">Mostrando 1 a 3 de 3 CVs</div>
+                    <div className="flex gap-2">
+                      <Button variant="outline" size="sm" disabled className="text-slate-400">Anterior</Button>
+                      <Button variant="outline" size="sm" disabled className="text-slate-400">Siguiente</Button>
                     </div>
                   </div>
                 </div>
