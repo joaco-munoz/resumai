@@ -47,7 +47,7 @@ const Index = () => {
     answer: "Tu experiencia se mantiene; la IA solo la hace brillar."
   }, {
     question: "¿Qué incluye el plan Pro?",
-    answer: "Exportaciones ilimitadas, análisis avanzado de compatibilidad y plantillas premium."
+    answer: "Todo lo que necesitas para destacar: CVs ilimitados con IA, exportaciones sin tope, análisis de compatibilidad preciso, plantillas premium y soporte prioritario."
   }];
 
   return <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
