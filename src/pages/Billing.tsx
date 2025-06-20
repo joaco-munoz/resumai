@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
@@ -6,12 +5,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { CreditCard, Crown, Download, FileText, Zap, CheckCircle, Calendar, TrendingUp } from "lucide-react";
+import { CreditCard, Crown, Download, FileText, Zap, CheckCircle, Calendar, TrendingUp, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 const Billing = () => {
   const [currentPlan] = useState('free'); // 'free' or 'pro'
   const [isUpgrading, setIsUpgrading] = useState(false);
+  const navigate = useNavigate();
 
   const handleUpgrade = async () => {
     setIsUpgrading(true);
@@ -25,6 +26,10 @@ const Billing = () => {
     } finally {
       setIsUpgrading(false);
     }
+  };
+
+  const handleBackToLanding = () => {
+    navigate("/");
   };
 
   const usageStats = {
@@ -49,12 +54,24 @@ const Billing = () => {
         <AppSidebar />
         <main className="flex-1">
           <header className="bg-white border-b px-6 py-4">
-            <div className="flex items-center gap-4">
-              <SidebarTrigger />
-              <div>
-                <h1 className="text-2xl font-bold gradient-text">Facturación</h1>
-                <p className="text-gray-600">Gestiona tu suscripción y uso</p>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <SidebarTrigger />
+                <div>
+                  <h1 className="text-2xl font-bold gradient-text">Facturación</h1>
+                  <p className="text-gray-600">Gestiona tu suscripción y uso</p>
+                </div>
               </div>
+              
+              <Button 
+                onClick={handleBackToLanding}
+                variant="outline" 
+                size="sm" 
+                className="border-orange-500 text-orange-400 hover:bg-orange-500/10"
+              >
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Volver a Landing (Test)
+              </Button>
             </div>
           </header>
 
