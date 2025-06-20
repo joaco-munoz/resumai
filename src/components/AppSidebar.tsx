@@ -78,7 +78,7 @@ export function AppSidebar() {
                       <NavLink 
                         to={item.url} 
                         className={active 
-                          ? "bg-blue-500 text-white font-medium hover:bg-blue-600" 
+                          ? "bg-blue-500 text-white font-medium hover:bg-blue-600 hover:text-white" 
                           : "hover:bg-gray-100"
                         }
                       >
@@ -101,7 +101,7 @@ export function AppSidebar() {
               <NavLink 
                 to={profileItem.url} 
                 className={isActive(profileItem.url)
-                  ? "bg-blue-500 text-white font-medium hover:bg-blue-600" 
+                  ? "bg-blue-500 text-white font-medium hover:bg-blue-600 hover:text-white" 
                   : "hover:bg-gray-100"
                 }
               >
