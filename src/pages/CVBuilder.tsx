@@ -9,10 +9,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Sparkles, Download, FileText, Plus, Trash2, ArrowRight, Check, Circle } from "lucide-react";
+import { Download, Plus, Trash2, ArrowRight, Check } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import AIButton from "@/components/AIButton";
 
 interface CVData {
   personalInfo: {
@@ -233,8 +234,7 @@ const CVBuilder = () => {
         content = cvData.summary;
         context = `Profesional: ${cvData.personalInfo.fullName}, Experiencia: ${cvData.experience.map(exp => `${exp.position} en ${exp.company}`).join(', ')}`;
       } else if (section === 'experience') {
-        // Mejora la experiencia actualmente visible o la primera
-        const expToImprove = cvData.experience[0]; // Por simplicidad, mejora la primera
+        const expToImprove = cvData.experience[0];
         if (expToImprove) {
           content = expToImprove.description;
           context = `Posición: ${expToImprove.position} en ${expToImprove.company}`;
@@ -281,18 +281,15 @@ const CVBuilder = () => {
   };
 
   const exportPDF = () => {
-    // TODO: Implement PDF generation
     toast.success("CV exportado como PDF");
   };
 
   const saveCV = () => {
-    // TODO: Implement save CV functionality
     toast.success("CV guardado exitosamente");
     navigate("/app/cvs");
   };
 
   const saveAndAdapt = () => {
-    // TODO: Implement save CV functionality
     toast.success("CV guardado exitosamente");
     navigate("/app/match");
   };
@@ -302,13 +299,11 @@ const CVBuilder = () => {
     const currentIndex = tabOrder.indexOf(activeTab);
     const validations = getSectionValidation();
     
-    // Validate current section
     if (!validations[activeTab as keyof typeof validations]) {
       toast.error("Por favor completa todos los campos requeridos antes de continuar");
       return;
     }
 
-    // Mark current section as completed ONLY when validation passes AND "Siguiente" is pressed
     if (!completedSections.includes(activeTab)) {
       setCompletedSections(prev => [...prev, activeTab]);
     }
@@ -468,18 +463,15 @@ const CVBuilder = () => {
                 <TabsContent value="summary" className="space-y-4">
                   <Card>
                     <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        Resumen Profesional
-                        <Button
-                          size="sm"
-                          variant="ghost"
+                      <CardTitle className="flex items-center justify-between">
+                        <span>Resumen Profesional</span>
+                        <AIButton
                           onClick={() => improveWithAI('summary')}
-                          disabled={isImproving === 'summary'}
-                          className="ml-auto"
+                          isLoading={isImproving === 'summary'}
+                          disabled={!cvData.summary.trim()}
                         >
-                          <Sparkles className="h-4 w-4 mr-1" />
-                          {isImproving === 'summary' ? 'Mejorando...' : 'Mejorar con IA'}
-                        </Button>
+                          Optimizar Resumen
+                        </AIButton>
                       </CardTitle>
                       <CardDescription>
                         Un resumen conciso que destaque tus fortalezas principales
@@ -513,15 +505,6 @@ const CVBuilder = () => {
                         <div>
                           <CardTitle className="flex items-center gap-2">
                             Experiencia Laboral
-                            <Button
-                              size="sm"
-                              variant="ghost"
-                              onClick={() => improveWithAI('experience')}
-                              disabled={isImproving === 'experience'}
-                            >
-                              <Sparkles className="h-4 w-4 mr-1" />
-                              {isImproving === 'experience' ? 'Mejorando...' : 'Mejorar con IA'}
-                            </Button>
                           </CardTitle>
                           <CardDescription>
                             Añade tu experiencia laboral más relevante
@@ -534,7 +517,7 @@ const CVBuilder = () => {
                       </div>
                     </CardHeader>
                     <CardContent className="space-y-6">
-                      {cvData.experience.map((exp) => (
+                      {cvData.experience.map((exp, index) => (
                         <div key={exp.id} className="border rounded-lg p-4 space-y-4">
                           <div className="flex justify-between items-start">
                             <div className="grid grid-cols-2 gap-4 flex-1">
@@ -597,7 +580,19 @@ const CVBuilder = () => {
                           </div>
                           
                           <div className="space-y-2">
-                            <Label>Descripción</Label>
+                            <div className="flex items-center justify-between">
+                              <Label>Descripción</Label>
+                              {index === 0 && exp.description.trim() && (
+                                <AIButton
+                                  onClick={() => improveWithAI('experience')}
+                                  isLoading={isImproving === 'experience'}
+                                  size="sm"
+                                  variant="secondary"
+                                >
+                                  Mejorar logros
+                                </AIButton>
+                              )}
+                            </div>
                             <Textarea
                               value={exp.description}
                               onChange={(e) => updateExperience(exp.id, 'description', e.target.value)}
@@ -703,15 +698,6 @@ const CVBuilder = () => {
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2">
                         Habilidades
-                        <Button
-                          size="sm"
-                          variant="ghost"
-                          onClick={() => improveWithAI('skills')}
-                          disabled={isImproving === 'skills'}
-                        >
-                          <Sparkles className="h-4 w-4" />
-                          {isImproving === 'skills' ? 'Mejorando...' : 'Mejorar con IA'}
-                        </Button>
                       </CardTitle>
                       <CardDescription>Añade habilidades técnicas y blandas relevantes</CardDescription>
                     </CardHeader>
