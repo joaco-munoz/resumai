@@ -165,7 +165,7 @@ const Kanban = () => {
     setInterviews(updatedInterviews);
     
     const columnTitle = columns.find(col => col.id === destination.droppableId)?.title;
-    toast.success(`Aplicación movida a ${columnTitle}`);
+    toast.success(`Postulación movida a ${columnTitle}`);
   };
 
   const filteredInterviews = interviews.filter(interview => {
@@ -190,7 +190,7 @@ const Kanban = () => {
               <div className="flex items-center gap-4">
                 <SidebarTrigger />
                 <div>
-                  <h1 className="text-2xl font-bold text-gray-900">Your Job Tracker</h1>
+                  <h1 className="text-2xl font-bold text-gray-900">Seguimiento Postulaciones</h1>
                   <p className="text-sm text-gray-600 mt-1">
                     <span className="font-semibold">{interviews.length} TOTAL JOBS</span>
                   </p>
@@ -210,7 +210,7 @@ const Kanban = () => {
                   <DialogTrigger asChild>
                     <Button className="bg-blue-600 hover:bg-blue-700">
                       <Plus className="h-4 w-4 mr-2" />
-                      Add Application
+                      Añadir postulación
                     </Button>
                   </DialogTrigger>
                   <DialogContent className="max-w-2xl">
