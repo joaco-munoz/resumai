@@ -46,7 +46,9 @@ export function AppSidebar() {
   };
 
   const getNavCls = ({ isActive }: { isActive: boolean }) =>
-    isActive ? "bg-brand-100 text-brand-700 font-medium border-r-2 border-brand-500" : "hover:bg-gray-100";
+    isActive 
+      ? "bg-blue-500 text-white font-medium hover:bg-blue-600 rounded-lg mx-2" 
+      : "hover:bg-gray-100 text-gray-700 rounded-lg mx-2";
 
   return (
     <Sidebar
