@@ -198,7 +198,7 @@ Ahorra horas adaptando tu currículum: nuestra plataforma usa IA para convertir 
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold mb-4 text-white">Planes Simples</h2>
-            <p className="text-xl text-slate-300">Empieza gratis, actualiza cuando necesites más</p>
+            <p className="text-xl text-slate-300">Prueba gratis hoy, amplía tu plan a tu ritmo.</p>
           </div>
           
           <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
