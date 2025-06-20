@@ -148,6 +148,31 @@ const Kanban = () => {
     }
   };
 
+  const handleDragEnd = (result: DropResult) => {
+    if (!result.destination) {
+      return;
+    }
+
+    const { source, destination, draggableId } = result;
+
+    // Si se mueve a la misma columna y posición, no hacer nada
+    if (source.droppableId === destination.droppableId && source.index === destination.index) {
+      return;
+    }
+
+    // Actualizar el estado de la entrevista
+    const updatedInterviews = interviews.map(interview =>
+      interview.id === draggableId
+        ? { ...interview, status: destination.droppableId as Interview['status'] }
+        : interview
+    );
+
+    setInterviews(updatedInterviews);
+    
+    const columnTitle = columns.find(col => col.id === destination.droppableId)?.title;
+    toast.success(`Aplicación movida a ${columnTitle}`);
+  };
+
   if (!isClient) {
     return <div>Loading...</div>;
   }
