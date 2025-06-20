@@ -41,13 +41,13 @@ const Index = () => {
 
   const faqItems = [{
     question: "¿Cómo funciona el optimizador ATS?",
-    answer: "Los filtros no leen cualquier CV, por eso creamos uno que sí entienden."
+    answer: "Analizamos más de 10,000 descripciones de trabajo para crear CVs que superen filtros automáticos."
   }, {
     question: "¿Puedo usar mi propio contenido?",
     answer: "¡Por supuesto! La IA mejora tu información existente sin cambiar tu experiencia real."
   }, {
     question: "¿Qué incluye el plan Pro?",
-    answer: "Exportaciones ilimitadas y análisis avanzado de compatibilidad."
+    answer: "Exportaciones ilimitadas, análisis avanzado de compatibilidad y plantillas premium."
   }];
 
   return <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
@@ -95,8 +95,7 @@ const Index = () => {
           </h1>
           
           <p className="text-xl text-slate-300 mb-8 max-w-3xl mx-auto animate-fade-in">
-            Plataforma todo en uno que transforma tus datos reales en currículums dinámicos, 
-            ajustados en segundos a cada oferta laboral con IA
+Ahorra horas adaptando tu currículum: nuestra plataforma usa IA para convertir tus datos reales en CVs listos para superar filtros y destacar en cada oferta.
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12 animate-fade-in">
