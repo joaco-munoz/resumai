@@ -8,7 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
-import { Sparkles, Download, FileText, Plus, Trash2, ArrowRight } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { Sparkles, Download, FileText, Plus, Trash2, ArrowRight, Check, Circle } from "lucide-react";
 import { toast } from "sonner";
 
 interface CVData {
@@ -77,6 +78,51 @@ const CVBuilder = () => {
   const [newSkill, setNewSkill] = useState('');
   const [isImproving, setIsImproving] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('personal');
+  const [completedSections, setCompletedSections] = useState<string[]>([]);
+
+  // Validation functions
+  const validatePersonalInfo = () => {
+    const { fullName, email, phone, location } = cvData.personalInfo;
+    return fullName.trim() && email.trim() && phone.trim() && location.trim();
+  };
+
+  const validateSummary = () => {
+    return cvData.summary.trim().length > 0;
+  };
+
+  const validateExperience = () => {
+    return cvData.experience.length > 0 && cvData.experience.every(exp => 
+      exp.position.trim() && exp.company.trim() && exp.startDate && exp.description.trim()
+    );
+  };
+
+  const validateEducation = () => {
+    return cvData.education.length > 0 && cvData.education.every(edu => 
+      edu.degree.trim() && edu.institution.trim() && edu.year.trim()
+    );
+  };
+
+  const validateSkills = () => {
+    return cvData.skills.length > 0;
+  };
+
+  // Get validation status for each section
+  const getSectionValidation = () => {
+    return {
+      personal: validatePersonalInfo(),
+      summary: validateSummary(),
+      experience: validateExperience(),
+      education: validateEducation(),
+      skills: validateSkills()
+    };
+  };
+
+  // Calculate progress percentage
+  const getProgress = () => {
+    const validations = getSectionValidation();
+    const completedCount = Object.values(validations).filter(Boolean).length;
+    return (completedCount / 5) * 100;
+  };
 
   const handlePersonalInfoChange = (field: string, value: string) => {
     setCvData(prev => ({
@@ -195,6 +241,19 @@ const CVBuilder = () => {
   const goToNextTab = () => {
     const tabOrder = ['personal', 'summary', 'experience', 'education', 'skills'];
     const currentIndex = tabOrder.indexOf(activeTab);
+    const validations = getSectionValidation();
+    
+    // Validate current section
+    if (!validations[activeTab as keyof typeof validations]) {
+      toast.error("Por favor completa todos los campos requeridos antes de continuar");
+      return;
+    }
+
+    // Mark current section as completed
+    if (!completedSections.includes(activeTab)) {
+      setCompletedSections(prev => [...prev, activeTab]);
+    }
+
     if (currentIndex < tabOrder.length - 1) {
       setActiveTab(tabOrder[currentIndex + 1]);
     }
@@ -207,6 +266,9 @@ const CVBuilder = () => {
       setActiveTab(tabOrder[currentIndex - 1]);
     }
   };
+
+  const validations = getSectionValidation();
+  const progress = getProgress();
 
   return (
     <SidebarProvider>
@@ -223,12 +285,32 @@ const CVBuilder = () => {
                 </div>
               </div>
               
-              <div className="flex gap-3">
-                <Button variant="outline" onClick={exportPDF}>
-                  <Download className="h-4 w-4 mr-2" />
-                  Exportar PDF
-                </Button>
-                <Badge variant="secondary">Guardado automático activado</Badge>
+              <div className="flex items-center gap-4">
+                {/* Progress Circle */}
+                <div className="flex items-center gap-2">
+                  <div className="relative w-12 h-12">
+                    <Circle className="w-12 h-12 text-gray-200" strokeWidth={2} />
+                    <Circle 
+                      className="w-12 h-12 text-brand-500 absolute top-0 left-0 transform -rotate-90 origin-center" 
+                      strokeWidth={2}
+                      strokeDasharray={`${2 * Math.PI * 20}`}
+                      strokeDashoffset={`${2 * Math.PI * 20 * (1 - progress / 100)}`}
+                      fill="none"
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <span className="text-xs font-medium">{Math.round(progress)}%</span>
+                    </div>
+                  </div>
+                  <span className="text-sm text-gray-600">Progreso</span>
+                </div>
+                
+                <div className="flex gap-3">
+                  <Button variant="outline" onClick={exportPDF}>
+                    <Download className="h-4 w-4 mr-2" />
+                    Exportar PDF
+                  </Button>
+                  <Badge variant="secondary">Guardado automático activado</Badge>
+                </div>
               </div>
             </div>
           </header>
@@ -238,12 +320,36 @@ const CVBuilder = () => {
             <div className="w-2/5 p-6 overflow-y-auto bg-white border-r">
               <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
                 <TabsList className="grid w-full grid-cols-5">
-                  <TabsTrigger value="personal" className="text-xs">Personal</TabsTrigger>
-                  <TabsTrigger value="summary" className="text-xs">Resumen</TabsTrigger>
-                  <TabsTrigger value="experience" className="text-xs">Experiencia</TabsTrigger>
-                  <TabsTrigger value="education" className="text-xs">Educación</TabsTrigger>
-                  <TabsTrigger value="skills" className="text-xs">Habilidades</TabsTrigger>
+                  <TabsTrigger value="personal" className="text-xs flex items-center gap-1">
+                    {validations.personal && <Check className="h-3 w-3 text-green-500" />}
+                    Personal
+                  </TabsTrigger>
+                  <TabsTrigger value="summary" className="text-xs flex items-center gap-1">
+                    {validations.summary && <Check className="h-3 w-3 text-green-500" />}
+                    Resumen
+                  </TabsTrigger>
+                  <TabsTrigger value="experience" className="text-xs flex items-center gap-1">
+                    {validations.experience && <Check className="h-3 w-3 text-green-500" />}
+                    Experiencia
+                  </TabsTrigger>
+                  <TabsTrigger value="education" className="text-xs flex items-center gap-1">
+                    {validations.education && <Check className="h-3 w-3 text-green-500" />}
+                    Educación
+                  </TabsTrigger>
+                  <TabsTrigger value="skills" className="text-xs flex items-center gap-1">
+                    {validations.skills && <Check className="h-3 w-3 text-green-500" />}
+                    Habilidades
+                  </TabsTrigger>
                 </TabsList>
+
+                {/* Progress Bar */}
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Progreso del CV</span>
+                    <span className="font-medium">{Math.round(progress)}%</span>
+                  </div>
+                  <Progress value={progress} className="h-2" />
+                </div>
 
                 <TabsContent value="personal" className="space-y-4">
                   <Card>
