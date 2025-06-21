@@ -28,6 +28,10 @@ const Index = () => {
     navigate("/auth");
   };
 
+  const handleSignUpNavigation = () => {
+    navigate("/auth?mode=signup");
+  };
+
   const features = [{
     icon: <Sparkles className="h-8 w-8 text-blue-400" />,
     title: "IA Generativa",
@@ -75,7 +79,7 @@ const Index = () => {
             <Button onClick={handleAuthNavigation} size="sm" className="bg-slate-600 hover:bg-slate-700 text-white border border-slate-500">
               Iniciar Sesión
             </Button>
-            <Button onClick={handleAuthNavigation} size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
+            <Button onClick={handleSignUpNavigation} size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
               Regístrate
             </Button>
           </div>
@@ -102,7 +106,7 @@ Ahorra horas adaptando tu currículum: nuestra plataforma usa IA para convertir 
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12 animate-fade-in">
-            <Button size="lg" className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-lg px-8 py-4 text-white" onClick={handleAuthNavigation}>
+            <Button size="lg" className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-lg px-8 py-4 text-white" onClick={handleSignUpNavigation}>
               Empieza gratis
             </Button>
           </div>
@@ -294,7 +298,7 @@ Ahorra horas adaptando tu currículum: nuestra plataforma usa IA para convertir 
                   <CheckCircle className="h-5 w-5 text-cyan-400" />
                   <span className="text-slate-300">Análisis básico ATS</span>
                 </div>
-                <Button className="w-full mt-6 bg-slate-700 hover:bg-slate-600 text-white border border-slate-600" onClick={handleAuthNavigation}>
+                <Button className="w-full mt-6 bg-slate-700 hover:bg-slate-600 text-white border border-slate-600" onClick={handleSignUpNavigation}>
                   Empezar Gratis
                 </Button>
               </CardContent>
@@ -331,7 +335,7 @@ Ahorra horas adaptando tu currículum: nuestra plataforma usa IA para convertir 
                   <CheckCircle className="h-5 w-5 text-cyan-400" />
                   <span className="text-slate-300">Soporte prioritario</span>
                 </div>
-                <Button className="w-full mt-6 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white" onClick={handleAuthNavigation}>
+                <Button className="w-full mt-6 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white" onClick={handleSignUpNavigation}>
                   <Zap className="h-4 w-4 mr-2" />
                   Empezar Pro
                 </Button>

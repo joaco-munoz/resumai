@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -6,11 +6,13 @@ import { Separator } from "@/components/ui/separator";
 import { Sparkles, Mail, Github, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Checkbox } from "@/components/ui/checkbox";
 
 const Auth = () => {
-  const [isSignUp, setIsSignUp] = useState(false);
+  const [searchParams] = useSearchParams();
+  const isSignUpFromUrl = searchParams.get('mode') === 'signup';
+  const [isSignUp, setIsSignUp] = useState(isSignUpFromUrl);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
@@ -18,6 +20,10 @@ const Auth = () => {
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const { signUp, signIn, signInWithGoogle } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    setIsSignUp(isSignUpFromUrl);
+  }, [isSignUpFromUrl]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
