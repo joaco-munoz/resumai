@@ -297,7 +297,7 @@ const Kanban = () => {
                 <div>
                   <h1 className="text-2xl font-bold text-gray-900">Seguimiento Postulaciones</h1>
                   <p className="text-sm text-gray-600 mt-1">
-                    <span className="font-semibold">{interviews.length} TOTAL JOBS</span>
+                    <span className="font-semibold">{interviews.length} postulaciones totales</span>
                   </p>
                 </div>
               </div>
@@ -313,10 +313,10 @@ const Kanban = () => {
                   <DialogContent className="max-w-2xl">
                     <DialogHeader>
                       <DialogTitle>
-                        {selectedInterview ? 'Editar Aplicación' : 'Nueva Aplicación'}
+                        {selectedInterview ? 'Editar Postulación' : 'Nueva Postulación'}
                       </DialogTitle>
                       <DialogDescription>
-                        {selectedInterview ? 'Actualiza los detalles de tu aplicación' : 'Agrega una nueva aplicación de trabajo a tu tablero'}
+                        {selectedInterview ? 'Actualiza los detalles de tu postulación' : 'Agrega una nueva postulación de trabajo a tu tablero'}
                       </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4">
