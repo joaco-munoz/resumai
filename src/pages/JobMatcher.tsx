@@ -9,6 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Target, Sparkles, CheckCircle, AlertCircle, TrendingUp } from "lucide-react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface MatchResult {
   score: number;
@@ -22,6 +24,7 @@ const JobMatcher = () => {
   const [jobDescription, setJobDescription] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [matchResult, setMatchResult] = useState<MatchResult | null>(null);
+  const { user } = useAuth();
 
   const analyzeMatch = async () => {
     if (!jobDescription.trim()) {
@@ -29,36 +32,35 @@ const JobMatcher = () => {
       return;
     }
 
+    if (!user) {
+      toast.error("Debes estar autenticado para usar esta función");
+      return;
+    }
+
     setIsAnalyzing(true);
     
-    // TODO: Connect to OpenAI when Supabase integration is set up
     try {
-      // Simulate AI analysis
-      await new Promise(resolve => setTimeout(resolve, 3000));
+      console.log('Starting job compatibility analysis...');
       
-      const mockResult: MatchResult = {
-        score: 78,
-        missingKeywords: ['Docker', 'Kubernetes', 'GraphQL', 'Testing'],
-        suggestedBullets: [
-          '• Desarrollé aplicaciones React escalables que sirvieron a más de 10,000 usuarios diarios',
-          '• Implementé arquitecturas de microservicios usando Node.js y APIs RESTful',
-          '• Colaboré con equipos cross-funcionales para entregar features en sprints de 2 semanas'
-        ],
-        strengths: [
-          'React y TypeScript (coincidencia exacta)',
-          'Experiencia en desarrollo frontend',
-          'Conocimiento de metodologías ágiles'
-        ],
-        improvements: [
-          'Añadir experiencia con contenedores (Docker/Kubernetes)',
-          'Mencionar testing automatizado',
-          'Incluir métricas de rendimiento'
-        ]
-      };
+      const { data, error } = await supabase.functions.invoke('analyze-job-compatibility', {
+        body: {
+          jobDescription: jobDescription,
+          userId: user.id
+        }
+      });
+
+      if (error) {
+        console.error('Error calling analyze-job-compatibility function:', error);
+        toast.error(`Error al analizar la compatibilidad: ${error.message}`);
+        return;
+      }
+
+      console.log('Analysis completed successfully:', data);
+      setMatchResult(data as MatchResult);
+      toast.success("Análisis completado exitosamente");
       
-      setMatchResult(mockResult);
-      toast.success("Análisis completado");
     } catch (error) {
+      console.error('Error analyzing job compatibility:', error);
       toast.error("Error al analizar la compatibilidad");
     } finally {
       setIsAnalyzing(false);
@@ -66,7 +68,7 @@ const JobMatcher = () => {
   };
 
   const applyToCV = () => {
-    // TODO: Integrate with CV Builder when Supabase is connected
+    // TODO: Integrate with CV Builder when needed
     toast.success("Sugerencias aplicadas al CV actual");
   };
 
@@ -158,7 +160,7 @@ Ejemplo:
                           Esperando análisis
                         </h3>
                         <p className="text-gray-500">
-                          Pega una descripción de trabajo y haz clic en "Analizar" para ver la compatibilidad con tu CV
+                          Pega una descripción de trabajo y haz clic en "Analizar" para ver la compatibilidad con tu CV General
                         </p>
                       </div>
                     </CardContent>
@@ -174,7 +176,7 @@ Ejemplo:
                           Analizando con IA...
                         </h3>
                         <p className="text-gray-500">
-                          Comparando tu CV con los requisitos de la oferta
+                          Comparando tu CV General con los requisitos de la oferta
                         </p>
                       </div>
                     </CardContent>
@@ -191,7 +193,7 @@ Ejemplo:
                         </div>
                         <CardTitle>Compatibilidad General</CardTitle>
                         <CardDescription>
-                          Tu CV coincide en un {matchResult.score}% con esta oferta
+                          Tu CV General coincide en un {matchResult.score}% con esta oferta
                         </CardDescription>
                       </CardHeader>
                       <CardContent>
