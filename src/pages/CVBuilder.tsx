@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Download, Plus, Trash2, ArrowRight, Check } from "lucide-react";
 import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import AIButton from "@/components/AIButton";
@@ -49,6 +48,7 @@ interface CVData {
 const CVBuilder = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { id: cvId } = useParams();
   
   const [cvData, setCvData] = useState<CVData>({
     personalInfo: {
@@ -88,6 +88,46 @@ const CVBuilder = () => {
   const [activeTab, setActiveTab] = useState('personal');
   const [completedSections, setCompletedSections] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Load CV data if editing existing CV
+  useEffect(() => {
+    if (cvId && user) {
+      loadCV();
+    }
+  }, [cvId, user]);
+
+  const loadCV = async () => {
+    setIsLoading(true);
+    try {
+      console.log('Loading CV with ID:', cvId);
+      
+      const { data, error } = await supabase
+        .from('cvs')
+        .select('*')
+        .eq('id', cvId)
+        .eq('user_id', user?.id)
+        .single();
+
+      if (error) {
+        console.error('Error loading CV:', error);
+        toast.error(`Error al cargar el CV: ${error.message}`);
+        navigate('/app/cvs');
+        return;
+      }
+
+      if (data && data.content) {
+        console.log('CV loaded successfully:', data);
+        setCvData(data.content as CVData);
+      }
+    } catch (error) {
+      console.error('Error loading CV:', error);
+      toast.error("Error al cargar el CV");
+      navigate('/app/cvs');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Validation functions
   const validatePersonalInfo = () => {
@@ -303,29 +343,48 @@ const CVBuilder = () => {
         user_id: user.id,
         title: cvTitle,
         content: cvData,
-        status: 'draft', // Cambio de 'active' a 'draft'
+        status: 'draft',
         template_name: 'modern'
       });
-      
-      const { data, error } = await supabase
-        .from('cvs')
-        .insert({
-          user_id: user.id,
-          title: cvTitle,
-          content: cvData,
-          status: 'draft', // Usando 'draft' en lugar de 'active'
-          template_name: 'modern'
-        })
-        .select();
 
-      if (error) {
-        console.error('Error saving CV:', error);
-        toast.error(`Error al guardar el CV: ${error.message}`);
+      let result;
+
+      if (cvId) {
+        // Update existing CV
+        result = await supabase
+          .from('cvs')
+          .update({
+            title: cvTitle,
+            content: cvData as any,
+            status: 'draft',
+            template_name: 'modern',
+            last_updated: new Date().toISOString()
+          })
+          .eq('id', cvId)
+          .eq('user_id', user.id)
+          .select();
+      } else {
+        // Create new CV
+        result = await supabase
+          .from('cvs')
+          .insert({
+            user_id: user.id,
+            title: cvTitle,
+            content: cvData as any,
+            status: 'draft',
+            template_name: 'modern'
+          })
+          .select();
+      }
+
+      if (result.error) {
+        console.error('Error saving CV:', result.error);
+        toast.error(`Error al guardar el CV: ${result.error.message}`);
         return;
       }
 
-      console.log('CV saved successfully:', data);
-      toast.success("CV guardado exitosamente");
+      console.log('CV saved successfully:', result.data);
+      toast.success(cvId ? "CV actualizado exitosamente" : "CV guardado exitosamente");
       navigate("/app/cvs");
     } catch (error) {
       console.error('Error saving CV:', error);
@@ -353,26 +412,45 @@ const CVBuilder = () => {
         status: 'draft',
         template_name: 'modern'
       });
-      
-      const { data, error } = await supabase
-        .from('cvs')
-        .insert({
-          user_id: user.id,
-          title: cvTitle,
-          content: cvData,
-          status: 'draft', // Usando 'draft' en lugar de 'active'
-          template_name: 'modern'
-        })
-        .select();
 
-      if (error) {
-        console.error('Error saving CV:', error);
-        toast.error(`Error al guardar el CV: ${error.message}`);
+      let result;
+
+      if (cvId) {
+        // Update existing CV
+        result = await supabase
+          .from('cvs')
+          .update({
+            title: cvTitle,
+            content: cvData as any,
+            status: 'draft',
+            template_name: 'modern',
+            last_updated: new Date().toISOString()
+          })
+          .eq('id', cvId)
+          .eq('user_id', user.id)
+          .select();
+      } else {
+        // Create new CV
+        result = await supabase
+          .from('cvs')
+          .insert({
+            user_id: user.id,
+            title: cvTitle,
+            content: cvData as any,
+            status: 'draft',
+            template_name: 'modern'
+          })
+          .select();
+      }
+
+      if (result.error) {
+        console.error('Error saving CV:', result.error);
+        toast.error(`Error al guardar el CV: ${result.error.message}`);
         return;
       }
 
-      console.log('CV saved successfully:', data);
-      toast.success("CV guardado exitosamente");
+      console.log('CV saved successfully:', result.data);
+      toast.success(cvId ? "CV actualizado exitosamente" : "CV guardado exitosamente");
       navigate("/app/match");
     } catch (error) {
       console.error('Error saving CV:', error);
@@ -411,6 +489,22 @@ const CVBuilder = () => {
 
   const progress = getProgress();
 
+  if (isLoading) {
+    return (
+      <SidebarProvider>
+        <div className="min-h-screen flex w-full bg-gray-50">
+          <AppSidebar />
+          <main className="flex-1 flex items-center justify-center">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-gray-600">Cargando CV...</p>
+            </div>
+          </main>
+        </div>
+      </SidebarProvider>
+    );
+  }
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-gray-50">
@@ -421,8 +515,12 @@ const CVBuilder = () => {
               <div className="flex items-center gap-4">
                 <SidebarTrigger />
                 <div>
-                  <h1 className="text-2xl font-bold gradient-text">Editor de CV</h1>
-                  <p className="text-gray-600">Crea tu CV profesional optimizado para ATS</p>
+                  <h1 className="text-2xl font-bold gradient-text">
+                    {cvId ? "Editar CV" : "Editor de CV"}
+                  </h1>
+                  <p className="text-gray-600">
+                    {cvId ? "Modifica tu CV existente" : "Crea tu CV profesional optimizado para ATS"}
+                  </p>
                 </div>
               </div>
               

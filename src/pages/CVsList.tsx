@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -26,6 +27,9 @@ import { AppSidebar } from "@/components/AppSidebar";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { CVPreviewModal } from "@/components/CVPreviewModal";
+import { DeleteConfirmDialog } from "@/components/DeleteConfirmDialog";
+import { downloadCVAsPDF } from "@/utils/pdfUtils";
 
 interface CV {
   id: string;
@@ -34,12 +38,16 @@ interface CV {
   created_at: string;
   last_updated: string;
   ai_score?: number;
+  content?: any;
 }
 
 export default function CVsList() {
   const [searchTerm, setSearchTerm] = useState("");
   const [cvs, setCvs] = useState<CV[]>([]);
   const [loading, setLoading] = useState(true);
+  const [previewCV, setPreviewCV] = useState<CV | null>(null);
+  const [deleteCV, setDeleteCV] = useState<CV | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -55,7 +63,7 @@ export default function CVsList() {
       
       const { data, error } = await supabase
         .from('cvs')
-        .select('id, title, status, created_at, last_updated, ai_score')
+        .select('id, title, status, created_at, last_updated, ai_score, content')
         .eq('user_id', user?.id)
         .order('last_updated', { ascending: false });
 
@@ -108,14 +116,38 @@ export default function CVsList() {
     return `hace ${Math.ceil(diffDays / 365)} años`;
   };
 
-  const deleteCV = async (cvId: string) => {
+  const handleViewCV = (cv: CV) => {
+    setPreviewCV(cv);
+  };
+
+  const handleEditCV = (cv: CV) => {
+    navigate(`/app/cv/${cv.id}`);
+  };
+
+  const handleDownloadCV = (cv: CV) => {
+    if (cv.content) {
+      downloadCVAsPDF(cv.content, cv.title);
+      toast.success("CV descargado exitosamente");
+    } else {
+      toast.error("No se pudo descargar el CV");
+    }
+  };
+
+  const handleDeleteCV = (cv: CV) => {
+    setDeleteCV(cv);
+  };
+
+  const confirmDeleteCV = async () => {
+    if (!deleteCV) return;
+    
+    setIsDeleting(true);
     try {
-      console.log('Deleting CV:', cvId);
+      console.log('Deleting CV:', deleteCV.id);
       
       const { error } = await supabase
         .from('cvs')
         .delete()
-        .eq('id', cvId);
+        .eq('id', deleteCV.id);
 
       if (error) {
         console.error('Error deleting CV:', error);
@@ -126,9 +158,12 @@ export default function CVsList() {
       console.log('CV deleted successfully');
       toast.success("CV eliminado exitosamente");
       loadCVs(); // Reload the list
+      setDeleteCV(null);
     } catch (error) {
       console.error('Error deleting CV:', error);
       toast.error("Error al eliminar el CV");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -266,21 +301,21 @@ export default function CVsList() {
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
-                                <DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleViewCV(cv)}>
                                   <Eye className="h-4 w-4 mr-2" />
                                   Ver
                                 </DropdownMenuItem>
-                                <DropdownMenuItem onClick={() => navigate(`/app/cv/${cv.id}`)}>
+                                <DropdownMenuItem onClick={() => handleEditCV(cv)}>
                                   <Edit className="h-4 w-4 mr-2" />
                                   Editar
                                 </DropdownMenuItem>
-                                <DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleDownloadCV(cv)}>
                                   <Download className="h-4 w-4 mr-2" />
                                   Descargar
                                 </DropdownMenuItem>
                                 <DropdownMenuItem 
                                   className="text-red-600"
-                                  onClick={() => deleteCV(cv.id)}
+                                  onClick={() => handleDeleteCV(cv)}
                                 >
                                   <Trash2 className="h-4 w-4 mr-2" />
                                   Eliminar
@@ -314,6 +349,28 @@ export default function CVsList() {
             </div>
           </div>
         </SidebarInset>
+
+        {/* Preview Modal */}
+        <CVPreviewModal
+          isOpen={!!previewCV}
+          onClose={() => setPreviewCV(null)}
+          cvData={previewCV?.content || null}
+          cvTitle={previewCV?.title || ""}
+          onDownload={() => {
+            if (previewCV) {
+              handleDownloadCV(previewCV);
+            }
+          }}
+        />
+
+        {/* Delete Confirmation Dialog */}
+        <DeleteConfirmDialog
+          isOpen={!!deleteCV}
+          onClose={() => setDeleteCV(null)}
+          onConfirm={confirmDeleteCV}
+          title={deleteCV?.title || ""}
+          isDeleting={isDeleting}
+        />
       </div>
     </SidebarProvider>
   );
