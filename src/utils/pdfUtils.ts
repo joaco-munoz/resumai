@@ -48,13 +48,13 @@ export const downloadCVAsPDF = (cvData: any, filename: string) => {
     const contactWidth = pdf.getTextWidth(contactInfo);
     const contactX = (pageWidth - contactWidth) / 2;
     pdf.text(contactInfo, contactX, yPosition);
-    yPosition += 2;
+    yPosition += 5;
     
     // Header separator line
     pdf.setDrawColor(0, 0, 0);
     pdf.setLineWidth(0.3);
     pdf.line(margin, yPosition, pageWidth - margin, yPosition);
-    yPosition += 2;
+    yPosition += 5;
     
     // Summary Section (italic paragraph)
     if (cvData.summary && cvData.summary.trim()) {
