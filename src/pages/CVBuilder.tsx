@@ -102,7 +102,11 @@ export default function CVBuilder() {
 
       console.log('CV loaded successfully:', data);
       if (data?.content) {
-        setCvData(data.content as CVData);
+        // Safely cast the content to CVData type
+        const loadedData = data.content as unknown as CVData;
+        if (loadedData && typeof loadedData === 'object' && 'personalInfo' in loadedData) {
+          setCvData(loadedData);
+        }
       }
     } catch (error) {
       console.error('Error loading CV:', error);
@@ -114,7 +118,7 @@ export default function CVBuilder() {
     setCvData(prevData => ({
       ...prevData,
       [section]: {
-        ...prevData[section],
+        ...(prevData[section] as object),
         [field]: value
       }
     }));
