@@ -333,7 +333,7 @@ const Kanban = () => {
             </div>
 
             {/* Search and Filters */}
-            <div className="flex items-center justify-between">
+            {/*<div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -400,8 +400,8 @@ const Kanban = () => {
                 </Button>
               </div>
             </div>
-          </header>
-
+          </header>*/}
+         
           {/* Kanban Board */}
           <div className="p-6">
             <DragDropContext onDragEnd={handleDragEnd}>
