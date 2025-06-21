@@ -23,52 +23,44 @@ export const downloadCVAsPDF = (cvData: any, filename: string) => {
     };
     
     // Header - Harvard style (centered)
-    pdf.setFontSize(16);
+    pdf.setFontSize(18);
     pdf.setFont('times', 'bold');
     pdf.setTextColor(0, 0, 0); // Black
     const nameWidth = pdf.getTextWidth(cvData.personalInfo.fullName);
     const nameX = (pageWidth - nameWidth) / 2;
     pdf.text(cvData.personalInfo.fullName, nameX, yPosition);
-    yPosition += 10;
+    yPosition += 8;
     
-    // Contact info (centered, each line separate - Harvard style)
+    // Contact info (centered, single line - Harvard style)
     pdf.setFontSize(11);
     pdf.setFont('times', 'normal');
     pdf.setTextColor(0, 0, 0);
     
-    const contactLines = [
+    const contactInfo = [
       cvData.personalInfo.location,
+      cvData.personalInfo.linkedin,
       cvData.personalInfo.phone,
       cvData.personalInfo.email,
-      cvData.personalInfo.linkedin,
       cvData.personalInfo.website
-    ].filter(Boolean);
+    ].filter(Boolean).join(' • ');
     
-    contactLines.forEach(line => {
-      const lineWidth = pdf.getTextWidth(line);
-      const lineX = (pageWidth - lineWidth) / 2;
-      pdf.text(line, lineX, yPosition);
-      yPosition += 5;
-    });
+    const contactWidth = pdf.getTextWidth(contactInfo);
+    const contactX = (pageWidth - contactWidth) / 2;
+    pdf.text(contactInfo, contactX, yPosition);
+    yPosition += 10;
     
     // Header separator line
-    yPosition += 5;
-    pdf.setDrawColor(0, 0, 0);
+    pdf.setDrawColor(100, 100, 100);
     pdf.setLineWidth(0.5);
     pdf.line(margin, yPosition, pageWidth - margin, yPosition);
     yPosition += 15;
     
-    // Summary Section
+    // Summary Section (italic paragraph)
     if (cvData.summary) {
       checkNewPage(20);
-      pdf.setFontSize(12);
-      pdf.setFont('times', 'bold');
-      pdf.setTextColor(0, 0, 0);
-      pdf.text('RESUMEN PROFESIONAL', margin, yPosition);
-      yPosition += 8;
-      
       pdf.setFontSize(11);
-      pdf.setFont('times', 'normal');
+      pdf.setFont('times', 'italic');
+      pdf.setTextColor(0, 0, 0);
       const summaryLines = pdf.splitTextToSize(cvData.summary, contentWidth);
       summaryLines.forEach((line: string) => {
         checkNewPage();
@@ -84,35 +76,52 @@ export const downloadCVAsPDF = (cvData: any, filename: string) => {
       pdf.setFontSize(12);
       pdf.setFont('times', 'bold');
       pdf.setTextColor(0, 0, 0);
-      pdf.text('EXPERIENCIA LABORAL', margin, yPosition);
-      yPosition += 8;
+      pdf.text('EXPERIENCIA PROFESIONAL', margin, yPosition);
+      yPosition += 3;
+      
+      // Underline
+      pdf.setDrawColor(100, 100, 100);
+      pdf.setLineWidth(0.5);
+      pdf.line(margin, yPosition, pageWidth - margin, yPosition);
+      yPosition += 10;
       
       cvData.experience.forEach((exp: any) => {
         checkNewPage(25);
         
-        // Position and date (Harvard style - position left, date right)
+        // Company name (left, bold) and Location (right, bold)
         pdf.setFontSize(11);
         pdf.setFont('times', 'bold');
         pdf.setTextColor(0, 0, 0);
+        pdf.text(exp.company, margin, yPosition);
+        
+        const locationWidth = pdf.getTextWidth(cvData.personalInfo.location);
+        pdf.text(cvData.personalInfo.location, pageWidth - margin - locationWidth, yPosition);
+        yPosition += 6;
+        
+        // Position (left, italic) and dates (right, italic)
+        pdf.setFont('times', 'italic');
         pdf.text(exp.position, margin, yPosition);
         
         const dateRange = `${exp.startDate} - ${exp.current ? 'Presente' : exp.endDate}`;
         const dateWidth = pdf.getTextWidth(dateRange);
         pdf.text(dateRange, pageWidth - margin - dateWidth, yPosition);
-        yPosition += 6;
-        
-        // Company (italic)
-        pdf.setFont('times', 'italic');
-        pdf.text(exp.company, margin, yPosition);
         yPosition += 8;
         
-        // Description (indented)
+        // Description as bullet points
         if (exp.description) {
           pdf.setFont('times', 'normal');
-          const descLines = pdf.splitTextToSize(exp.description, contentWidth - 10);
+          const descLines = exp.description.split('\n').filter((line: string) => line.trim());
           descLines.forEach((line: string) => {
             checkNewPage();
-            pdf.text(line, margin + 10, yPosition);
+            pdf.text('•', margin, yPosition);
+            const bulletLines = pdf.splitTextToSize(line.trim(), contentWidth - 10);
+            bulletLines.forEach((bulletLine: string, index: number) => {
+              if (index > 0) {
+                checkNewPage();
+                yPosition += 5;
+              }
+              pdf.text(bulletLine, margin + 6, yPosition);
+            });
             yPosition += 5;
           });
         }
@@ -128,28 +137,38 @@ export const downloadCVAsPDF = (cvData: any, filename: string) => {
       pdf.setFont('times', 'bold');
       pdf.setTextColor(0, 0, 0);
       pdf.text('EDUCACIÓN', margin, yPosition);
-      yPosition += 8;
+      yPosition += 3;
+      
+      // Underline
+      pdf.setDrawColor(100, 100, 100);
+      pdf.setLineWidth(0.5);
+      pdf.line(margin, yPosition, pageWidth - margin, yPosition);
+      yPosition += 10;
       
       cvData.education.forEach((edu: any) => {
         checkNewPage(20);
         
-        // Degree and year (Harvard style)
+        // Institution (left, bold uppercase) and Location (right, bold)
         pdf.setFontSize(11);
         pdf.setFont('times', 'bold');
+        pdf.text(edu.institution.toUpperCase(), margin, yPosition);
+        
+        const locationWidth = pdf.getTextWidth(cvData.personalInfo.location);
+        pdf.text(cvData.personalInfo.location, pageWidth - margin - locationWidth, yPosition);
+        yPosition += 6;
+        
+        // Degree (left) and year (right, italic)
+        pdf.setFont('times', 'normal');
         pdf.text(edu.degree, margin, yPosition);
         
+        pdf.setFont('times', 'italic');
         const yearWidth = pdf.getTextWidth(edu.year);
         pdf.text(edu.year, pageWidth - margin - yearWidth, yPosition);
         yPosition += 6;
         
-        // Institution (italic)
-        pdf.setFont('times', 'italic');
-        pdf.text(edu.institution, margin, yPosition);
-        yPosition += 6;
-        
-        // Description if exists
+        // Description if exists (italic)
         if (edu.description) {
-          pdf.setFont('times', 'normal');
+          pdf.setFont('times', 'italic');
           const eduDescLines = pdf.splitTextToSize(edu.description, contentWidth);
           eduDescLines.forEach((line: string) => {
             checkNewPage();
@@ -168,17 +187,22 @@ export const downloadCVAsPDF = (cvData: any, filename: string) => {
       pdf.setFontSize(12);
       pdf.setFont('times', 'bold');
       pdf.setTextColor(0, 0, 0);
-      pdf.text('HABILIDADES', margin, yPosition);
-      yPosition += 8;
+      pdf.text('SKILLS ADICIONALES', margin, yPosition);
+      yPosition += 3;
       
-      // Skills as continuous text with bullets (Harvard style)
+      // Underline
+      pdf.setDrawColor(100, 100, 100);
+      pdf.setLineWidth(0.5);
+      pdf.line(margin, yPosition, pageWidth - margin, yPosition);
+      yPosition += 10;
+      
+      // Skills as bullet points
       pdf.setFontSize(11);
       pdf.setFont('times', 'normal');
-      const skillsText = cvData.skills.join(' • ');
-      const skillsLines = pdf.splitTextToSize(skillsText, contentWidth);
-      skillsLines.forEach((line: string) => {
+      cvData.skills.forEach((skill: string) => {
         checkNewPage();
-        pdf.text(line, margin, yPosition);
+        pdf.text('•', margin, yPosition);
+        pdf.text(skill, margin + 6, yPosition);
         yPosition += 5;
       });
     }
