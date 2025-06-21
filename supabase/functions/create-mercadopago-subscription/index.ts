@@ -40,7 +40,7 @@ serve(async (req) => {
     if (!user?.email) throw new Error("User not authenticated or email not available");
     logStep("User authenticated", { userId: user.id, email: user.email });
 
-    // Crear la suscripción en MercadoPago
+    // Crear la suscripción en MercadoPago con el formato correcto
     const subscriptionData = {
       reason: "Plan Pro CVMaster AI",
       auto_recurring: {
@@ -54,13 +54,14 @@ serve(async (req) => {
       status: "pending"
     };
 
-    logStep("Creating subscription", subscriptionData);
+    logStep("Creating subscription with email", { email: user.email, subscriptionData });
 
     const response = await fetch("https://api.mercadopago.com/preapproval", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${accessToken}`,
         "Content-Type": "application/json",
+        "X-Idempotency-Key": `subscription-${user.id}-${Date.now()}` // Añadir clave de idempotencia
       },
       body: JSON.stringify(subscriptionData),
     });
@@ -72,7 +73,7 @@ serve(async (req) => {
       throw new Error(`MercadoPago API error: ${JSON.stringify(result)}`);
     }
 
-    // Primero verificar si ya existe una suscripción para este usuario
+    // Verificar si ya existe una suscripción para este usuario
     const { data: existingSubscription, error: checkError } = await supabaseClient
       .from("subscriptions")
       .select("*")
@@ -92,7 +93,6 @@ serve(async (req) => {
       updated_at: new Date().toISOString(),
     };
 
-    let dbResult;
     if (existingSubscription) {
       // Actualizar la suscripción existente
       const { error: updateError } = await supabaseClient
@@ -120,7 +120,8 @@ serve(async (req) => {
 
     logStep("Subscription processed successfully", {
       subscriptionId: result.id,
-      checkoutUrl: result.init_point
+      checkoutUrl: result.init_point,
+      payerEmail: result.payer_email || "not_returned_by_mp"
     });
 
     return new Response(JSON.stringify({
