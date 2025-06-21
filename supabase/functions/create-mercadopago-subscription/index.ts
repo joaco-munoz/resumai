@@ -28,7 +28,10 @@ serve(async (req) => {
 
     const accessToken = Deno.env.get("MERCADOPAGO_ACCESS_TOKEN");
     if (!accessToken) throw new Error("MERCADOPAGO_ACCESS_TOKEN is not set");
-    logStep("MercadoPago token verified");
+    
+    // Detectar si es token de prueba
+    const isTestToken = accessToken.startsWith("TEST-");
+    logStep("MercadoPago token verified", { isTestMode: isTestToken });
 
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) throw new Error("No authorization header provided");
@@ -40,7 +43,11 @@ serve(async (req) => {
     if (!user?.email) throw new Error("User not authenticated or email not available");
     logStep("User authenticated", { userId: user.id, email: user.email });
 
-    // Crear la suscripción en MercadoPago con el formato correcto
+    // Para modo de prueba, usar un email de prueba específico
+    const payerEmail = isTestToken ? "test_user_123456@testuser.com" : user.email;
+    logStep("Payer email determined", { originalEmail: user.email, payerEmail, isTestMode: isTestToken });
+
+    // Crear la suscripción en MercadoPago con ajustes para prueba
     const subscriptionData = {
       reason: "Plan Pro CVMaster AI",
       auto_recurring: {
@@ -49,27 +56,40 @@ serve(async (req) => {
         transaction_amount: 6990,
         currency_id: "CLP"
       },
-      payer_email: user.email,
+      payer_email: payerEmail,
       back_url: `${req.headers.get("origin")}/app/billing?success=true`,
       status: "pending"
     };
 
-    logStep("Creating subscription with email", { email: user.email, subscriptionData });
+    logStep("Creating subscription", { subscriptionData, isTestMode: isTestToken });
 
     const response = await fetch("https://api.mercadopago.com/preapproval", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${accessToken}`,
         "Content-Type": "application/json",
-        "X-Idempotency-Key": `subscription-${user.id}-${Date.now()}` // Añadir clave de idempotencia
+        "X-Idempotency-Key": `subscription-${user.id}-${Date.now()}`
       },
       body: JSON.stringify(subscriptionData),
     });
 
     const result = await response.json();
-    logStep("MercadoPago response", { status: response.status, result });
+    logStep("MercadoPago response", { 
+      status: response.status, 
+      resultId: result.id,
+      resultStatus: result.status,
+      payerEmail: result.payer_email,
+      initPoint: result.init_point,
+      error: result.error || "none"
+    });
 
     if (!response.ok) {
+      logStep("MercadoPago API Error Details", {
+        status: response.status,
+        error: result,
+        message: result.message || "Unknown error",
+        cause: result.cause || "Unknown cause"
+      });
       throw new Error(`MercadoPago API error: ${JSON.stringify(result)}`);
     }
 
@@ -121,13 +141,15 @@ serve(async (req) => {
     logStep("Subscription processed successfully", {
       subscriptionId: result.id,
       checkoutUrl: result.init_point,
-      payerEmail: result.payer_email || "not_returned_by_mp"
+      payerEmail: result.payer_email || "not_returned_by_mp",
+      isTestMode: isTestToken
     });
 
     return new Response(JSON.stringify({
       subscription_id: result.id,
       checkout_url: result.init_point,
-      status: result.status
+      status: result.status,
+      is_test: isTestToken
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
