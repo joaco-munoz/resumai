@@ -1,5 +1,5 @@
 
-import jsPDF from 'jsPDF';
+import { jsPDF } from 'jspdf';
 
 export const downloadCVAsPDF = (cvData: any, filename: string) => {
   try {
