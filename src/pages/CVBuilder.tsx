@@ -13,6 +13,7 @@ import { Download, Plus, Trash2, ArrowRight, Check } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import AIButton from "@/components/AIButton";
 
 interface CVData {
@@ -46,6 +47,7 @@ interface CVData {
 
 const CVBuilder = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   
   const [cvData, setCvData] = useState<CVData>({
     personalInfo: {
@@ -84,6 +86,7 @@ const CVBuilder = () => {
   const [isImproving, setIsImproving] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('personal');
   const [completedSections, setCompletedSections] = useState<string[]>([]);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Validation functions
   const validatePersonalInfo = () => {
@@ -284,14 +287,78 @@ const CVBuilder = () => {
     toast.success("CV exportado como PDF");
   };
 
-  const saveCV = () => {
-    toast.success("CV guardado exitosamente");
-    navigate("/app/cvs");
+  const saveCV = async () => {
+    if (!user) {
+      toast.error("Debes estar autenticado para guardar el CV");
+      return;
+    }
+
+    setIsSaving(true);
+    
+    try {
+      const cvTitle = `CV - ${cvData.personalInfo.fullName}`;
+      
+      const { error } = await supabase
+        .from('cvs')
+        .insert({
+          user_id: user.id,
+          title: cvTitle,
+          content: cvData,
+          status: 'active',
+          template_name: 'modern'
+        });
+
+      if (error) {
+        console.error('Error saving CV:', error);
+        toast.error("Error al guardar el CV");
+        return;
+      }
+
+      toast.success("CV guardado exitosamente");
+      navigate("/app/cvs");
+    } catch (error) {
+      console.error('Error saving CV:', error);
+      toast.error("Error al guardar el CV");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
-  const saveAndAdapt = () => {
-    toast.success("CV guardado exitosamente");
-    navigate("/app/match");
+  const saveAndAdapt = async () => {
+    if (!user) {
+      toast.error("Debes estar autenticado para guardar el CV");
+      return;
+    }
+
+    setIsSaving(true);
+    
+    try {
+      const cvTitle = `CV - ${cvData.personalInfo.fullName}`;
+      
+      const { error } = await supabase
+        .from('cvs')
+        .insert({
+          user_id: user.id,
+          title: cvTitle,
+          content: cvData,
+          status: 'active',
+          template_name: 'modern'
+        });
+
+      if (error) {
+        console.error('Error saving CV:', error);
+        toast.error("Error al guardar el CV");
+        return;
+      }
+
+      toast.success("CV guardado exitosamente");
+      navigate("/app/match");
+    } catch (error) {
+      console.error('Error saving CV:', error);
+      toast.error("Error al guardar el CV");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const goToNextTab = () => {
@@ -733,11 +800,11 @@ const CVBuilder = () => {
                           Atrás
                         </Button>
                         <div className="flex gap-2">
-                          <Button variant="outline" onClick={saveCV}>
-                            Guardar
+                          <Button variant="outline" onClick={saveCV} disabled={isSaving}>
+                            {isSaving ? "Guardando..." : "Guardar"}
                           </Button>
-                          <Button onClick={saveAndAdapt}>
-                            Guardar y adaptar
+                          <Button onClick={saveAndAdapt} disabled={isSaving}>
+                            {isSaving ? "Guardando..." : "Guardar y adaptar"}
                           </Button>
                         </div>
                       </div>

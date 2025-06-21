@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -24,54 +24,126 @@ import {
 import { useNavigate } from "react-router-dom";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
-// Mock data for CVs
-const mockCVs = [
-  {
-    id: "1",
-    title: "CV - Desarrollador Frontend",
-    score: 85,
-    createdAt: "hace 5 días",
-    updatedAt: "hace 2 días",
-    status: "Activo"
-  },
-  {
-    id: "2", 
-    title: "CV - Data Analyst",
-    score: 92,
-    createdAt: "hace 12 días",
-    updatedAt: "hace 8 días",
-    status: "Activo"
-  },
-  {
-    id: "3",
-    title: "CV - Product Manager",
-    score: 78,
-    createdAt: "hace 20 días", 
-    updatedAt: "hace 15 días",
-    status: "Borrador"
-  }
-];
+interface CV {
+  id: string;
+  title: string;
+  status: string;
+  created_at: string;
+  last_updated: string;
+  ai_score?: number;
+}
 
 export default function CVsList() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [cvs, setCvs] = useState<CV[]>([]);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const { user } = useAuth();
 
-  const filteredCVs = mockCVs.filter(cv => 
+  useEffect(() => {
+    if (user) {
+      loadCVs();
+    }
+  }, [user]);
+
+  const loadCVs = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('cvs')
+        .select('id, title, status, created_at, last_updated, ai_score')
+        .eq('user_id', user?.id)
+        .order('last_updated', { ascending: false });
+
+      if (error) {
+        console.error('Error loading CVs:', error);
+        toast.error("Error al cargar los CVs");
+        return;
+      }
+
+      setCvs(data || []);
+    } catch (error) {
+      console.error('Error loading CVs:', error);
+      toast.error("Error al cargar los CVs");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const filteredCVs = cvs.filter(cv => 
     cv.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const getScoreColor = (score: number) => {
+  const getScoreColor = (score?: number) => {
+    if (!score) return "bg-gray-100 text-gray-800";
     if (score >= 80) return "bg-green-100 text-green-800";
     if (score >= 60) return "bg-yellow-100 text-yellow-800";
     return "bg-red-100 text-red-800";
   };
 
   const getStatusColor = (status: string) => {
-    return status === "Activo" 
+    return status === "active" 
       ? "bg-green-100 text-green-800" 
       : "bg-gray-100 text-gray-800";
   };
+
+  const getStatusLabel = (status: string) => {
+    return status === "active" ? "Activo" : "Borrador";
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffTime = Math.abs(now.getTime() - date.getTime());
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 1) return "hace 1 día";
+    if (diffDays < 30) return `hace ${diffDays} días`;
+    if (diffDays < 365) return `hace ${Math.ceil(diffDays / 30)} meses`;
+    return `hace ${Math.ceil(diffDays / 365)} años`;
+  };
+
+  const deleteCV = async (cvId: string) => {
+    try {
+      const { error } = await supabase
+        .from('cvs')
+        .delete()
+        .eq('id', cvId);
+
+      if (error) {
+        console.error('Error deleting CV:', error);
+        toast.error("Error al eliminar el CV");
+        return;
+      }
+
+      toast.success("CV eliminado exitosamente");
+      loadCVs(); // Reload the list
+    } catch (error) {
+      console.error('Error deleting CV:', error);
+      toast.error("Error al eliminar el CV");
+    }
+  };
+
+  if (loading) {
+    return (
+      <SidebarProvider>
+        <div className="min-h-screen flex w-full">
+          <AppSidebar />
+          <SidebarInset>
+            <div className="min-h-screen bg-gray-50 p-6 flex items-center justify-center">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                <p className="text-gray-600">Cargando CVs...</p>
+              </div>
+            </div>
+          </SidebarInset>
+        </div>
+      </SidebarProvider>
+    );
+  }
 
   return (
     <SidebarProvider>
@@ -121,91 +193,117 @@ export default function CVsList() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
-                    {/* Table Header */}
-                    <div className="grid grid-cols-12 gap-4 text-sm font-medium text-gray-500 border-b pb-3">
-                      <div className="col-span-5">CV</div>
-                      <div className="col-span-2">Puntuación</div>
-                      <div className="col-span-2">Estado</div>
-                      <div className="col-span-2">Actualizado</div>
-                      <div className="col-span-1"></div>
+                  {filteredCVs.length === 0 ? (
+                    <div className="text-center py-12">
+                      <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">
+                        {cvs.length === 0 ? "No tienes CVs creados" : "No se encontraron CVs"}
+                      </h3>
+                      <p className="text-gray-500 mb-4">
+                        {cvs.length === 0 
+                          ? "Crea tu primer CV para comenzar" 
+                          : "Intenta con otro término de búsqueda"
+                        }
+                      </p>
+                      {cvs.length === 0 && (
+                        <Button onClick={() => navigate("/app/cv/new")}>
+                          <Plus className="h-4 w-4 mr-2" />
+                          Crear mi primer CV
+                        </Button>
+                      )}
                     </div>
-
-                    {/* Table Rows */}
-                    {filteredCVs.map((cv) => (
-                      <div key={cv.id} className="grid grid-cols-12 gap-4 items-center py-3 border-b border-gray-100 hover:bg-gray-50 rounded-lg transition-colors">
-                        <div className="col-span-5 flex items-center gap-3">
-                          <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                            <FileText className="h-5 w-5 text-blue-600" />
-                          </div>
-                          <div>
-                            <h3 className="font-medium text-gray-900">{cv.title}</h3>
-                            <p className="text-sm text-gray-500">Creado {cv.createdAt}</p>
-                          </div>
-                        </div>
-                        
-                        <div className="col-span-2">
-                          <Badge className={`${getScoreColor(cv.score)} border-0`}>
-                            {cv.score}%
-                          </Badge>
-                        </div>
-                        
-                        <div className="col-span-2">
-                          <Badge className={`${getStatusColor(cv.status)} border-0`}>
-                            {cv.status}
-                          </Badge>
-                        </div>
-                        
-                        <div className="col-span-2 flex items-center gap-1 text-sm text-gray-500">
-                          <Calendar className="h-4 w-4" />
-                          {cv.updatedAt}
-                        </div>
-                        
-                        <div className="col-span-1 flex justify-end">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="sm">
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem>
-                                <Eye className="h-4 w-4 mr-2" />
-                                Ver
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => navigate(`/app/cv/${cv.id}`)}>
-                                <Edit className="h-4 w-4 mr-2" />
-                                Editar
-                              </DropdownMenuItem>
-                              <DropdownMenuItem>
-                                <Download className="h-4 w-4 mr-2" />
-                                Descargar
-                              </DropdownMenuItem>
-                              <DropdownMenuItem className="text-red-600">
-                                <Trash2 className="h-4 w-4 mr-2" />
-                                Eliminar
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
+                  ) : (
+                    <div className="space-y-4">
+                      {/* Table Header */}
+                      <div className="grid grid-cols-12 gap-4 text-sm font-medium text-gray-500 border-b pb-3">
+                        <div className="col-span-5">CV</div>
+                        <div className="col-span-2">Puntuación</div>
+                        <div className="col-span-2">Estado</div>
+                        <div className="col-span-2">Actualizado</div>
+                        <div className="col-span-1"></div>
                       </div>
-                    ))}
-                  </div>
+
+                      {/* Table Rows */}
+                      {filteredCVs.map((cv) => (
+                        <div key={cv.id} className="grid grid-cols-12 gap-4 items-center py-3 border-b border-gray-100 hover:bg-gray-50 rounded-lg transition-colors">
+                          <div className="col-span-5 flex items-center gap-3">
+                            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                              <FileText className="h-5 w-5 text-blue-600" />
+                            </div>
+                            <div>
+                              <h3 className="font-medium text-gray-900">{cv.title}</h3>
+                              <p className="text-sm text-gray-500">Creado {formatDate(cv.created_at)}</p>
+                            </div>
+                          </div>
+                          
+                          <div className="col-span-2">
+                            <Badge className={`${getScoreColor(cv.ai_score)} border-0`}>
+                              {cv.ai_score ? `${cv.ai_score}%` : "Sin evaluar"}
+                            </Badge>
+                          </div>
+                          
+                          <div className="col-span-2">
+                            <Badge className={`${getStatusColor(cv.status)} border-0`}>
+                              {getStatusLabel(cv.status)}
+                            </Badge>
+                          </div>
+                          
+                          <div className="col-span-2 flex items-center gap-1 text-sm text-gray-500">
+                            <Calendar className="h-4 w-4" />
+                            {formatDate(cv.last_updated || cv.created_at)}
+                          </div>
+                          
+                          <div className="col-span-1 flex justify-end">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="sm">
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem>
+                                  <Eye className="h-4 w-4 mr-2" />
+                                  Ver
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => navigate(`/app/cv/${cv.id}`)}>
+                                  <Edit className="h-4 w-4 mr-2" />
+                                  Editar
+                                </DropdownMenuItem>
+                                <DropdownMenuItem>
+                                  <Download className="h-4 w-4 mr-2" />
+                                  Descargar
+                                </DropdownMenuItem>
+                                <DropdownMenuItem 
+                                  className="text-red-600"
+                                  onClick={() => deleteCV(cv.id)}
+                                >
+                                  <Trash2 className="h-4 w-4 mr-2" />
+                                  Eliminar
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
 
                   {/* Pagination Info */}
-                  <div className="flex items-center justify-between mt-6 pt-4 border-t">
-                    <p className="text-sm text-gray-500">
-                      Mostrando 1 a {filteredCVs.length} de {filteredCVs.length} CVs
-                    </p>
-                    <div className="flex items-center gap-2">
-                      <Button variant="outline" size="sm" disabled>
-                        Anterior
-                      </Button>
-                      <Button variant="outline" size="sm" disabled>
-                        Siguiente
-                      </Button>
+                  {filteredCVs.length > 0 && (
+                    <div className="flex items-center justify-between mt-6 pt-4 border-t">
+                      <p className="text-sm text-gray-500">
+                        Mostrando 1 a {filteredCVs.length} de {filteredCVs.length} CVs
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <Button variant="outline" size="sm" disabled>
+                          Anterior
+                        </Button>
+                        <Button variant="outline" size="sm" disabled>
+                          Siguiente
+                        </Button>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </CardContent>
               </Card>
             </div>
