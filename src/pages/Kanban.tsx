@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
@@ -15,6 +14,7 @@ import { toast } from "sonner";
 import { DragDropContext, Droppable, Draggable, DropResult } from "react-beautiful-dnd";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import FireworksAnimation from "@/components/FireworksAnimation";
 
 interface Interview {
   id: string;
@@ -51,6 +51,7 @@ const Kanban = () => {
   });
   const [isClient, setIsClient] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showFireworks, setShowFireworks] = useState(false);
 
   // Handle hydration for drag and drop
   useEffect(() => {
@@ -250,7 +251,16 @@ const Kanban = () => {
       ));
       
       const columnTitle = columns.find(col => col.id === destination.droppableId)?.title;
-      toast.success(`Postulación movida a ${columnTitle}`);
+      
+      // Trigger fireworks animation if moved to offer status
+      if (newStatus === 'offer') {
+        setShowFireworks(true);
+        toast.success(`🎉 ¡Felicidades! Postulación movida a ${columnTitle}`, {
+          duration: 4000,
+        });
+      } else {
+        toast.success(`Postulación movida a ${columnTitle}`);
+      }
     } catch (error) {
       console.error('Error updating status:', error);
       toast.error('Error al mover la postulación');
@@ -541,6 +551,12 @@ const Kanban = () => {
           </div>
         </main>
       </div>
+
+      {/* Fireworks Animation */}
+      <FireworksAnimation 
+        isActive={showFireworks} 
+        onComplete={() => setShowFireworks(false)} 
+      />
     </SidebarProvider>
   );
 };
