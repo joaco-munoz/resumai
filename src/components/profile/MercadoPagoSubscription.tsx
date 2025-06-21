@@ -18,17 +18,24 @@ export const MercadoPagoSubscription = ({ currentPlan, onPlanChange }: MercadoPa
     setIsCreatingSubscription(true);
     
     try {
+      console.log("Iniciando proceso de suscripción...");
+      
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         toast.error("Debes iniciar sesión para suscribirte");
+        setIsCreatingSubscription(false);
         return;
       }
 
+      console.log("Usuario autenticado, creando suscripción...");
+      
       const { data, error } = await supabase.functions.invoke('create-mercadopago-subscription', {
         headers: {
           Authorization: `Bearer ${session.access_token}`,
         },
       });
+
+      console.log("Respuesta de la función:", { data, error });
 
       if (error) {
         console.error('Error creating subscription:', error);
@@ -37,10 +44,12 @@ export const MercadoPagoSubscription = ({ currentPlan, onPlanChange }: MercadoPa
       }
 
       if (data?.checkout_url) {
+        console.log("Redirigiendo a:", data.checkout_url);
         toast.success("Redirigiendo a MercadoPago...");
         // Abrir en nueva pestaña
         window.open(data.checkout_url, '_blank');
       } else {
+        console.error("No checkout URL received:", data);
         toast.error("No se pudo obtener la URL de pago");
       }
     } catch (error: any) {
@@ -70,38 +79,43 @@ export const MercadoPagoSubscription = ({ currentPlan, onPlanChange }: MercadoPa
               <CardDescription>
                 {currentPlan === 'pro' 
                   ? 'Acceso completo a todas las funciones premium'
-                  : 'Suscríbete al Plan Pro para desbloquear todas las funciones'
+                  : 'Actualiza a Pro para acceder a todas las funciones premium'
                 }
               </CardDescription>
             </div>
           </div>
           
           {currentPlan === 'free' && (
-            <Button 
-              onClick={handleCreateSubscription}
-              disabled={isCreatingSubscription}
-              className="bg-gradient-to-r from-brand-500 to-brand-700"
-            >
-              {isCreatingSubscription ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Procesando...
-                </>
-              ) : (
-                <>
-                  <Crown className="h-4 w-4 mr-2" />
-                  Actualizar a Pro - $6.990 CLP/mes
-                </>
-              )}
-            </Button>
+            <div className="text-right">
+              <div className="text-2xl font-bold text-brand-600 mb-1">
+                $6.990 <span className="text-sm font-normal text-gray-500">CLP/mes</span>
+              </div>
+              <Button 
+                onClick={handleCreateSubscription}
+                disabled={isCreatingSubscription}
+                className="bg-gradient-to-r from-brand-500 to-brand-700 hover:from-brand-600 hover:to-brand-800"
+              >
+                {isCreatingSubscription ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Procesando...
+                  </>
+                ) : (
+                  <>
+                    <Crown className="h-4 w-4 mr-2" />
+                    Suscribirse a Pro
+                  </>
+                )}
+              </Button>
+            </div>
           )}
         </div>
       </CardHeader>
       {currentPlan === 'pro' && (
         <CardContent>
-          <div className="flex items-center justify-between text-sm text-gray-600">
-            <span>Suscripción activa con MercadoPago</span>
-            <span>$6.990 CLP/mes</span>
+          <div className="flex items-center justify-between text-sm">
+            <span className="text-gray-600">Suscripción activa con MercadoPago</span>
+            <span className="font-semibold text-brand-600">$6.990 CLP/mes</span>
           </div>
         </CardContent>
       )}
