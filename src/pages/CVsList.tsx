@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,6 +32,8 @@ import { toast } from "sonner";
 import { CVPreviewModal } from "@/components/CVPreviewModal";
 import { DeleteConfirmDialog } from "@/components/DeleteConfirmDialog";
 import { downloadCVAsPDF } from "@/utils/pdfUtils";
+import { JobReportModal } from "@/components/JobReportModal";
+import { CVAdaptationModal } from "@/components/CVAdaptationModal";
 
 interface CV {
   id: string;
@@ -51,6 +54,8 @@ export default function CVsList() {
   const [previewCV, setPreviewCV] = useState<CV | null>(null);
   const [deleteCV, setDeleteCV] = useState<CV | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [jobReportCV, setJobReportCV] = useState<CV | null>(null);
+  const [adaptationCV, setAdaptationCV] = useState<CV | null>(null);
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -127,15 +132,33 @@ export default function CVsList() {
     return `hace ${Math.ceil(diffDays / 365)} años`;
   };
 
+  const isJobReport = (cv: CV) => {
+    return cv.content?.type === 'job_report';
+  };
+
   const handleViewCV = (cv: CV) => {
-    setPreviewCV(cv);
+    if (isJobReport(cv)) {
+      setJobReportCV(cv);
+    } else {
+      setPreviewCV(cv);
+    }
   };
 
   const handleEditCV = (cv: CV) => {
-    navigate(`/app/cv/${cv.id}`);
+    if (isJobReport(cv)) {
+      // Para informes, mostrar la ventana de adaptación
+      setAdaptationCV(cv);
+    } else {
+      navigate(`/app/cv/${cv.id}`);
+    }
   };
 
   const handleDownloadCV = (cv: CV) => {
+    if (isJobReport(cv)) {
+      toast.error("Los informes no se pueden descargar");
+      return;
+    }
+    
     if (cv.content) {
       downloadCVAsPDF(cv.content, cv.title);
       toast.success("CV descargado exitosamente");
@@ -178,67 +201,81 @@ export default function CVsList() {
     }
   };
 
-  const renderCVCard = (cv: CV) => (
-    <div key={cv.id} className="grid grid-cols-12 gap-4 items-center py-3 border-b border-gray-100 hover:bg-gray-50 rounded-lg transition-colors">
-      <div className="col-span-5 flex items-center gap-3">
-        <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-          <FileText className="h-5 w-5 text-blue-600" />
+  const renderCVCard = (cv: CV) => {
+    const isReport = isJobReport(cv);
+    
+    return (
+      <div key={cv.id} className="grid grid-cols-12 gap-4 items-center py-3 border-b border-gray-100 hover:bg-gray-50 rounded-lg transition-colors">
+        <div className="col-span-5 flex items-center gap-3">
+          <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${isReport ? 'bg-yellow-100' : 'bg-blue-100'}`}>
+            {isReport ? (
+              <Target className="h-5 w-5 text-yellow-600" />
+            ) : (
+              <FileText className="h-5 w-5 text-blue-600" />
+            )}
+          </div>
+          <div>
+            <h3 className="font-medium text-gray-900">{cv.title}</h3>
+            <p className="text-sm text-gray-500">
+              {isReport ? "Informe de compatibilidad" : "CV adaptado"} - Creado {formatDate(cv.created_at)}
+            </p>
+          </div>
         </div>
-        <div>
-          <h3 className="font-medium text-gray-900">{cv.title}</h3>
-          <p className="text-sm text-gray-500">Creado {formatDate(cv.created_at)}</p>
+        
+        <div className="col-span-2">
+          <Badge className={`${getScoreColor(cv.ai_score)} border-0`}>
+            {cv.ai_score ? `${cv.ai_score}%` : "Sin evaluar"}
+          </Badge>
+        </div>
+        
+        <div className="col-span-2">
+          <Badge className={`${getStatusColor(cv.status)} border-0`}>
+            {getStatusLabel(cv.status)}
+          </Badge>
+        </div>
+        
+        <div className="col-span-2 flex items-center gap-1 text-sm text-gray-500">
+          <Calendar className="h-4 w-4" />
+          {formatDate(cv.last_updated || cv.created_at)}
+        </div>
+        
+        <div className="col-span-1 flex justify-end">
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm">
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => handleViewCV(cv)}>
+                <Eye className="h-4 w-4 mr-2" />
+                Ver
+              </DropdownMenuItem>
+              {!isReport && (
+                <DropdownMenuItem onClick={() => handleEditCV(cv)}>
+                  <Edit className="h-4 w-4 mr-2" />
+                  Editar
+                </DropdownMenuItem>
+              )}
+              {!isReport && (
+                <DropdownMenuItem onClick={() => handleDownloadCV(cv)}>
+                  <Download className="h-4 w-4 mr-2" />
+                  Descargar
+                </DropdownMenuItem>
+              )}
+              <DropdownMenuItem 
+                className="text-red-600"
+                onClick={() => handleDeleteCV(cv)}
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Eliminar
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </div>
-      
-      <div className="col-span-2">
-        <Badge className={`${getScoreColor(cv.ai_score)} border-0`}>
-          {cv.ai_score ? `${cv.ai_score}%` : "Sin evaluar"}
-        </Badge>
-      </div>
-      
-      <div className="col-span-2">
-        <Badge className={`${getStatusColor(cv.status)} border-0`}>
-          {getStatusLabel(cv.status)}
-        </Badge>
-      </div>
-      
-      <div className="col-span-2 flex items-center gap-1 text-sm text-gray-500">
-        <Calendar className="h-4 w-4" />
-        {formatDate(cv.last_updated || cv.created_at)}
-      </div>
-      
-      <div className="col-span-1 flex justify-end">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="sm">
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={() => handleViewCV(cv)}>
-              <Eye className="h-4 w-4 mr-2" />
-              Ver
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleEditCV(cv)}>
-              <Edit className="h-4 w-4 mr-2" />
-              Editar
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleDownloadCV(cv)}>
-              <Download className="h-4 w-4 mr-2" />
-              Descargar
-            </DropdownMenuItem>
-            <DropdownMenuItem 
-              className="text-red-600"
-              onClick={() => handleDeleteCV(cv)}
-            >
-              <Trash2 className="h-4 w-4 mr-2" />
-              Eliminar
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-    </div>
-  );
+    );
+  };
 
   if (loading) {
     return (
@@ -333,7 +370,7 @@ export default function CVsList() {
                     CVs de Job Matcher
                   </CardTitle>
                   <p className="text-sm text-gray-600">
-                    CVs adaptados específicamente para ofertas de trabajo
+                    CVs adaptados e informes de compatibilidad de ofertas de trabajo
                   </p>
                 </CardHeader>
                 <CardContent>
@@ -358,7 +395,7 @@ export default function CVsList() {
                       </h3>
                       <p className="text-gray-500 mb-4">
                         {jobMatcherCVs.length === 0 
-                          ? "Los CVs adaptados desde Job Matcher aparecerán aquí" 
+                          ? "Los CVs adaptados e informes desde Job Matcher aparecerán aquí" 
                           : "Intenta con otro término de búsqueda"
                         }
                       </p>
@@ -373,7 +410,7 @@ export default function CVsList() {
                     <div className="space-y-4">
                       {/* Table Header */}
                       <div className="grid grid-cols-12 gap-4 text-sm font-medium text-gray-500 border-b pb-3">
-                        <div className="col-span-5">CV</div>
+                        <div className="col-span-5">CV / Informe</div>
                         <div className="col-span-2">Puntuación</div>
                         <div className="col-span-2">Estado</div>
                         <div className="col-span-2">Actualizado</div>
@@ -389,7 +426,7 @@ export default function CVsList() {
                   {filteredJobMatcherCVs.length > 0 && (
                     <div className="flex items-center justify-between mt-6 pt-4 border-t">
                       <p className="text-sm text-gray-500">
-                        Mostrando 1 a {filteredJobMatcherCVs.length} de {filteredJobMatcherCVs.length} CVs de Job Matcher
+                        Mostrando 1 a {filteredJobMatcherCVs.length} de {filteredJobMatcherCVs.length} elementos de Job Matcher
                       </p>
                     </div>
                   )}
@@ -399,7 +436,7 @@ export default function CVsList() {
           </div>
         </SidebarInset>
 
-        {/* Preview Modal */}
+        {/* Preview Modal for CVs */}
         <CVPreviewModal
           isOpen={!!previewCV}
           onClose={() => setPreviewCV(null)}
@@ -409,6 +446,30 @@ export default function CVsList() {
             if (previewCV) {
               handleDownloadCV(previewCV);
             }
+          }}
+        />
+
+        {/* Job Report Modal */}
+        <JobReportModal
+          isOpen={!!jobReportCV}
+          onClose={() => setJobReportCV(null)}
+          reportData={jobReportCV?.content || null}
+          reportTitle={jobReportCV?.title || ""}
+          onApply={() => {
+            setJobReportCV(null);
+            // Aquí podríamos abrir el modal de adaptación si es necesario
+          }}
+        />
+
+        {/* CV Adaptation Modal */}
+        <CVAdaptationModal
+          isOpen={!!adaptationCV}
+          onClose={() => setAdaptationCV(null)}
+          matchResult={adaptationCV?.content?.matchResult || null}
+          jobDetails={adaptationCV?.content?.jobDetails || { title: "", company: "" }}
+          onSave={() => {
+            setAdaptationCV(null);
+            loadCVs();
           }}
         />
 

@@ -11,6 +11,8 @@ import { Target, Sparkles, CheckCircle, AlertCircle, TrendingUp } from "lucide-r
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
+import { CVAdaptationModal } from "@/components/CVAdaptationModal";
 
 interface MatchResult {
   score: number;
@@ -20,11 +22,40 @@ interface MatchResult {
   improvements: string[];
 }
 
+interface JobDetails {
+  title: string;
+  company: string;
+}
+
 const JobMatcher = () => {
   const [jobDescription, setJobDescription] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [matchResult, setMatchResult] = useState<MatchResult | null>(null);
+  const [jobDetails, setJobDetails] = useState<JobDetails>({ title: "", company: "" });
+  const [showAdaptationModal, setShowAdaptationModal] = useState(false);
   const { user } = useAuth();
+  const navigate = useNavigate();
+
+  // Función para extraer el título del trabajo y la empresa de la descripción
+  const extractJobDetails = (description: string): JobDetails => {
+    const lines = description.split('\n').filter(line => line.trim());
+    let title = "Posición";
+    let company = "Empresa";
+    
+    // Buscar patrones comunes para extraer información
+    for (const line of lines) {
+      if (line.toLowerCase().includes('puesto:') || line.toLowerCase().includes('cargo:') || line.toLowerCase().includes('posición:')) {
+        title = line.split(':')[1]?.trim() || title;
+      } else if (line.toLowerCase().includes('empresa:') || line.toLowerCase().includes('compañía:')) {
+        company = line.split(':')[1]?.trim() || company;
+      } else if (line.toLowerCase().includes('buscamos') && line.toLowerCase().includes('developer')) {
+        const match = line.match(/buscamos.*?([a-zA-Z\s]+developer)/i);
+        if (match) title = match[1].trim();
+      }
+    }
+    
+    return { title, company };
+  };
 
   const analyzeMatch = async () => {
     if (!jobDescription.trim()) {
@@ -57,6 +88,11 @@ const JobMatcher = () => {
 
       console.log('Analysis completed successfully:', data);
       setMatchResult(data as MatchResult);
+      
+      // Extraer detalles del trabajo
+      const details = extractJobDetails(jobDescription);
+      setJobDetails(details);
+      
       toast.success("Análisis completado exitosamente");
       
     } catch (error) {
@@ -67,9 +103,44 @@ const JobMatcher = () => {
     }
   };
 
-  const applyToCV = () => {
-    // TODO: Integrate with CV Builder when needed
-    toast.success("Sugerencias aplicadas al CV actual");
+  const handleNoApply = async () => {
+    if (!matchResult || !user) return;
+    
+    try {
+      const cvTitle = `Informe - ${jobDetails.title} en ${jobDetails.company}`;
+      
+      const { error } = await supabase
+        .from('cvs')
+        .insert({
+          user_id: user.id,
+          title: cvTitle,
+          content: {
+            jobDescription,
+            matchResult,
+            jobDetails,
+            type: 'job_report'
+          },
+          status: 'draft',
+          cv_source: 'job_matcher',
+          ai_score: matchResult.score
+        });
+
+      if (error) {
+        console.error('Error saving job report:', error);
+        toast.error(`Error al guardar el informe: ${error.message}`);
+        return;
+      }
+      
+      toast.success("Informe guardado exitosamente");
+      navigate("/app/cvs");
+    } catch (error) {
+      console.error('Error saving job report:', error);
+      toast.error("Error al guardar el informe");
+    }
+  };
+
+  const handleApply = () => {
+    setShowAdaptationModal(true);
   };
 
   const getScoreColor = (score: number) => {
@@ -268,15 +339,6 @@ Ejemplo:
                         </div>
                       ))}
                     </div>
-                    
-                    <Button 
-                      onClick={applyToCV}
-                      className="w-full"
-                      variant="outline"
-                    >
-                      <Sparkles className="h-4 w-4 mr-2" />
-                      Aplicar al CV Actual
-                    </Button>
                   </CardContent>
                 </Card>
 
@@ -299,10 +361,39 @@ Ejemplo:
                     </ul>
                   </CardContent>
                 </Card>
+
+                {/* Action Buttons */}
+                <div className="flex gap-4 pt-6">
+                  <Button 
+                    onClick={handleNoApply}
+                    variant="outline"
+                    className="flex-1 bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
+                  >
+                    No Aplicar
+                  </Button>
+                  <Button 
+                    onClick={handleApply}
+                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    Aplicar
+                  </Button>
+                </div>
               </div>
             )}
           </div>
         </main>
+
+        {/* CV Adaptation Modal */}
+        <CVAdaptationModal
+          isOpen={showAdaptationModal}
+          onClose={() => setShowAdaptationModal(false)}
+          matchResult={matchResult}
+          jobDetails={jobDetails}
+          onSave={() => {
+            setShowAdaptationModal(false);
+            navigate("/app/cvs");
+          }}
+        />
       </div>
     </SidebarProvider>
   );
