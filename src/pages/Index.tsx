@@ -10,7 +10,6 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 
 const Index = () => {
-  const [authModalOpen, setAuthModalOpen] = useState(false);
   const [email, setEmail] = useState("");
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -26,8 +25,8 @@ const Index = () => {
     navigate("/app");
   };
 
-  const handleLoginClick = () => {
-    setAuthModalOpen(true);
+  const handleAuthNavigation = () => {
+    navigate("/auth");
   };
 
   const features = [{
@@ -74,10 +73,10 @@ const Index = () => {
               <ArrowRight className="h-4 w-4 mr-2" />
               Acceso Directo (Test)
             </Button>
-            <Button onClick={handleLoginClick} size="sm" className="bg-slate-600 hover:bg-slate-700 text-white border border-slate-500">
+            <Button onClick={handleAuthNavigation} size="sm" className="bg-slate-600 hover:bg-slate-700 text-white border border-slate-500">
               Iniciar Sesión
             </Button>
-            <Button onClick={() => setAuthModalOpen(true)} size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
+            <Button onClick={handleAuthNavigation} size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
               Regístrate
             </Button>
           </div>
@@ -104,7 +103,7 @@ Ahorra horas adaptando tu currículum: nuestra plataforma usa IA para convertir 
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12 animate-fade-in">
-            <Button size="lg" className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-lg px-8 py-4 text-white" onClick={() => setAuthModalOpen(true)}>
+            <Button size="lg" className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-lg px-8 py-4 text-white" onClick={handleAuthNavigation}>
               Empieza gratis
             </Button>
           </div>
@@ -296,7 +295,7 @@ Ahorra horas adaptando tu currículum: nuestra plataforma usa IA para convertir 
                   <CheckCircle className="h-5 w-5 text-cyan-400" />
                   <span className="text-slate-300">Análisis básico ATS</span>
                 </div>
-                <Button className="w-full mt-6 bg-slate-700 hover:bg-slate-600 text-white border border-slate-600" onClick={() => setAuthModalOpen(true)}>
+                <Button className="w-full mt-6 bg-slate-700 hover:bg-slate-600 text-white border border-slate-600" onClick={handleAuthNavigation}>
                   Empezar Gratis
                 </Button>
               </CardContent>
@@ -333,7 +332,7 @@ Ahorra horas adaptando tu currículum: nuestra plataforma usa IA para convertir 
                   <CheckCircle className="h-5 w-5 text-cyan-400" />
                   <span className="text-slate-300">Soporte prioritario</span>
                 </div>
-                <Button className="w-full mt-6 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white" onClick={() => setAuthModalOpen(true)}>
+                <Button className="w-full mt-6 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white" onClick={handleAuthNavigation}>
                   <Zap className="h-4 w-4 mr-2" />
                   Empezar Pro
                 </Button>
