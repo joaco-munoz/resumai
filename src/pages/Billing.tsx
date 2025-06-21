@@ -217,33 +217,6 @@ const Billing = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <Card>
                   <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <TrendingUp className="h-5 w-5 text-success-500" />
-                      Tu Progreso
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">CVs enviados</span>
-                      <span className="font-bold text-brand-600">12</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Respuestas recibidas</span>
-                      <span className="font-bold text-success-600">8</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Entrevistas conseguidas</span>
-                      <span className="font-bold text-yellow-600">4</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-gray-600">Tasa de respuesta</span>
-                      <span className="font-bold text-brand-600">67%</span>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardHeader>
                     <CardTitle>¿Necesitas Ayuda?</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
