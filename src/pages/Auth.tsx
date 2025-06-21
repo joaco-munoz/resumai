@@ -252,17 +252,6 @@ const Auth = () => {
               </button>
             </p>
           </div>
-
-          {!isSignUp && (
-            <div className="text-center mt-4">
-              <button 
-                type="button"
-                className="text-sm text-blue-400 hover:text-blue-300 underline"
-              >
-                Continue with SSO
-              </button>
-            </div>
-          )}
         </div>
       </div>
 
