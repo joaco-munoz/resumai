@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
@@ -28,7 +29,7 @@ import { SkillsTab } from "@/components/cv-builder/SkillsTab";
 import { CVPreview } from "@/components/cv-builder/CVPreview";
 
 const CVBuilder = () => {
-  const { cvData, setCvData, isLoading, currentCvId, saveCV, saveAndAdapt, setCurrentCvId } = useCVData();
+  const { cvData, setCvData, isLoading, currentCvId, saveCV, saveAndAdapt } = useCVData();
   
   const [isImproving, setIsImproving] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('personal');
@@ -234,151 +235,6 @@ const CVBuilder = () => {
     toast.success("CV exportado como PDF");
   };
 
-  const saveCV = async () => {
-    if (!user) {
-      toast.error("Debes estar autenticado para guardar el CV");
-      return;
-    }
-
-    setIsSaving(true);
-    
-    try {
-      const cvTitle = `CV - ${cvData.personalInfo.fullName}`;
-      
-      console.log('Attempting to save CV with data:', {
-        user_id: user.id,
-        title: cvTitle,
-        content: cvData,
-        status: 'draft',
-        template_name: 'modern'
-      });
-
-      let result;
-
-      if (currentCvId) {
-        // Update existing CV
-        result = await supabase
-          .from('cvs')
-          .update({
-            title: cvTitle,
-            content: cvData as any,
-            status: 'draft',
-            template_name: 'modern',
-            last_updated: new Date().toISOString()
-          })
-          .eq('id', currentCvId)
-          .eq('user_id', user.id)
-          .select();
-      } else {
-        // Create new CV
-        result = await supabase
-          .from('cvs')
-          .insert({
-            user_id: user.id,
-            title: cvTitle,
-            content: cvData as any,
-            status: 'draft',
-            template_name: 'modern'
-          })
-          .select();
-      }
-
-      if (result.error) {
-        console.error('Error saving CV:', result.error);
-        toast.error(`Error al guardar el CV: ${result.error.message}`);
-        return;
-      }
-
-      console.log('CV saved successfully:', result.data);
-      
-      // Update currentCvId if it was a new CV
-      if (!currentCvId && result.data && result.data[0]) {
-        setCurrentCvId(result.data[0].id);
-        navigate(`/app/cv/${result.data[0].id}`, { replace: true });
-      }
-      
-      toast.success(currentCvId ? "CV actualizado exitosamente" : "CV guardado exitosamente");
-      navigate("/app/cvs");
-    } catch (error) {
-      console.error('Error saving CV:', error);
-      toast.error("Error al guardar el CV");
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const saveAndAdapt = async () => {
-    if (!user) {
-      toast.error("Debes estar autenticado para guardar el CV");
-      return;
-    }
-
-    setIsSaving(true);
-    
-    try {
-      const cvTitle = `CV - ${cvData.personalInfo.fullName}`;
-      
-      console.log('Attempting to save and adapt CV with data:', {
-        user_id: user.id,
-        title: cvTitle,
-        content: cvData,
-        status: 'draft',
-        template_name: 'modern'
-      });
-
-      let result;
-
-      if (currentCvId) {
-        // Update existing CV
-        result = await supabase
-          .from('cvs')
-          .update({
-            title: cvTitle,
-            content: cvData as any,
-            status: 'draft',
-            template_name: 'modern',
-            last_updated: new Date().toISOString()
-          })
-          .eq('id', currentCvId)
-          .eq('user_id', user.id)
-          .select();
-      } else {
-        // Create new CV
-        result = await supabase
-          .from('cvs')
-          .insert({
-            user_id: user.id,
-            title: cvTitle,
-            content: cvData as any,
-            status: 'draft',
-            template_name: 'modern'
-          })
-          .select();
-      }
-
-      if (result.error) {
-        console.error('Error saving CV:', result.error);
-        toast.error(`Error al guardar el CV: ${result.error.message}`);
-        return;
-      }
-
-      console.log('CV saved successfully:', result.data);
-      
-      // Update currentCvId if it was a new CV
-      if (!currentCvId && result.data && result.data[0]) {
-        setCurrentCvId(result.data[0].id);
-      }
-      
-      toast.success(currentCvId ? "CV actualizado exitosamente" : "CV guardado exitosamente");
-      navigate("/app/match");
-    } catch (error) {
-      console.error('Error saving CV:', error);
-      toast.error("Error al guardar el CV");
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
   const goToNextTab = () => {
     const tabOrder = ['personal', 'summary', 'experience', 'education', 'skills'];
     const currentIndex = tabOrder.indexOf(activeTab);
@@ -464,35 +320,9 @@ const CVBuilder = () => {
                 <TabsContent value="experience">
                   <ExperienceTab
                     cvData={cvData}
-                    updateExperience={(id, field, value) => {
-                      setCvData(prev => ({
-                        ...prev,
-                        experience: prev.experience.map(exp =>
-                          exp.id === id ? { ...exp, [field]: value } : exp
-                        )
-                      }));
-                    }}
-                    addExperience={() => {
-                      const newExp = {
-                        id: Date.now().toString(),
-                        position: '',
-                        company: '',
-                        startDate: '',
-                        endDate: '',
-                        current: false,
-                        description: ''
-                      };
-                      setCvData(prev => ({
-                        ...prev,
-                        experience: [...prev.experience, newExp]
-                      }));
-                    }}
-                    removeExperience={(id) => {
-                      setCvData(prev => ({
-                        ...prev,
-                        experience: prev.experience.filter(exp => exp.id !== id)
-                      }));
-                    }}
+                    updateExperience={updateExperience}
+                    addExperience={addExperience}
+                    removeExperience={removeExperience}
                     improveWithAI={improveWithAI}
                     isImproving={isImproving}
                     goToPreviousTab={goToPreviousTab}
@@ -503,33 +333,9 @@ const CVBuilder = () => {
                 <TabsContent value="education">
                   <EducationTab
                     cvData={cvData}
-                    updateEducation={(id, field, value) => {
-                      setCvData(prev => ({
-                        ...prev,
-                        education: prev.education.map(edu =>
-                          edu.id === id ? { ...edu, [field]: value } : edu
-                        )
-                      }));
-                    }}
-                    addEducation={() => {
-                      const newEdu = {
-                        id: Date.now().toString(),
-                        degree: '',
-                        institution: '',
-                        year: '',
-                        description: ''
-                      };
-                      setCvData(prev => ({
-                        ...prev,
-                        education: [...prev.education, newEdu]
-                      }));
-                    }}
-                    removeEducation={(id) => {
-                      setCvData(prev => ({
-                        ...prev,
-                        education: prev.education.filter(edu => edu.id !== id)
-                      }));
-                    }}
+                    updateEducation={updateEducation}
+                    addEducation={addEducation}
+                    removeEducation={removeEducation}
                     goToPreviousTab={goToPreviousTab}
                     goToNextTab={goToNextTab}
                   />
@@ -538,21 +344,8 @@ const CVBuilder = () => {
                 <TabsContent value="skills">
                   <SkillsTab
                     cvData={cvData}
-                    addSkill={() => {
-                      const newSkill = prompt("Enter new skill:");
-                      if (newSkill && newSkill.trim() !== "") {
-                        setCvData(prev => ({
-                          ...prev,
-                          skills: [...prev.skills, newSkill.trim()]
-                        }));
-                      }
-                    }}
-                    removeSkill={(skill) => {
-                      setCvData(prev => ({
-                        ...prev,
-                        skills: prev.skills.filter(s => s !== skill)
-                      }));
-                    }}
+                    addSkill={addSkill}
+                    removeSkill={removeSkill}
                     goToPreviousTab={goToPreviousTab}
                     saveCV={saveCV}
                     saveAndAdapt={saveAndAdapt}
