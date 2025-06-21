@@ -94,7 +94,7 @@ export const CVPreview = ({ cvData }: CVPreviewProps) => {
             <h2 className="text-base font-bold text-black mb-3 uppercase tracking-wide border-b border-gray-400 pb-1">Skills Adicionales</h2>
             <ul className="text-sm text-black">
               {cvData.skills.map((skill, index) => (
-                <li key={index} className="flex items-start mb-1">
+                <li key={index} className="flex flex-wrap gap-2 mt-1">
                   <span className="mr-2">•</span>
                   <span>{skill}</span>
                 </li>
