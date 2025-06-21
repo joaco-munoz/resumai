@@ -11,7 +11,7 @@ export const CVPreview = ({ cvData }: CVPreviewProps) => {
     <div className="bg-white rounded-lg shadow-lg p-8 max-w-3xl mx-auto font-serif">
       <div className="space-y-6">
         {/* Header - Harvard style centered */}
-        <div className="text-center mb-4">
+        <div className="text-center border-b border-gray-400 pb-4">
           <h1 className="text-3xl font-bold text-black mb-2">{cvData.personalInfo.fullName}</h1>
           <div className="flex flex-wrap justify-center gap-2 text-black text-sm">
             <span>{cvData.personalInfo.location}</span>
