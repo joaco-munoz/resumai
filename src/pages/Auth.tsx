@@ -167,7 +167,7 @@ const Auth = () => {
                 <Input
                   id="name"
                   type="text"
-                  placeholder="Nombre"
+                  placeholder="Nombre y Apellido"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   className="bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500 focus:border-blue-500 focus:ring-blue-500 h-12"
