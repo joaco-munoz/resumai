@@ -75,7 +75,7 @@ export const CVAdaptationModal = ({
         return;
       }
 
-      const originalCV = cvData.content as CVData;
+      const originalCV = cvData.content as unknown as CVData;
       
       // Adaptar el CV con las sugerencias
       const adapted = adaptCVWithSuggestions(originalCV, matchResult!);
@@ -126,7 +126,7 @@ export const CVAdaptationModal = ({
         .insert({
           user_id: user.id,
           title: cvTitle,
-          content: adaptedCV,
+          content: adaptedCV as any,
           status: 'draft',
           template_name: 'modern',
           cv_source: 'job_matcher',

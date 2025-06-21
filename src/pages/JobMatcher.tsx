@@ -119,7 +119,7 @@ const JobMatcher = () => {
             matchResult,
             jobDetails,
             type: 'job_report'
-          },
+          } as any,
           status: 'draft',
           cv_source: 'job_matcher',
           ai_score: matchResult.score
