@@ -51,7 +51,7 @@ export const downloadCVAsPDF = (cvData: any, filename: string) => {
     yPosition += 8;
     
     // Header separator line
-    pdf.setDrawColor(120, 120, 120);
+    pdf.setDrawColor(0, 0, 0);
     pdf.setLineWidth(0.3);
     pdf.line(margin, yPosition, pageWidth - margin, yPosition);
     yPosition += 12;
@@ -84,7 +84,7 @@ export const downloadCVAsPDF = (cvData: any, filename: string) => {
       yPosition += 2;
       
       // Section underline
-      pdf.setDrawColor(120, 120, 120);
+      pdf.setDrawColor(0, 0, 0);
       pdf.setLineWidth(0.3);
       pdf.line(margin, yPosition, pageWidth - margin, yPosition);
       yPosition += 8;
@@ -157,7 +157,7 @@ export const downloadCVAsPDF = (cvData: any, filename: string) => {
       yPosition += 2;
       
       // Section underline
-      pdf.setDrawColor(120, 120, 120);
+      pdf.setDrawColor(0, 0, 0);
       pdf.setLineWidth(0.3);
       pdf.line(margin, yPosition, pageWidth - margin, yPosition);
       yPosition += 8;
@@ -217,7 +217,7 @@ export const downloadCVAsPDF = (cvData: any, filename: string) => {
       yPosition += 2;
       
       // Section underline
-      pdf.setDrawColor(120, 120, 120);
+      pdf.setDrawColor(0, 0, 0);
       pdf.setLineWidth(0.3);
       pdf.line(margin, yPosition, pageWidth - margin, yPosition);
       yPosition += 8;
