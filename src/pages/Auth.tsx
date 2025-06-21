@@ -162,7 +162,7 @@ const Auth = () => {
             {isSignUp && (
               <div className="space-y-2">
                 <Label htmlFor="name" className="text-sm font-medium text-slate-300">
-                  Full name
+                  Nombre completo
                 </Label>
                 <Input
                   id="name"
@@ -193,7 +193,7 @@ const Auth = () => {
 
             <div className="space-y-2">
               <Label htmlFor="password" className="text-sm font-medium text-slate-300">
-                Password
+                Contraseña
               </Label>
               <Input
                 id="password"
