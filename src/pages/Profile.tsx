@@ -283,6 +283,11 @@ const Profile = () => {
                   usageStats={usageStats}
                   getUsagePercentage={getUsagePercentage}
                 />
+
+                <ProgressMetrics 
+                  stats={stats}
+                  currentPlan={currentPlan}
+                />
               </TabsContent>
             </Tabs>
           </div>
