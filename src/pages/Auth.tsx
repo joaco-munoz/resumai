@@ -243,12 +243,12 @@ const Auth = () => {
           {/* Switch between sign up / sign in */}
           <div className="text-center mt-6">
             <p className="text-sm text-slate-400">
-              {isSignUp ? "Already have an account?" : "Don't have an account?"}{" "}
+              {isSignUp ? "Ya tienes una cuenta?" : "No tienes una cuenta?"}{" "}
               <button 
                 onClick={() => setIsSignUp(!isSignUp)}
                 className="text-blue-400 hover:text-blue-300 underline font-medium"
               >
-                {isSignUp ? "Log in" : "Sign up"}
+                {isSignUp ? "Ingresar" : "Regístrate"}
               </button>
             </p>
           </div>
