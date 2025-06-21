@@ -30,7 +30,7 @@ export const downloadCVAsPDF = (cvData: any, filename: string) => {
     const nameWidth = pdf.getTextWidth(cvData.personalInfo.fullName);
     const nameX = (pageWidth - nameWidth) / 2;
     pdf.text(cvData.personalInfo.fullName, nameX, yPosition);
-    yPosition += 10;
+    yPosition += 5;
     
     // Contact info (centered, single line - Harvard style)
     pdf.setFontSize(10);
@@ -48,7 +48,7 @@ export const downloadCVAsPDF = (cvData: any, filename: string) => {
     const contactWidth = pdf.getTextWidth(contactInfo);
     const contactX = (pageWidth - contactWidth) / 2;
     pdf.text(contactInfo, contactX, yPosition);
-    yPosition += 8;
+    yPosition += 5;
     
     // Header separator line
     pdf.setDrawColor(0, 0, 0);
