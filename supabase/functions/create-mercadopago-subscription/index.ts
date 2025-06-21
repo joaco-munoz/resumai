@@ -47,6 +47,11 @@ serve(async (req) => {
     const payerEmail = isTestToken ? "test_user_123456@testuser.com" : user.email;
     logStep("Payer email determined", { originalEmail: user.email, payerEmail, isTestMode: isTestToken });
 
+    // Construir la back_url correctamente
+    const origin = req.headers.get("origin") || req.headers.get("referer")?.split('/').slice(0, 3).join('/') || "https://localhost:3000";
+    const backUrl = `${origin}/app/billing?success=true`;
+    logStep("Back URL constructed", { origin, backUrl });
+
     // Crear la suscripción en MercadoPago con ajustes para prueba
     const subscriptionData = {
       reason: "Plan Pro CVMaster AI",
@@ -57,7 +62,7 @@ serve(async (req) => {
         currency_id: "CLP"
       },
       payer_email: payerEmail,
-      back_url: `${req.headers.get("origin")}/app/billing?success=true`,
+      back_url: backUrl,
       status: "pending"
     };
 
