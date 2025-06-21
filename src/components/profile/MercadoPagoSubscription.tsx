@@ -90,7 +90,7 @@ export const MercadoPagoSubscription = ({ currentPlan, onPlanChange }: MercadoPa
               ) : (
                 <>
                   <Crown className="h-4 w-4 mr-2" />
-                  Actualizar a Pro - $29/mes
+                  Actualizar a Pro - $6.990 CLP/mes
                 </>
               )}
             </Button>
@@ -101,7 +101,7 @@ export const MercadoPagoSubscription = ({ currentPlan, onPlanChange }: MercadoPa
         <CardContent>
           <div className="flex items-center justify-between text-sm text-gray-600">
             <span>Suscripción activa con MercadoPago</span>
-            <span>$29.00 USD/mes</span>
+            <span>$6.990 CLP/mes</span>
           </div>
         </CardContent>
       )}

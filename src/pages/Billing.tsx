@@ -180,7 +180,7 @@ const Billing = () => {
                           <h3 className="text-lg font-semibold">Plan Pro</h3>
                           <Badge className="bg-brand-100 text-brand-700">Recomendado</Badge>
                         </div>
-                        <div className="text-2xl font-bold">$29<span className="text-sm font-normal text-gray-500">/mes</span></div>
+                        <div className="text-2xl font-bold">$6.990<span className="text-sm font-normal text-gray-500"> CLP/mes</span></div>
                         <ul className="space-y-2 text-sm">
                           <li className="flex items-center gap-2">
                             <CheckCircle className="h-4 w-4 text-success-500" />

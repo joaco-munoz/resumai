@@ -46,8 +46,8 @@ serve(async (req) => {
       auto_recurring: {
         frequency: 1,
         frequency_type: "months",
-        transaction_amount: 29,
-        currency_id: "USD"
+        transaction_amount: 6990,
+        currency_id: "CLP"
       },
       payer_email: user.email,
       back_url: `${req.headers.get("origin")}/app/billing?success=true`,
@@ -77,8 +77,8 @@ serve(async (req) => {
       user_id: user.id,
       tier: "pro",
       status: "pending",
-      price_per_month: 29,
-      currency: "USD",
+      price_per_month: 6990,
+      currency: "CLP",
       stripe_subscription_id: result.id, // Reutilizamos este campo para MP
       updated_at: new Date().toISOString(),
     }, { onConflict: 'user_id' });
