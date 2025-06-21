@@ -1,97 +1,123 @@
 
-export const downloadCVAsPDF = (cvData: any, filename: string) => {
-  // Create a simple HTML version of the CV for PDF generation
-  const htmlContent = `
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <meta charset="utf-8">
-      <title>${filename}</title>
-      <style>
-        body { font-family: Arial, sans-serif; margin: 40px; color: #333; }
-        .header { text-align: center; border-bottom: 2px solid #333; padding-bottom: 20px; margin-bottom: 30px; }
-        .name { font-size: 24px; font-weight: bold; margin-bottom: 10px; }
-        .contact { font-size: 14px; color: #666; }
-        .section { margin-bottom: 25px; }
-        .section-title { font-size: 18px; font-weight: bold; margin-bottom: 15px; border-bottom: 1px solid #ccc; padding-bottom: 5px; }
-        .experience-item, .education-item { margin-bottom: 15px; }
-        .job-title { font-weight: bold; }
-        .company { color: #2563eb; font-weight: 500; }
-        .date { color: #666; font-size: 14px; }
-        .description { margin-top: 5px; white-space: pre-line; }
-        .skills { display: flex; flex-wrap: wrap; gap: 8px; }
-        .skill { background: #f3f4f6; padding: 4px 8px; border-radius: 4px; font-size: 14px; }
-      </style>
-    </head>
-    <body>
-      <div class="header">
-        <div class="name">${cvData.personalInfo.fullName}</div>
-        <div class="contact">
-          ${cvData.personalInfo.email} • ${cvData.personalInfo.phone} • ${cvData.personalInfo.location}
-        </div>
-        <div class="contact">
-          ${cvData.personalInfo.linkedin} • ${cvData.personalInfo.website}
-        </div>
-      </div>
-      
-      <div class="section">
-        <div class="section-title">Resumen Profesional</div>
-        <p>${cvData.summary}</p>
-      </div>
-      
-      <div class="section">
-        <div class="section-title">Experiencia Laboral</div>
-        ${cvData.experience.map((exp: any) => `
-          <div class="experience-item">
-            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
-              <div>
-                <div class="job-title">${exp.position}</div>
-                <div class="company">${exp.company}</div>
-              </div>
-              <div class="date">${exp.startDate} - ${exp.current ? 'Presente' : exp.endDate}</div>
-            </div>
-            <div class="description">${exp.description}</div>
-          </div>
-        `).join('')}
-      </div>
-      
-      <div class="section">
-        <div class="section-title">Educación</div>
-        ${cvData.education.map((edu: any) => `
-          <div class="education-item">
-            <div style="display: flex; justify-content: space-between;">
-              <div>
-                <div class="job-title">${edu.degree}</div>
-                <div class="company">${edu.institution}</div>
-                ${edu.description ? `<div style="font-size: 14px; color: #666;">${edu.description}</div>` : ''}
-              </div>
-              <div class="date">${edu.year}</div>
-            </div>
-          </div>
-        `).join('')}
-      </div>
-      
-      <div class="section">
-        <div class="section-title">Habilidades</div>
-        <div class="skills">
-          ${cvData.skills.map((skill: string) => `<span class="skill">${skill}</span>`).join('')}
-        </div>
-      </div>
-    </body>
-    </html>
-  `;
+import jsPDF from 'jsPDF';
 
-  // Create a blob and download it
-  const blob = new Blob([htmlContent], { type: 'text/html' });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = url;
-  link.download = `${filename}.html`;
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
-  
-  // Note: For proper PDF generation, you would typically use a library like jsPDF or Puppeteer
-  // This creates an HTML file that can be opened in a browser and printed as PDF
+export const downloadCVAsPDF = (cvData: any, filename: string) => {
+  try {
+    // Create new PDF document
+    const pdf = new jsPDF();
+    
+    // Set font and colors
+    pdf.setFont('helvetica');
+    
+    let yPosition = 20;
+    const pageWidth = pdf.internal.pageSize.width;
+    const margin = 20;
+    const contentWidth = pageWidth - (margin * 2);
+    
+    // Helper function to add text with word wrapping
+    const addText = (text: string, fontSize: number = 11, isBold: boolean = false, color: string = '#000000') => {
+      pdf.setFontSize(fontSize);
+      pdf.setFont('helvetica', isBold ? 'bold' : 'normal');
+      pdf.setTextColor(color);
+      
+      const lines = pdf.splitTextToSize(text, contentWidth);
+      lines.forEach((line: string) => {
+        if (yPosition > 270) { // Check if we need a new page
+          pdf.addPage();
+          yPosition = 20;
+        }
+        pdf.text(line, margin, yPosition);
+        yPosition += fontSize * 0.5;
+      });
+      yPosition += 5; // Add extra space after text block
+    };
+    
+    // Header - Personal Info
+    addText(cvData.personalInfo.fullName, 20, true, '#2563eb');
+    
+    const contactInfo = [
+      cvData.personalInfo.email,
+      cvData.personalInfo.phone,
+      cvData.personalInfo.location
+    ].filter(Boolean).join(' • ');
+    
+    addText(contactInfo, 10, false, '#666666');
+    
+    const linksInfo = [
+      cvData.personalInfo.linkedin,
+      cvData.personalInfo.website
+    ].filter(Boolean).join(' • ');
+    
+    if (linksInfo) {
+      addText(linksInfo, 10, false, '#666666');
+    }
+    
+    yPosition += 10;
+    
+    // Add a line separator
+    pdf.setDrawColor(200, 200, 200);
+    pdf.line(margin, yPosition, pageWidth - margin, yPosition);
+    yPosition += 15;
+    
+    // Summary Section
+    if (cvData.summary) {
+      addText('RESUMEN PROFESIONAL', 14, true, '#2563eb');
+      addText(cvData.summary, 11);
+    }
+    
+    // Experience Section
+    if (cvData.experience && cvData.experience.length > 0) {
+      addText('EXPERIENCIA LABORAL', 14, true, '#2563eb');
+      
+      cvData.experience.forEach((exp: any) => {
+        // Position and Company
+        addText(exp.position, 12, true);
+        addText(exp.company, 11, false, '#2563eb');
+        
+        // Date range
+        const dateRange = `${exp.startDate} - ${exp.current ? 'Presente' : exp.endDate}`;
+        addText(dateRange, 10, false, '#666666');
+        
+        // Description
+        if (exp.description) {
+          addText(exp.description, 11);
+        }
+        
+        yPosition += 5; // Extra space between experiences
+      });
+    }
+    
+    // Education Section
+    if (cvData.education && cvData.education.length > 0) {
+      addText('EDUCACIÓN', 14, true, '#2563eb');
+      
+      cvData.education.forEach((edu: any) => {
+        addText(edu.degree, 12, true);
+        addText(edu.institution, 11, false, '#2563eb');
+        addText(edu.year, 10, false, '#666666');
+        
+        if (edu.description) {
+          addText(edu.description, 10, false, '#666666');
+        }
+        
+        yPosition += 5;
+      });
+    }
+    
+    // Skills Section
+    if (cvData.skills && cvData.skills.length > 0) {
+      addText('HABILIDADES', 14, true, '#2563eb');
+      
+      // Group skills in lines of reasonable length
+      const skillsText = cvData.skills.join(' • ');
+      addText(skillsText, 11);
+    }
+    
+    // Save the PDF
+    pdf.save(`${filename}.pdf`);
+    
+  } catch (error) {
+    console.error('Error generating PDF:', error);
+    throw new Error('Error al generar el PDF');
+  }
 };
