@@ -289,7 +289,7 @@ export default function CVsList() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <User className="h-5 w-5 text-blue-600" />
-                    CV 
+                    CV Principal
                   </CardTitle>
                   <p className="text-sm text-gray-600">
                     Tu CV principal que se actualiza cuando guardas desde el Editor de CVs
