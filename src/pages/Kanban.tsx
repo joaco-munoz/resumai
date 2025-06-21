@@ -107,7 +107,7 @@ const Kanban = () => {
     { id: 'saved', title: 'Guardado', count: interviews.filter(i => i.status === 'saved').length },
     { id: 'applied', title: 'Postulado', count: interviews.filter(i => i.status === 'applied').length },
     { id: 'interviewing', title: 'En entrevista', count: interviews.filter(i => i.status === 'interviewing').length },
-    { id: 'offer', title: 'Oferta Recibidad', count: interviews.filter(i => i.status === 'offer').length },
+    { id: 'offer', title: 'Oferta Recibida', count: interviews.filter(i => i.status === 'offer').length },
     { id: 'rejected', title: 'Rechazado', count: interviews.filter(i => i.status === 'rejected').length }
   ];
 
