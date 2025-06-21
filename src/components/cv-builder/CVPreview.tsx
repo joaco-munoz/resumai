@@ -46,7 +46,7 @@ export const CVPreview = ({ cvData }: CVPreviewProps) => {
                     <div className="text-right">
                       <div className="text-sm text-black font-bold">{cvData.personalInfo.location}</div>
                       <div className="text-sm text-black italic">
-                        {exp.startDate} / {exp.current ? 'Presente' : exp.endDate}
+                        {exp.startDate} - {exp.current ? 'Presente' : exp.endDate}
                       </div>
                     </div>
                   </div>
