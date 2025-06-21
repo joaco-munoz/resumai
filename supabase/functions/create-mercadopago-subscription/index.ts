@@ -72,8 +72,17 @@ serve(async (req) => {
       throw new Error(`MercadoPago API error: ${JSON.stringify(result)}`);
     }
 
-    // Guardar la suscripción en nuestra base de datos
-    const { error: dbError } = await supabaseClient.from("subscriptions").upsert({
+    // Primero verificar si ya existe una suscripción para este usuario
+    const { data: existingSubscription, error: checkError } = await supabaseClient
+      .from("subscriptions")
+      .select("*")
+      .eq("user_id", user.id)
+      .single();
+
+    logStep("Checking existing subscription", { exists: !!existingSubscription, error: checkError });
+
+    // Preparar los datos de la suscripción
+    const subscriptionRecord = {
       user_id: user.id,
       tier: "pro",
       status: "pending",
@@ -81,14 +90,35 @@ serve(async (req) => {
       currency: "CLP",
       stripe_subscription_id: result.id, // Reutilizamos este campo para MP
       updated_at: new Date().toISOString(),
-    }, { onConflict: 'user_id' });
+    };
 
-    if (dbError) {
-      logStep("Database error", dbError);
-      throw new Error(`Database error: ${dbError.message}`);
+    let dbResult;
+    if (existingSubscription) {
+      // Actualizar la suscripción existente
+      const { error: updateError } = await supabaseClient
+        .from("subscriptions")
+        .update(subscriptionRecord)
+        .eq("user_id", user.id);
+      
+      if (updateError) {
+        logStep("Database update error", updateError);
+        throw new Error(`Database update error: ${updateError.message}`);
+      }
+      logStep("Subscription updated successfully");
+    } else {
+      // Crear nueva suscripción
+      const { error: insertError } = await supabaseClient
+        .from("subscriptions")
+        .insert([subscriptionRecord]);
+      
+      if (insertError) {
+        logStep("Database insert error", insertError);
+        throw new Error(`Database insert error: ${insertError.message}`);
+      }
+      logStep("Subscription created successfully");
     }
 
-    logStep("Subscription created successfully", {
+    logStep("Subscription processed successfully", {
       subscriptionId: result.id,
       checkoutUrl: result.init_point
     });
