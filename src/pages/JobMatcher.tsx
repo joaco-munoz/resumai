@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
@@ -72,6 +71,9 @@ const JobMatcher = () => {
     
     try {
       console.log('Starting job compatibility analysis...');
+      
+      // Guardar la descripción del trabajo en localStorage para uso posterior
+      localStorage.setItem('currentJobDescription', jobDescription);
       
       const { data, error } = await supabase.functions.invoke('analyze-job-compatibility', {
         body: {

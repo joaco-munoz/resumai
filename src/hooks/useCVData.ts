@@ -190,7 +190,7 @@ export const useCVData = () => {
         return;
       }
       
-      toast.success("CV general guardado exitosamente");
+      toast.success("CV principal guardado exitosamente");
       navigate("/app/cvs");
     } catch (error) {
       console.error('Error saving CV:', error);
@@ -205,32 +205,67 @@ export const useCVData = () => {
     }
 
     try {
-      const cvTitle = `CV - ${cvData.personalInfo.fullName} (Adaptado)`;
+      const cvTitle = `CV - ${cvData.personalInfo.fullName}`;
       
-      // Create a new CV with cv_source = 'job_matcher'
-      const result = await supabase
+      // First save as general CV (same logic as saveCV)
+      const { data: existingCV, error: searchError } = await supabase
         .from('cvs')
-        .insert({
-          user_id: user.id,
-          title: cvTitle,
-          content: cvData as any,
-          status: 'draft',
-          template_name: 'modern',
-          cv_source: 'job_matcher'
-        })
-        .select();
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('cv_source', 'editor')
+        .maybeSingle();
+
+      if (searchError) {
+        console.error('Error searching for existing CV:', searchError);
+      }
+
+      let result;
+
+      if (existingCV) {
+        // Update existing general CV
+        result = await supabase
+          .from('cvs')
+          .update({
+            title: cvTitle,
+            content: cvData as any,
+            status: 'draft',
+            template_name: 'modern',
+            last_updated: new Date().toISOString()
+          })
+          .eq('id', existingCV.id)
+          .select();
+        
+        setCurrentCvId(existingCV.id);
+      } else {
+        // Create new general CV
+        result = await supabase
+          .from('cvs')
+          .insert({
+            user_id: user.id,
+            title: cvTitle,
+            content: cvData as any,
+            status: 'draft',
+            template_name: 'modern',
+            cv_source: 'editor'
+          })
+          .select();
+
+        if (result.data && result.data[0]) {
+          setCurrentCvId(result.data[0].id);
+        }
+      }
 
       if (result.error) {
-        console.error('Error saving adapted CV:', result.error);
-        toast.error(`Error al guardar el CV adaptado: ${result.error.message}`);
+        console.error('Error saving CV:', result.error);
+        toast.error(`Error al guardar el CV: ${result.error.message}`);
         return;
       }
       
-      toast.success("CV adaptado guardado exitosamente");
+      toast.success("CV principal guardado exitosamente");
       navigate("/app/match");
     } catch (error) {
-      console.error('Error saving adapted CV:', error);
-      toast.error("Error al guardar el CV adaptado");
+      console.error('Error saving CV:', error);
+      toast.error("Error al guardar el CV");
     }
   };
 
