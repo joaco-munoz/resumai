@@ -28,7 +28,7 @@ import { SkillsTab } from "@/components/cv-builder/SkillsTab";
 import { CVPreview } from "@/components/cv-builder/CVPreview";
 
 const CVBuilder = () => {
-  const { cvData, setCvData, isLoading, currentCvId, saveCV, saveAndAdapt } = useCVData();
+  const { cvData, setCvData, isLoading, currentCvId, saveCV, saveAndAdapt, setCurrentCvId } = useCVData();
   
   const [isImproving, setIsImproving] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('personal');
