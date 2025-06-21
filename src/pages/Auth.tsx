@@ -152,7 +152,7 @@ const Auth = () => {
             <Separator className="bg-slate-700" />
             <div className="absolute inset-0 flex items-center justify-center">
               <span className="bg-slate-900 px-3 text-sm text-slate-400 uppercase tracking-wider">
-                OR
+                O
               </span>
             </div>
           </div>
@@ -235,7 +235,7 @@ const Auth = () => {
             >
               {loading 
                 ? (isSignUp ? "Creating account..." : "Signing in...") 
-                : (isSignUp ? "Create your account" : "Log in")
+                : (isSignUp ? "Create your account" : "Ingresar")
               }
             </Button>
           </form>
