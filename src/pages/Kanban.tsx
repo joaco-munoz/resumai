@@ -104,11 +104,11 @@ const Kanban = () => {
   }, [user]);
 
   const columns = [
-    { id: 'saved', title: 'SAVED', count: interviews.filter(i => i.status === 'saved').length },
-    { id: 'applied', title: 'APPLIED', count: interviews.filter(i => i.status === 'applied').length },
-    { id: 'interviewing', title: 'INTERVIEWING', count: interviews.filter(i => i.status === 'interviewing').length },
-    { id: 'offer', title: 'OFFER', count: interviews.filter(i => i.status === 'offer').length },
-    { id: 'rejected', title: 'REJECTED', count: interviews.filter(i => i.status === 'rejected').length }
+    { id: 'saved', title: 'Guardado', count: interviews.filter(i => i.status === 'saved').length },
+    { id: 'applied', title: 'Postulado', count: interviews.filter(i => i.status === 'applied').length },
+    { id: 'interviewing', title: 'En entrevista', count: interviews.filter(i => i.status === 'interviewing').length },
+    { id: 'offer', title: 'Oferta Recibidad', count: interviews.filter(i => i.status === 'offer').length },
+    { id: 'rejected', title: 'Rechazado', count: interviews.filter(i => i.status === 'rejected').length }
   ];
 
   const handleAddInterview = async () => {
