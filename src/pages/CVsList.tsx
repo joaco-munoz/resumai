@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -52,6 +51,8 @@ export default function CVsList() {
 
   const loadCVs = async () => {
     try {
+      console.log('Loading CVs for user:', user?.id);
+      
       const { data, error } = await supabase
         .from('cvs')
         .select('id, title, status, created_at, last_updated, ai_score')
@@ -60,10 +61,11 @@ export default function CVsList() {
 
       if (error) {
         console.error('Error loading CVs:', error);
-        toast.error("Error al cargar los CVs");
+        toast.error(`Error al cargar los CVs: ${error.message}`);
         return;
       }
 
+      console.log('CVs loaded successfully:', data);
       setCvs(data || []);
     } catch (error) {
       console.error('Error loading CVs:', error);
@@ -108,6 +110,8 @@ export default function CVsList() {
 
   const deleteCV = async (cvId: string) => {
     try {
+      console.log('Deleting CV:', cvId);
+      
       const { error } = await supabase
         .from('cvs')
         .delete()
@@ -115,10 +119,11 @@ export default function CVsList() {
 
       if (error) {
         console.error('Error deleting CV:', error);
-        toast.error("Error al eliminar el CV");
+        toast.error(`Error al eliminar el CV: ${error.message}`);
         return;
       }
 
+      console.log('CV deleted successfully');
       toast.success("CV eliminado exitosamente");
       loadCVs(); // Reload the list
     } catch (error) {

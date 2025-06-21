@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
@@ -298,22 +299,32 @@ const CVBuilder = () => {
     try {
       const cvTitle = `CV - ${cvData.personalInfo.fullName}`;
       
-      const { error } = await supabase
+      console.log('Attempting to save CV with data:', {
+        user_id: user.id,
+        title: cvTitle,
+        content: cvData,
+        status: 'draft', // Cambio de 'active' a 'draft'
+        template_name: 'modern'
+      });
+      
+      const { data, error } = await supabase
         .from('cvs')
         .insert({
           user_id: user.id,
           title: cvTitle,
           content: cvData,
-          status: 'active',
+          status: 'draft', // Usando 'draft' en lugar de 'active'
           template_name: 'modern'
-        });
+        })
+        .select();
 
       if (error) {
         console.error('Error saving CV:', error);
-        toast.error("Error al guardar el CV");
+        toast.error(`Error al guardar el CV: ${error.message}`);
         return;
       }
 
+      console.log('CV saved successfully:', data);
       toast.success("CV guardado exitosamente");
       navigate("/app/cvs");
     } catch (error) {
@@ -335,22 +346,32 @@ const CVBuilder = () => {
     try {
       const cvTitle = `CV - ${cvData.personalInfo.fullName}`;
       
-      const { error } = await supabase
+      console.log('Attempting to save and adapt CV with data:', {
+        user_id: user.id,
+        title: cvTitle,
+        content: cvData,
+        status: 'draft',
+        template_name: 'modern'
+      });
+      
+      const { data, error } = await supabase
         .from('cvs')
         .insert({
           user_id: user.id,
           title: cvTitle,
           content: cvData,
-          status: 'active',
+          status: 'draft', // Usando 'draft' en lugar de 'active'
           template_name: 'modern'
-        });
+        })
+        .select();
 
       if (error) {
         console.error('Error saving CV:', error);
-        toast.error("Error al guardar el CV");
+        toast.error(`Error al guardar el CV: ${error.message}`);
         return;
       }
 
+      console.log('CV saved successfully:', data);
       toast.success("CV guardado exitosamente");
       navigate("/app/match");
     } catch (error) {
