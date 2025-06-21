@@ -89,23 +89,30 @@ const CVBuilder = () => {
   const [completedSections, setCompletedSections] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [currentCvId, setCurrentCvId] = useState<string | null>(null);
 
-  // Load CV data if editing existing CV
+  // Load CV data - either specific CV or last saved CV
   useEffect(() => {
-    if (cvId && user) {
-      loadCV();
+    if (user) {
+      if (cvId && cvId !== 'new') {
+        // Load specific CV
+        loadCV(cvId);
+      } else {
+        // Load the last saved CV
+        loadLastCV();
+      }
     }
   }, [cvId, user]);
 
-  const loadCV = async () => {
+  const loadCV = async (id: string) => {
     setIsLoading(true);
     try {
-      console.log('Loading CV with ID:', cvId);
+      console.log('Loading CV with ID:', id);
       
       const { data, error } = await supabase
         .from('cvs')
         .select('*')
-        .eq('id', cvId)
+        .eq('id', id)
         .eq('user_id', user?.id)
         .single();
 
@@ -119,11 +126,49 @@ const CVBuilder = () => {
       if (data && data.content) {
         console.log('CV loaded successfully:', data);
         setCvData(data.content as unknown as CVData);
+        setCurrentCvId(data.id);
       }
     } catch (error) {
       console.error('Error loading CV:', error);
       toast.error("Error al cargar el CV");
       navigate('/app/cvs');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const loadLastCV = async () => {
+    setIsLoading(true);
+    try {
+      console.log('Loading last saved CV for user:', user?.id);
+      
+      const { data, error } = await supabase
+        .from('cvs')
+        .select('*')
+        .eq('user_id', user?.id)
+        .order('last_updated', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (error) {
+        console.error('Error loading last CV:', error);
+        toast.error(`Error al cargar el último CV: ${error.message}`);
+        return;
+      }
+
+      if (data && data.content) {
+        console.log('Last CV loaded successfully:', data);
+        setCvData(data.content as unknown as CVData);
+        setCurrentCvId(data.id);
+        // Update URL to reflect the loaded CV
+        navigate(`/app/cv/${data.id}`, { replace: true });
+      } else {
+        console.log('No CVs found, keeping default data');
+        setCurrentCvId(null);
+      }
+    } catch (error) {
+      console.error('Error loading last CV:', error);
+      toast.error("Error al cargar el último CV");
     } finally {
       setIsLoading(false);
     }
@@ -349,7 +394,7 @@ const CVBuilder = () => {
 
       let result;
 
-      if (cvId) {
+      if (currentCvId) {
         // Update existing CV
         result = await supabase
           .from('cvs')
@@ -360,7 +405,7 @@ const CVBuilder = () => {
             template_name: 'modern',
             last_updated: new Date().toISOString()
           })
-          .eq('id', cvId)
+          .eq('id', currentCvId)
           .eq('user_id', user.id)
           .select();
       } else {
@@ -384,7 +429,14 @@ const CVBuilder = () => {
       }
 
       console.log('CV saved successfully:', result.data);
-      toast.success(cvId ? "CV actualizado exitosamente" : "CV guardado exitosamente");
+      
+      // Update currentCvId if it was a new CV
+      if (!currentCvId && result.data && result.data[0]) {
+        setCurrentCvId(result.data[0].id);
+        navigate(`/app/cv/${result.data[0].id}`, { replace: true });
+      }
+      
+      toast.success(currentCvId ? "CV actualizado exitosamente" : "CV guardado exitosamente");
       navigate("/app/cvs");
     } catch (error) {
       console.error('Error saving CV:', error);
@@ -415,7 +467,7 @@ const CVBuilder = () => {
 
       let result;
 
-      if (cvId) {
+      if (currentCvId) {
         // Update existing CV
         result = await supabase
           .from('cvs')
@@ -426,7 +478,7 @@ const CVBuilder = () => {
             template_name: 'modern',
             last_updated: new Date().toISOString()
           })
-          .eq('id', cvId)
+          .eq('id', currentCvId)
           .eq('user_id', user.id)
           .select();
       } else {
@@ -450,7 +502,13 @@ const CVBuilder = () => {
       }
 
       console.log('CV saved successfully:', result.data);
-      toast.success(cvId ? "CV actualizado exitosamente" : "CV guardado exitosamente");
+      
+      // Update currentCvId if it was a new CV
+      if (!currentCvId && result.data && result.data[0]) {
+        setCurrentCvId(result.data[0].id);
+      }
+      
+      toast.success(currentCvId ? "CV actualizado exitosamente" : "CV guardado exitosamente");
       navigate("/app/match");
     } catch (error) {
       console.error('Error saving CV:', error);
@@ -516,10 +574,10 @@ const CVBuilder = () => {
                 <SidebarTrigger />
                 <div>
                   <h1 className="text-2xl font-bold gradient-text">
-                    {cvId ? "Editar CV" : "Editor de CV"}
+                    {currentCvId ? "Editar CV" : "Editor de CV"}
                   </h1>
                   <p className="text-gray-600">
-                    {cvId ? "Modifica tu CV existente" : "Crea tu CV profesional optimizado para ATS"}
+                    {currentCvId ? "Modifica tu CV existente" : "Crea tu CV profesional optimizado para ATS"}
                   </p>
                 </div>
               </div>
