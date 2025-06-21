@@ -14,13 +14,8 @@ export const AccountStats = ({
       
 
       <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-medium text-gray-600">Aplicaciones</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold text-success-600">{stats.applications}</div>
-          <p className="text-sm text-gray-500">Total enviadas</p>
-        </CardContent>
+        
+        
       </Card>
 
       
