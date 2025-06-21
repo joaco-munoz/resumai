@@ -123,7 +123,7 @@ export function AppSidebar() {
                         to={item.url} 
                         className={active 
                           ? "bg-blue-500 text-white font-medium hover:bg-blue-600" 
-                          : "hover:bg-gray-100"
+                          : "hover:bg-blue-500"
                         }
                       >
                         <item.icon className="h-4 w-4" />
@@ -168,7 +168,7 @@ export function AppSidebar() {
                 to={profileItem.url} 
                 className={isActive(profileItem.url)
                   ? "bg-blue-500 text-white font-medium hover:bg-blue-600" 
-                  : "hover:bg-gray-100"
+                  : "hover:bg-blue-500"
                 }
               >
                 <profileItem.icon className="h-4 w-4" />
