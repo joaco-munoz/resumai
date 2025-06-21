@@ -2,7 +2,10 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Crown, CreditCard, Zap, CheckCircle } from "lucide-react";
+import { Crown, CreditCard, Zap, CheckCircle, Loader2 } from "lucide-react";
+import { useState } from "react";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface PlanCardProps {
   currentPlan: string;
@@ -11,6 +14,53 @@ interface PlanCardProps {
 }
 
 export const PlanCard = ({ currentPlan, isUpgrading, onUpgrade }: PlanCardProps) => {
+  const [isCreatingSubscription, setIsCreatingSubscription] = useState(false);
+
+  const handleCreateSubscription = async () => {
+    setIsCreatingSubscription(true);
+    
+    try {
+      console.log("Iniciando proceso de suscripción desde Profile...");
+      
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error("Debes iniciar sesión para suscribirte");
+        setIsCreatingSubscription(false);
+        return;
+      }
+
+      console.log("Usuario autenticado, creando suscripción...");
+      
+      const { data, error } = await supabase.functions.invoke('create-mercadopago-subscription', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      console.log("Respuesta de la función:", { data, error });
+
+      if (error) {
+        console.error('Error creating subscription:', error);
+        toast.error(`Error al crear la suscripción: ${error.message}`);
+        return;
+      }
+
+      if (data?.checkout_url) {
+        console.log("Redirigiendo a:", data.checkout_url);
+        toast.success("Redirigiendo a MercadoPago...");
+        window.open(data.checkout_url, '_blank');
+      } else {
+        console.error("No checkout URL received:", data);
+        toast.error("No se pudo obtener la URL de pago");
+      }
+    } catch (error: any) {
+      console.error('Subscription error:', error);
+      toast.error("Error inesperado al procesar la suscripción");
+    } finally {
+      setIsCreatingSubscription(false);
+    }
+  };
+
   return (
     <>
       {/* Current Plan */}
@@ -34,30 +84,44 @@ export const PlanCard = ({ currentPlan, isUpgrading, onUpgrade }: PlanCardProps)
                 </CardTitle>
                 <CardDescription>
                   {currentPlan === 'pro' 
-                    ? 'Acceso completo a todas las funciones'
-                    : 'Perfecto para empezar con CVMaster AI'
+                    ? 'Acceso completo a todas las funciones premium'
+                    : 'Actualiza a Pro para acceder a todas las funciones premium'
                   }
                 </CardDescription>
               </div>
             </div>
             
             {currentPlan === 'free' && (
-              <Button 
-                onClick={onUpgrade}
-                disabled={isUpgrading}
-                className="bg-gradient-to-r from-brand-500 to-brand-700"
-              >
-                <Zap className="h-4 w-4 mr-2" />
-                {isUpgrading ? 'Procesando...' : 'Actualizar a Pro'}
-              </Button>
+              <div className="text-right">
+                <div className="text-2xl font-bold text-brand-600 mb-1">
+                  $6.990 <span className="text-sm font-normal text-gray-500">CLP/mes</span>
+                </div>
+                <Button 
+                  onClick={handleCreateSubscription}
+                  disabled={isCreatingSubscription}
+                  className="bg-gradient-to-r from-brand-500 to-brand-700 hover:from-brand-600 hover:to-brand-800"
+                >
+                  {isCreatingSubscription ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Procesando...
+                    </>
+                  ) : (
+                    <>
+                      <Crown className="h-4 w-4 mr-2" />
+                      Suscribirse a Pro
+                    </>
+                  )}
+                </Button>
+              </div>
             )}
           </div>
         </CardHeader>
         {currentPlan === 'pro' && (
           <CardContent>
-            <div className="flex items-center justify-between text-sm text-gray-600">
-              <span>Próxima facturación: 15 de Febrero, 2024</span>
-              <span>$29.00 USD/mes</span>
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-gray-600">Suscripción activa con MercadoPago</span>
+              <span className="font-semibold text-brand-600">$6.990 CLP/mes</span>
             </div>
           </CardContent>
         )}
@@ -107,7 +171,7 @@ export const PlanCard = ({ currentPlan, isUpgrading, onUpgrade }: PlanCardProps)
                   <h3 className="text-lg font-semibold">Plan Pro</h3>
                   <Badge className="bg-brand-100 text-brand-700">Recomendado</Badge>
                 </div>
-                <div className="text-2xl font-bold">$29<span className="text-sm font-normal text-gray-500">/mes</span></div>
+                <div className="text-2xl font-bold">$6.990<span className="text-sm font-normal text-gray-500"> CLP/mes</span></div>
                 <ul className="space-y-2 text-sm">
                   <li className="flex items-center gap-2">
                     <CheckCircle className="h-4 w-4 text-success-500" />
@@ -139,12 +203,21 @@ export const PlanCard = ({ currentPlan, isUpgrading, onUpgrade }: PlanCardProps)
                   </li>
                 </ul>
                 <Button 
-                  onClick={onUpgrade}
-                  disabled={isUpgrading}
-                  className="w-full bg-gradient-to-r from-brand-500 to-brand-700"
+                  onClick={handleCreateSubscription}
+                  disabled={isCreatingSubscription}
+                  className="w-full bg-gradient-to-r from-brand-500 to-brand-700 hover:from-brand-600 hover:to-brand-800"
                 >
-                  <Crown className="h-4 w-4 mr-2" />
-                  {isUpgrading ? 'Procesando...' : 'Actualizar a Pro'}
+                  {isCreatingSubscription ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Procesando...
+                    </>
+                  ) : (
+                    <>
+                      <Crown className="h-4 w-4 mr-2" />
+                      Suscribirse a Pro
+                    </>
+                  )}
                 </Button>
               </div>
             </div>
