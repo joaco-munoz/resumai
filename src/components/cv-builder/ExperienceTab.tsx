@@ -2,7 +2,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Plus, Trash2, ArrowRight } from "lucide-react";
@@ -117,12 +117,46 @@ export const ExperienceTab = ({
             
             <div className="space-y-2">
               <Label>Descripción</Label>
-              <Textarea
-                value={exp.description}
-                onChange={(e) => updateExperience(exp.id, 'description', e.target.value)}
-                rows={3}
-                placeholder="Describe tus responsabilidades y logros principales..."
-              />
+              {exp.description.split('\n').map((line, idx) => (
+                <div key={idx} className="flex gap-2">
+                  <Input
+                    className="flex-1"
+                    value={line}
+                    onChange={(e) => {
+                      const lines = exp.description.split('\n');
+                      lines[idx] = e.target.value;
+                      updateExperience(exp.id, 'description', lines.join('\n'));
+                    }}
+                    placeholder={`Responsabilidad o logro ${idx + 1}`}
+                  />
+                  {exp.description.split('\n').length > 1 && (
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      onClick={() => {
+                        const lines = exp.description.split('\n');
+                        lines.splice(idx, 1);
+                        updateExperience(exp.id, 'description', lines.join('\n'));
+                      }}
+                      className="text-red-600 hover:text-red-700"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
+              ))}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  const lines = exp.description ? exp.description.split('\n') : [];
+                  lines.push('');
+                  updateExperience(exp.id, 'description', lines.join('\n'));
+                }}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Agregar bullet
+              </Button>
             </div>
           </div>
         ))}

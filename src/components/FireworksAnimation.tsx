@@ -69,6 +69,9 @@ const FireworksAnimation: React.FC<FireworksAnimationProps> = ({ isActive, onCom
       return;
     }
 
+    // Track if any particles have been launched to avoid finishing before start
+    const launchedRef = { current: false } as { current: boolean };
+
     // Create multiple fireworks at different positions and times
     const fireworksPositions = [
       { x: window.innerWidth * 0.2, y: window.innerHeight * 0.3, delay: 0 },
@@ -90,10 +93,6 @@ const FireworksAnimation: React.FC<FireworksAnimationProps> = ({ isActive, onCom
     const animate = () => {
       setParticles(prev => {
         const updated = updateParticles(prev);
-        if (updated.length === 0 && Date.now() > 2000) {
-          onComplete();
-          return [];
-        }
         return updated;
       });
       

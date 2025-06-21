@@ -49,9 +49,35 @@ const Kanban = () => {
     job_type: '',
     location: ''
   });
+  const [companySuggestions, setCompanySuggestions] = useState<{ name: string; logo: string; domain: string }[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const [isClient, setIsClient] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showFireworks, setShowFireworks] = useState(false);
+
+  // Fetch company suggestions when the user types in the company field
+  useEffect(() => {
+    const query = formData.company.trim();
+    if (query.length < 2) {
+      setCompanySuggestions([]);
+      return;
+    }
+    const controller = new AbortController();
+    const timeout = setTimeout(async () => {
+      try {
+        const res = await fetch(`https://autocomplete.clearbit.com/v1/companies/suggest?query=${encodeURIComponent(query)}`, { signal: controller.signal });
+        if (!res.ok) return;
+        const data = await res.json();
+        setCompanySuggestions(data.slice(0, 8));
+      } catch (err) {
+        console.error('Error fetching company suggestions', err);
+      }
+    }, 300);
+    return () => {
+      clearTimeout(timeout);
+      controller.abort();
+    };
+  }, [formData.company]);
 
   // Handle hydration for drag and drop
   useEffect(() => {
@@ -342,12 +368,36 @@ const Kanban = () => {
                         </div>
                         <div className="space-y-2">
                           <Label htmlFor="company">Empresa *</Label>
-                          <Input
-                            id="company"
-                            value={formData.company}
-                            onChange={(e) => setFormData({ ...formData, company: e.target.value })}
-                            placeholder="ej. TechCorp"
-                          />
+                          <div className="relative">
+                            <Input
+                              id="company"
+                              value={formData.company}
+                              onChange={(e) => {
+                                setFormData({ ...formData, company: e.target.value });
+                              }}
+                              onFocus={() => setShowSuggestions(true)}
+                              placeholder="ej. TechCorp"
+                              autoComplete="off"
+                            />
+                            {showSuggestions && companySuggestions.length > 0 && (
+                              <div className="absolute z-50 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto">
+                                {companySuggestions.map((suggestion) => (
+                                  <button
+                                    key={suggestion.domain}
+                                    type="button"
+                                    className="w-full flex items-center px-3 py-2 text-left hover:bg-gray-50"
+                                    onClick={() => {
+                                      setFormData({ ...formData, company: suggestion.name });
+                                      setShowSuggestions(false);
+                                    }}
+                                  >
+                                    <img src={suggestion.logo} alt={suggestion.name} className="w-6 h-6 mr-2 rounded" />
+                                    <span className="text-sm text-gray-700">{suggestion.name}</span>
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
                       <div className="grid grid-cols-2 gap-4">
@@ -474,8 +524,19 @@ const Kanban = () => {
                                         <div className="flex items-start justify-between">
                                           <div className="flex-1">
                                             <div className="flex items-center gap-2 mb-1">
-                                              <div className="w-8 h-8 bg-gray-100 rounded-md flex items-center justify-center">
-                                                <span className="text-xs font-medium text-gray-600">
+                                              <div className="w-8 h-8 bg-gray-100 rounded-md flex items-center justify-center overflow-hidden">
+                                                <img
+                                                  src={`https://logo.clearbit.com/${interview.company.replace(/\s+/g, '').toLowerCase()}.com`}
+                                                  alt={interview.company}
+                                                  className="w-full h-full object-contain"
+                                                  onError={(e) => {
+                                                    const img = e.currentTarget as HTMLImageElement;
+                                                    img.style.display = 'none';
+                                                    const fallback = img.nextElementSibling as HTMLElement | null;
+                                                    if (fallback) fallback.style.display = 'flex';
+                                                  }}
+                                                />
+                                                <span className="hidden w-full h-full items-center justify-center text-xs font-medium text-gray-600">
                                                   {interview.company.charAt(0)}
                                                 </span>
                                               </div>
