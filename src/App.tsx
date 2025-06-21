@@ -13,6 +13,7 @@ import CVBuilder from "./pages/CVBuilder";
 import CVsList from "./pages/CVsList";
 import JobMatcher from "./pages/JobMatcher";
 import Profile from "./pages/Profile";
+import Billing from "./pages/Billing";
 import Kanban from "./pages/Kanban";
 import NotFound from "./pages/NotFound";
 
@@ -56,6 +57,11 @@ const App = () => (
             <Route path="/app/profile" element={
               <ProtectedRoute>
                 <Profile />
+              </ProtectedRoute>
+            } />
+            <Route path="/app/billing" element={
+              <ProtectedRoute>
+                <Billing />
               </ProtectedRoute>
             } />
             <Route path="*" element={<NotFound />} />
