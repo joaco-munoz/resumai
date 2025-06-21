@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -138,7 +139,7 @@ export default function CVBuilder() {
   const handleExperienceChange = (index: number, field: string, value: string) => {
     setCvData(prevData => {
       const newExperience = [...prevData.experience];
-      newExperience[index][field] = value;
+      newExperience[index] = { ...newExperience[index], [field]: value };
       return {
         ...prevData,
         experience: newExperience
@@ -172,7 +173,7 @@ export default function CVBuilder() {
   const handleEducationChange = (index: number, field: string, value: string) => {
     setCvData(prevData => {
       const newEducation = [...prevData.education];
-      newEducation[index][field] = value;
+      newEducation[index] = { ...newEducation[index], [field]: value };
       return {
         ...prevData,
         education: newEducation
@@ -250,8 +251,8 @@ export default function CVBuilder() {
           .from('cvs')
           .update({
             title: cvData.personalInfo.fullName || "Mi CV General",
-            content: cvData,
-            status: 'active',
+            content: cvData as any,
+            status: 'draft' as const,
             last_updated: new Date().toISOString(),
             cv_source: 'editor'
           })
@@ -265,8 +266,8 @@ export default function CVBuilder() {
           .insert({
             user_id: user.id,
             title: cvData.personalInfo.fullName || "Mi CV General",
-            content: cvData,
-            status: 'active',
+            content: cvData as any,
+            status: 'draft' as const,
             cv_source: 'editor'
           })
           .select()
