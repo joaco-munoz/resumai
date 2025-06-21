@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -101,8 +100,10 @@ export const CVAdaptationModal = ({
     if (adapted.experience.length > 0) {
       const latestExperience = adapted.experience[0];
       const existingBullets = latestExperience.description.split('\n').filter(line => line.trim());
+      
+      // No agregar puntos ya que el formato ya los incluye
       const newBullets = suggestions.suggestedBullets.map(bullet => 
-        bullet.startsWith('•') ? bullet : `• ${bullet}`
+        bullet.trim()
       );
       
       adapted.experience[0] = {
