@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import AuthModal from "@/components/AuthModal";
 import { Sparkles, Target, FileText, CheckCircle, Users, Zap, Star, ArrowRight, Calendar, MoreHorizontal } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
@@ -411,8 +410,6 @@ Ahorra horas adaptando tu currículum: nuestra plataforma usa IA para convertir 
           </div>
         </div>
       </footer>
-
-      <AuthModal open={authModalOpen} onOpenChange={setAuthModalOpen} />
     </div>;
 };
 export default Index;
