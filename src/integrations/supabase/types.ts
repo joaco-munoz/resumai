@@ -111,10 +111,8 @@ export type Database = {
           ai_score: number | null
           content: Json | null
           created_at: string
-          cv_source: string
           download_count: number | null
           id: string
-          is_primary: boolean | null
           is_public: boolean | null
           last_updated: string | null
           pdf_url: string | null
@@ -131,10 +129,8 @@ export type Database = {
           ai_score?: number | null
           content?: Json | null
           created_at?: string
-          cv_source?: string
           download_count?: number | null
           id?: string
-          is_primary?: boolean | null
           is_public?: boolean | null
           last_updated?: string | null
           pdf_url?: string | null
@@ -151,10 +147,8 @@ export type Database = {
           ai_score?: number | null
           content?: Json | null
           created_at?: string
-          cv_source?: string
           download_count?: number | null
           id?: string
-          is_primary?: boolean | null
           is_public?: boolean | null
           last_updated?: string | null
           pdf_url?: string | null

@@ -13,8 +13,7 @@ import {
   Eye,
   Edit,
   Download,
-  Trash2,
-  Star
+  Trash2
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -40,13 +39,11 @@ interface CV {
   last_updated: string;
   ai_score?: number;
   content?: any;
-  cv_source: string;
 }
 
 export default function CVsList() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [generalCV, setGeneralCV] = useState<CV | null>(null);
-  const [jobMatcherCVs, setJobMatcherCVs] = useState<CV[]>([]);
+  const [cvs, setCvs] = useState<CV[]>([]);
   const [loading, setLoading] = useState(true);
   const [previewCV, setPreviewCV] = useState<CV | null>(null);
   const [deleteCV, setDeleteCV] = useState<CV | null>(null);
@@ -66,7 +63,7 @@ export default function CVsList() {
       
       const { data, error } = await supabase
         .from('cvs')
-        .select('id, title, status, created_at, last_updated, ai_score, content, cv_source')
+        .select('id, title, status, created_at, last_updated, ai_score, content')
         .eq('user_id', user?.id)
         .order('last_updated', { ascending: false });
 
@@ -77,15 +74,7 @@ export default function CVsList() {
       }
 
       console.log('CVs loaded successfully:', data);
-      
-      // Separar CVs por origen
-      const editorCVs = data?.filter(cv => cv.cv_source === 'editor') || [];
-      const matcherCVs = data?.filter(cv => cv.cv_source === 'job_matcher') || [];
-      
-      // El CV general es el más reciente del editor
-      setGeneralCV(editorCVs.length > 0 ? editorCVs[0] : null);
-      setJobMatcherCVs(matcherCVs);
-      
+      setCvs(data || []);
     } catch (error) {
       console.error('Error loading CVs:', error);
       toast.error("Error al cargar los CVs");
@@ -94,7 +83,7 @@ export default function CVsList() {
     }
   };
 
-  const filteredJobMatcherCVs = jobMatcherCVs.filter(cv => 
+  const filteredCVs = cvs.filter(cv => 
     cv.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -132,11 +121,7 @@ export default function CVsList() {
   };
 
   const handleEditCV = (cv: CV) => {
-    if (cv.cv_source === 'editor') {
-      navigate(`/app/cv/new`);
-    } else {
-      navigate(`/app/cv/${cv.id}`);
-    }
+    navigate(`/app/cv/${cv.id}`);
   };
 
   const handleDownloadCV = (cv: CV) => {
@@ -182,77 +167,6 @@ export default function CVsList() {
     }
   };
 
-  const renderCVCard = (cv: CV, showActions = true) => (
-    <div className="grid grid-cols-12 gap-4 items-center py-3 border-b border-gray-100 hover:bg-gray-50 rounded-lg transition-colors">
-      <div className="col-span-5 flex items-center gap-3">
-        <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-          <FileText className="h-5 w-5 text-blue-600" />
-        </div>
-        <div>
-          <div className="flex items-center gap-2">
-            <h3 className="font-medium text-gray-900">{cv.title}</h3>
-            {cv.cv_source === 'editor' && (
-              <Star className="h-4 w-4 text-yellow-500 fill-current" />
-            )}
-          </div>
-          <p className="text-sm text-gray-500">Creado {formatDate(cv.created_at)}</p>
-        </div>
-      </div>
-      
-      <div className="col-span-2">
-        <Badge className={`${getScoreColor(cv.ai_score)} border-0`}>
-          {cv.ai_score ? `${cv.ai_score}%` : "Sin evaluar"}
-        </Badge>
-      </div>
-      
-      <div className="col-span-2">
-        <Badge className={`${getStatusColor(cv.status)} border-0`}>
-          {getStatusLabel(cv.status)}
-        </Badge>
-      </div>
-      
-      <div className="col-span-2 flex items-center gap-1 text-sm text-gray-500">
-        <Calendar className="h-4 w-4" />
-        {formatDate(cv.last_updated || cv.created_at)}
-      </div>
-      
-      {showActions && (
-        <div className="col-span-1 flex justify-end">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm">
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => handleViewCV(cv)}>
-                <Eye className="h-4 w-4 mr-2" />
-                Ver
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleEditCV(cv)}>
-                <Edit className="h-4 w-4 mr-2" />
-                Editar
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleDownloadCV(cv)}>
-                <Download className="h-4 w-4 mr-2" />
-                Descargar
-              </DropdownMenuItem>
-              {cv.cv_source === 'job_matcher' && (
-                <DropdownMenuItem 
-                  className="text-red-600"
-                  onClick={() => handleDeleteCV(cv)}
-                >
-                  <Trash2 className="h-4 w-4 mr-2" />
-                  Eliminar
-                </DropdownMenuItem>
-              )}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      )}
-    </div>
-  );
-
   if (loading) {
     return (
       <SidebarProvider>
@@ -283,7 +197,7 @@ export default function CVsList() {
                 <div>
                   <h1 className="text-3xl font-bold text-gray-900">Mis CVs</h1>
                   <p className="text-gray-600 mt-2">
-                    Gestiona tu CV general y todos los CVs creados con Job Matcher.
+                    Una lista de todos tus currículums, mostrando título, puntuación y fecha de creación.
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
@@ -297,93 +211,44 @@ export default function CVsList() {
                 </div>
               </div>
 
-              {/* CV General Section */}
-              <Card className="mb-8">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Star className="h-5 w-5 text-yellow-500" />
-                    CV General
-                  </CardTitle>
-                  <p className="text-sm text-gray-600">
-                    Tu CV principal creado desde el Editor CVs
-                  </p>
-                </CardHeader>
-                <CardContent>
-                  {generalCV ? (
-                    <div className="space-y-4">
-                      {/* Table Header */}
-                      <div className="grid grid-cols-12 gap-4 text-sm font-medium text-gray-500 border-b pb-3">
-                        <div className="col-span-5">CV</div>
-                        <div className="col-span-2">Puntuación</div>
-                        <div className="col-span-2">Estado</div>
-                        <div className="col-span-2">Actualizado</div>
-                        <div className="col-span-1"></div>
-                      </div>
-                      {renderCVCard(generalCV)}
-                    </div>
-                  ) : (
-                    <div className="text-center py-12">
-                      <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                      <h3 className="text-lg font-medium text-gray-900 mb-2">
-                        No tienes un CV general
-                      </h3>
-                      <p className="text-gray-500 mb-4">
-                        Crea tu CV principal usando el Editor CVs
-                      </p>
-                      <Button onClick={() => navigate("/app/cv/new")}>
-                        <Plus className="h-4 w-4 mr-2" />
-                        Crear CV General
-                      </Button>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+              {/* Search */}
+              <div className="mb-6">
+                <div className="relative max-w-md">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+                  <Input
+                    placeholder="Buscar currículums..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+              </div>
 
-              {/* Job Matcher CVs Section */}
+              {/* CVs Table */}
               <Card>
                 <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle className="flex items-center gap-2">
-                        <FileText className="h-5 w-5" />
-                        CVs de Job Matcher
-                      </CardTitle>
-                      <p className="text-sm text-gray-600 mt-1">
-                        CVs personalizados creados para ofertas específicas
-                      </p>
-                    </div>
-                    {jobMatcherCVs.length > 0 && (
-                      <div className="max-w-md">
-                        <div className="relative">
-                          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                          <Input
-                            placeholder="Buscar CVs de Job Matcher..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="pl-10"
-                          />
-                        </div>
-                      </div>
-                    )}
-                  </div>
+                  <CardTitle className="flex items-center gap-2">
+                    <FileText className="h-5 w-5" />
+                    Currículums
+                  </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {filteredJobMatcherCVs.length === 0 ? (
+                  {filteredCVs.length === 0 ? (
                     <div className="text-center py-12">
                       <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                       <h3 className="text-lg font-medium text-gray-900 mb-2">
-                        {jobMatcherCVs.length === 0 ? "No tienes CVs de Job Matcher" : "No se encontraron CVs"}
+                        {cvs.length === 0 ? "No tienes CVs creados" : "No se encontraron CVs"}
                       </h3>
                       <p className="text-gray-500 mb-4">
-                        {jobMatcherCVs.length === 0 
-                          ? "Los CVs creados con Job Matcher aparecerán aquí" 
+                        {cvs.length === 0 
+                          ? "Crea tu primer CV para comenzar" 
                           : "Intenta con otro término de búsqueda"
                         }
                       </p>
-                      {jobMatcherCVs.length === 0 && (
-                        <Button onClick={() => navigate("/app/jobs")}>
+                      {cvs.length === 0 && (
+                        <Button onClick={() => navigate("/app/cv/new")}>
                           <Plus className="h-4 w-4 mr-2" />
-                          Ir a Job Matcher
+                          Crear mi primer CV
                         </Button>
                       )}
                     </div>
@@ -399,20 +264,84 @@ export default function CVsList() {
                       </div>
 
                       {/* Table Rows */}
-                      {filteredJobMatcherCVs.map((cv) => (
-                        <div key={cv.id}>
-                          {renderCVCard(cv)}
+                      {filteredCVs.map((cv) => (
+                        <div key={cv.id} className="grid grid-cols-12 gap-4 items-center py-3 border-b border-gray-100 hover:bg-gray-50 rounded-lg transition-colors">
+                          <div className="col-span-5 flex items-center gap-3">
+                            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                              <FileText className="h-5 w-5 text-blue-600" />
+                            </div>
+                            <div>
+                              <h3 className="font-medium text-gray-900">{cv.title}</h3>
+                              <p className="text-sm text-gray-500">Creado {formatDate(cv.created_at)}</p>
+                            </div>
+                          </div>
+                          
+                          <div className="col-span-2">
+                            <Badge className={`${getScoreColor(cv.ai_score)} border-0`}>
+                              {cv.ai_score ? `${cv.ai_score}%` : "Sin evaluar"}
+                            </Badge>
+                          </div>
+                          
+                          <div className="col-span-2">
+                            <Badge className={`${getStatusColor(cv.status)} border-0`}>
+                              {getStatusLabel(cv.status)}
+                            </Badge>
+                          </div>
+                          
+                          <div className="col-span-2 flex items-center gap-1 text-sm text-gray-500">
+                            <Calendar className="h-4 w-4" />
+                            {formatDate(cv.last_updated || cv.created_at)}
+                          </div>
+                          
+                          <div className="col-span-1 flex justify-end">
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="sm">
+                                  <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={() => handleViewCV(cv)}>
+                                  <Eye className="h-4 w-4 mr-2" />
+                                  Ver
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleEditCV(cv)}>
+                                  <Edit className="h-4 w-4 mr-2" />
+                                  Editar
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleDownloadCV(cv)}>
+                                  <Download className="h-4 w-4 mr-2" />
+                                  Descargar
+                                </DropdownMenuItem>
+                                <DropdownMenuItem 
+                                  className="text-red-600"
+                                  onClick={() => handleDeleteCV(cv)}
+                                >
+                                  <Trash2 className="h-4 w-4 mr-2" />
+                                  Eliminar
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
                         </div>
                       ))}
                     </div>
                   )}
 
                   {/* Pagination Info */}
-                  {filteredJobMatcherCVs.length > 0 && (
+                  {filteredCVs.length > 0 && (
                     <div className="flex items-center justify-between mt-6 pt-4 border-t">
                       <p className="text-sm text-gray-500">
-                        Mostrando 1 a {filteredJobMatcherCVs.length} de {filteredJobMatcherCVs.length} CVs de Job Matcher
+                        Mostrando 1 a {filteredCVs.length} de {filteredCVs.length} CVs
                       </p>
+                      <div className="flex items-center gap-2">
+                        <Button variant="outline" size="sm" disabled>
+                          Anterior
+                        </Button>
+                        <Button variant="outline" size="sm" disabled>
+                          Siguiente
+                        </Button>
+                      </div>
                     </div>
                   )}
                 </CardContent>
