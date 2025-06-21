@@ -24,13 +24,8 @@ export const AccountStats = ({
       </Card>
 
       <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="text-sm font-medium text-gray-600">Entrevistas</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="text-2xl font-bold text-yellow-600">{stats.interviews}</div>
-          <p className="text-sm text-gray-500">Conseguidas</p>
-        </CardContent>
+        
+        
       </Card>
     </div>;
 };
