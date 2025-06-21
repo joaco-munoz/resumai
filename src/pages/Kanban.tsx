@@ -198,14 +198,6 @@ const Kanban = () => {
               </div>
 
               <div className="flex items-center gap-3">
-                <Button variant="outline" size="sm" className="text-blue-600 border-blue-200">
-                  <Download className="h-4 w-4 mr-2" />
-                  Export CSV
-                </Button>
-                <Button variant="outline" size="sm" className="text-blue-600 border-blue-200">
-                  <Upload className="h-4 w-4 mr-2" />
-                  Import CSV
-                </Button>
                 <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
                   <DialogTrigger asChild>
                     <Button className="bg-blue-600 hover:bg-blue-700">
