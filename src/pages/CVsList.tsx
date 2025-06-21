@@ -270,7 +270,7 @@ export default function CVsList() {
                 <div>
                   <h1 className="text-3xl font-bold text-gray-900">Mis CVs</h1>
                   <p className="text-gray-600 mt-2">
-                    Gestiona tu CV general y los CVs adaptados por Job Matcher
+                    Gestiona tu CV Principal y los CVs adaptados por Job Matcher
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
@@ -289,7 +289,7 @@ export default function CVsList() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <User className="h-5 w-5 text-blue-600" />
-                    CV General
+                    CV 
                   </CardTitle>
                   <p className="text-sm text-gray-600">
                     Tu CV principal que se actualiza cuando guardas desde el Editor de CVs
@@ -311,14 +311,14 @@ export default function CVsList() {
                     <div className="text-center py-12">
                       <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                       <h3 className="text-lg font-medium text-gray-900 mb-2">
-                        No tienes un CV general
+                        No tienes un CV Principal
                       </h3>
                       <p className="text-gray-500 mb-4">
-                        Crea tu primer CV para que aparezca aquí como tu CV general
+                        Crea tu primer CV para que aparezca aquí como tu CV Principal
                       </p>
                       <Button onClick={() => navigate("/app/cv/new")}>
                         <Plus className="h-4 w-4 mr-2" />
-                        Crear CV General
+                        Crear CV Principal
                       </Button>
                     </div>
                   )}
