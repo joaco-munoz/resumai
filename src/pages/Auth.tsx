@@ -137,7 +137,12 @@ const Auth = () => {
               onClick={handleGoogleAuth}
               disabled={loading}
             >
-              <Mail className="h-5 w-5 mr-3" />
+              <img
+                src="https://developers.google.com/static/identity/images/g-logo.png"
+                srcSet="https://developers.google.com/static/identity/images/g-logo.png 1x, https://developers.google.com/static/identity/images/g-logo-2x.png 2x"
+                alt="Google G"
+                className="h-5 w-5 mr-3"
+              />
               Continue with Google
             </Button>
           </div>
