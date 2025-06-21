@@ -331,8 +331,7 @@ const Kanban = () => {
                 Archived
               </button>
             </div>
-          </header>
-        
+         
           {/* Kanban Board */}
           <div className="p-6">
             <DragDropContext onDragEnd={handleDragEnd}>
