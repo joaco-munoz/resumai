@@ -350,8 +350,8 @@ const Kanban = () => {
                             <SelectContent>
                               <SelectItem value="Full-time">Full-time</SelectItem>
                               <SelectItem value="Part-time">Part-time</SelectItem>
-                              <SelectItem value="Contract">Contract</SelectItem>
-                              <SelectItem value="Internship">Internship</SelectItem>
+                              <SelectItem value="Contract">Contrato</SelectItem>
+                              <SelectItem value="Internship">Práctica Profesional</SelectItem>
                             </SelectContent>
                           </Select>
                         </div>
@@ -407,7 +407,7 @@ const Kanban = () => {
                           onClick={selectedInterview ? handleUpdateInterview : handleAddInterview}
                           disabled={isSubmitting}
                         >
-                          {isSubmitting ? 'Guardando...' : (selectedInterview ? 'Actualizar' : 'Agregar')} Aplicación
+                          {isSubmitting ? 'Guardando...' : (selectedInterview ? 'Actualizar' : 'Agregar')} Postulación
                         </Button>
                       </div>
                     </div>
