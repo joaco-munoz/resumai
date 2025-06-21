@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -8,6 +7,7 @@ import { CheckCircle, AlertCircle, TrendingUp, Sparkles, Target } from "lucide-r
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { CVData } from "@/types/cv";
 
 interface MatchResult {
   score: number;
@@ -107,6 +107,9 @@ export const CVAdaptationModal = ({
         return;
       }
 
+      // Cast the content to CVData type
+      const cvContent = generalCV.content as unknown as CVData;
+
       // Extraer detalles del trabajo desde la descripción si están disponibles
       const jobDescription = localStorage.getItem('currentJobDescription') || '';
       const extractedDetails = extractJobDetailsFromDescription(jobDescription);
@@ -129,7 +132,7 @@ export const CVAdaptationModal = ({
       } else if (extractedDetails.position) {
         cvTitle = `CV - ${extractedDetails.position}`;
       } else {
-        cvTitle = `CV - ${generalCV.content?.personalInfo?.fullName || 'Adaptado'} - ${dateTime}`;
+        cvTitle = `CV - ${cvContent?.personalInfo?.fullName || 'Adaptado'} - ${dateTime}`;
       }
 
       // Crear el CV adaptado
