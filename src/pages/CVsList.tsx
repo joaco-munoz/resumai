@@ -63,9 +63,8 @@ export default function CVsList() {
       
       const { data, error } = await supabase
         .from('cvs')
-        .select('id, title, status, created_at, last_updated, ai_score, content, is_primary')
+        .select('id, title, status, created_at, last_updated, ai_score, content')
         .eq('user_id', user?.id)
-        .order('is_primary', { ascending: false })
         .order('last_updated', { ascending: false });
 
       if (error) {
@@ -268,22 +267,11 @@ export default function CVsList() {
                       {filteredCVs.map((cv) => (
                         <div key={cv.id} className="grid grid-cols-12 gap-4 items-center py-3 border-b border-gray-100 hover:bg-gray-50 rounded-lg transition-colors">
                           <div className="col-span-5 flex items-center gap-3">
-                            <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${cv.is_primary ? 'bg-yellow-100' : 'bg-blue-100'}`}>
-                              {cv.is_primary ? (
-                                <Star className="h-5 w-5 text-yellow-600" />
-                              ) : (
-                                <FileText className="h-5 w-5 text-blue-600" />
-                              )}
+                            <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
+                              <FileText className="h-5 w-5 text-blue-600" />
                             </div>
                             <div>
-                              <div className="flex items-center gap-2">
-                                <h3 className="font-medium text-gray-900">{cv.title}</h3>
-                                {cv.is_primary && (
-                                  <Badge className="text-xs bg-yellow-100 text-yellow-800 border-yellow-300">
-                                    Principal
-                                  </Badge>
-                                )}
-                              </div>
+                              <h3 className="font-medium text-gray-900">{cv.title}</h3>
                               <p className="text-sm text-gray-500">Creado {formatDate(cv.created_at)}</p>
                             </div>
                           </div>

@@ -113,7 +113,6 @@ export type Database = {
           created_at: string
           download_count: number | null
           id: string
-          is_primary: boolean | null
           is_public: boolean | null
           last_updated: string | null
           pdf_url: string | null
@@ -132,7 +131,6 @@ export type Database = {
           created_at?: string
           download_count?: number | null
           id?: string
-          is_primary?: boolean | null
           is_public?: boolean | null
           last_updated?: string | null
           pdf_url?: string | null
@@ -151,7 +149,6 @@ export type Database = {
           created_at?: string
           download_count?: number | null
           id?: string
-          is_primary?: boolean | null
           is_public?: boolean | null
           last_updated?: string | null
           pdf_url?: string | null
