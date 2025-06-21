@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
@@ -35,6 +34,8 @@ const CVBuilder = () => {
   const [activeTab, setActiveTab] = useState('personal');
   const [completedSections, setCompletedSections] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState(false);
+  const [savingProgress, setSavingProgress] = useState(80);
+  const [showSaveAnimation, setShowSaveAnimation] = useState(false);
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -262,7 +263,57 @@ const CVBuilder = () => {
     }
   };
 
-  const progress = getProgress();
+  const handleSaveCV = async () => {
+    setIsSaving(true);
+    setShowSaveAnimation(true);
+    setSavingProgress(80);
+    
+    // Animate progress from 80% to 100%
+    const progressInterval = setInterval(() => {
+      setSavingProgress(prev => {
+        if (prev >= 100) {
+          clearInterval(progressInterval);
+          return 100;
+        }
+        return prev + 2;
+      });
+    }, 50);
+
+    // Wait for animation to complete
+    setTimeout(async () => {
+      await saveCV();
+      setIsSaving(false);
+      setShowSaveAnimation(false);
+      setSavingProgress(80);
+    }, 1000);
+  };
+
+  const handleSaveAndAdapt = async () => {
+    setIsSaving(true);
+    setShowSaveAnimation(true);
+    setSavingProgress(80);
+    
+    // Animate progress from 80% to 100%
+    const progressInterval = setInterval(() => {
+      setSavingProgress(prev => {
+        if (prev >= 100) {
+          clearInterval(progressInterval);
+          return 100;
+        }
+        return prev + 2;
+      });
+    }, 50);
+
+    // Wait for animation to complete
+    setTimeout(async () => {
+      await saveAndAdapt();
+      setIsSaving(false);
+      setShowSaveAnimation(false);
+      setSavingProgress(80);
+    }, 1000);
+  };
+
+  const progress = showSaveAnimation ? savingProgress : getProgress();
 
   if (isLoading) {
     return (
@@ -347,8 +398,8 @@ const CVBuilder = () => {
                     addSkill={addSkill}
                     removeSkill={removeSkill}
                     goToPreviousTab={goToPreviousTab}
-                    saveCV={saveCV}
-                    saveAndAdapt={saveAndAdapt}
+                    saveCV={handleSaveCV}
+                    saveAndAdapt={handleSaveAndAdapt}
                   />
                 </TabsContent>
               </Tabs>
@@ -359,6 +410,27 @@ const CVBuilder = () => {
               <CVPreview cvData={cvData} />
             </div>
           </div>
+
+          {/* Save Animation Overlay */}
+          {showSaveAnimation && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <div className="bg-white p-8 rounded-lg shadow-lg max-w-md w-full mx-4">
+                <div className="text-center mb-6">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                  <h3 className="text-lg font-semibold text-gray-900">Guardando CV...</h3>
+                  <p className="text-gray-600 mt-2">Finalizando el proceso</p>
+                </div>
+                
+                <div className="space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Progreso</span>
+                    <span className="font-medium">{Math.round(savingProgress)}%</span>
+                  </div>
+                  <Progress value={savingProgress} className="h-2" />
+                </div>
+              </div>
+            </div>
+          )}
         </main>
       </div>
     </SidebarProvider>
