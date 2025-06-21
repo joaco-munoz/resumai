@@ -16,6 +16,9 @@ import {
 import { Sparkles, FileText, Target, User, CheckCircle, House, FolderOpen, LogOut } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 const mainMenuItems = [
   { title: "Dashboard", url: "/app", icon: House },
@@ -27,13 +30,39 @@ const mainMenuItems = [
 
 const profileItem = { title: "Mi Perfil", url: "/app/profile", icon: User };
 
+interface Profile {
+  full_name: string | null;
+  avatar_url: string | null;
+}
+
 export function AppSidebar() {
   const { state } = useSidebar();
   const location = useLocation();
   const { signOut, user } = useAuth();
   const currentPath = location.pathname;
+  const [profile, setProfile] = useState<Profile | null>(null);
   
   const isCollapsed = state === "collapsed";
+
+  useEffect(() => {
+    if (user) {
+      fetchProfile();
+    }
+  }, [user]);
+
+  const fetchProfile = async () => {
+    if (!user) return;
+    
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('full_name, avatar_url')
+      .eq('id', user.id)
+      .single();
+
+    if (!error && data) {
+      setProfile(data);
+    }
+  };
 
   const isActive = (url: string) => {
     console.log(`Checking if ${url} is active. Current path: ${currentPath}`);
@@ -50,6 +79,18 @@ export function AppSidebar() {
     return false;
   };
 
+  const getInitials = (name: string | null) => {
+    if (!name) return user?.email?.substring(0, 2).toUpperCase() || "U";
+    return name.split(' ').map(n => n[0]).join('').toUpperCase().substring(0, 2);
+  };
+
+  const getDisplayName = () => {
+    if (profile?.full_name) {
+      return profile.full_name;
+    }
+    return user?.email?.split('@')[0] || "Usuario";
+  };
+
   return (
     <Sidebar
       className={isCollapsed ? "w-14" : "w-64"}
@@ -63,11 +104,6 @@ export function AppSidebar() {
             <span className="font-bold text-lg gradient-text">ResumAI</span>
           )}
         </div>
-        {!isCollapsed && user && (
-          <div className="mt-2 text-xs text-gray-500 truncate">
-            {user.email}
-          </div>
-        )}
       </div>
 
       <SidebarTrigger className="m-2 self-start" />
@@ -104,6 +140,28 @@ export function AppSidebar() {
 
       <SidebarFooter>
         <SidebarMenu>
+          {/* User Profile Section */}
+          {!isCollapsed && user && (
+            <div className="px-2 py-3 border-t">
+              <div className="flex items-center gap-3">
+                <Avatar className="h-10 w-10">
+                  <AvatarImage src={profile?.avatar_url || undefined} alt={getDisplayName()} />
+                  <AvatarFallback className="bg-blue-100 text-blue-600 font-medium">
+                    {getInitials(profile?.full_name)}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-gray-900 truncate">
+                    {getDisplayName()}
+                  </p>
+                  <p className="text-xs text-gray-500 truncate">
+                    {user.email}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+          
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
               <NavLink 
