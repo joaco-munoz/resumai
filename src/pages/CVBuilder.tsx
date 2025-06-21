@@ -118,7 +118,7 @@ const CVBuilder = () => {
 
       if (data && data.content) {
         console.log('CV loaded successfully:', data);
-        setCvData(data.content as CVData);
+        setCvData(data.content as unknown as CVData);
       }
     } catch (error) {
       console.error('Error loading CV:', error);
