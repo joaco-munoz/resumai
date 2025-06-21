@@ -20,7 +20,7 @@ export const CVBuilderHeader = ({ currentCvId, exportPDF }: CVBuilderHeaderProps
               {currentCvId ? "Editar CV" : "Editor de CV"}
             </h1>
             <p className="text-gray-600">
-              {currentCvId ? "Modifica tu CV existente" : "Crea tu CV profesional optimizado para ATS"}
+              {currentCvId ? "Modifica tu CV principal" : "Crea tu CV profesional optimizado para ATS"}
             </p>
           </div>
         </div>
