@@ -1,5 +1,4 @@
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,22 +13,122 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { User, Mail, Phone, MapPin, Linkedin, Globe, Save, CreditCard, Crown, Download, FileText, Zap, CheckCircle, Calendar, TrendingUp } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 const Profile = () => {
+  const { user } = useAuth();
   const [profileData, setProfileData] = useState({
-    fullName: 'Juan Pérez',
-    email: 'juan.perez@email.com',
-    phone: '+34 600 123 456',
-    location: 'Madrid, España',
-    linkedin: 'linkedin.com/in/juanperez',
-    website: 'juanperez.dev',
-    github: 'github.com/juanperez'
+    fullName: '',
+    email: '',
+    phone: '',
+    location: '',
+    linkedin: '',
+    website: '',
+    github: '',
+    jobTitle: '',
+    company: '',
+    bio: '',
+    avatarUrl: ''
   });
 
   const [isSaving, setIsSaving] = useState(false);
-  const [currentPlan] = useState('free'); // 'free' or 'pro'
+  const [currentPlan, setCurrentPlan] = useState('free');
   const [isUpgrading, setIsUpgrading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({
+    cvsCreated: 0,
+    applications: 0,
+    interviews: 0
+  });
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (user) {
+      fetchProfile();
+      fetchUserStats();
+    }
+  }, [user]);
+
+  const fetchProfile = async () => {
+    if (!user) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error fetching profile:', error);
+        toast.error("Error al cargar el perfil");
+        return;
+      }
+
+      if (data) {
+        setProfileData({
+          fullName: data.full_name || '',
+          email: data.email || user.email || '',
+          phone: data.phone || '',
+          location: `${data.city || ''}${data.city && data.country ? ', ' : ''}${data.country || ''}`.trim(),
+          linkedin: data.linkedin_url || '',
+          website: data.website_url || '',
+          github: '', // No hay campo github en la tabla actual
+          jobTitle: data.job_title || '',
+          company: data.company || '',
+          bio: data.bio || '',
+          avatarUrl: data.avatar_url || ''
+        });
+        setCurrentPlan(data.subscription_tier || 'free');
+      } else {
+        // Si no existe perfil, usar datos del usuario de auth
+        setProfileData(prev => ({
+          ...prev,
+          email: user.email || '',
+          fullName: user.user_metadata?.full_name || ''
+        }));
+      }
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+      toast.error("Error al cargar el perfil");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchUserStats = async () => {
+    if (!user) return;
+
+    try {
+      // Fetch CVs count
+      const { count: cvsCount } = await supabase
+        .from('cvs')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id);
+
+      // Fetch applications count
+      const { count: applicationsCount } = await supabase
+        .from('job_applications')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id);
+
+      // Fetch interviews count (applications with status 'interview')
+      const { count: interviewsCount } = await supabase
+        .from('job_applications')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .eq('status', 'interview');
+
+      setStats({
+        cvsCreated: cvsCount || 0,
+        applications: applicationsCount || 0,
+        interviews: interviewsCount || 0
+      });
+    } catch (error) {
+      console.error('Error fetching user stats:', error);
+    }
+  };
 
   const handleInputChange = (field: string, value: string) => {
     setProfileData(prev => ({
@@ -39,13 +138,42 @@ const Profile = () => {
   };
 
   const handleSave = async () => {
+    if (!user) return;
+    
     setIsSaving(true);
     
-    // TODO: Connect to Supabase when integration is set up
     try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Separar city y country del location
+      const locationParts = profileData.location.split(',').map(part => part.trim());
+      const city = locationParts[0] || '';
+      const country = locationParts[1] || '';
+
+      const updateData = {
+        full_name: profileData.fullName,
+        email: profileData.email,
+        phone: profileData.phone,
+        city: city,
+        country: country,
+        linkedin_url: profileData.linkedin,
+        website_url: profileData.website,
+        job_title: profileData.jobTitle,
+        company: profileData.company,
+        bio: profileData.bio,
+        avatar_url: profileData.avatarUrl,
+        updated_at: new Date().toISOString()
+      };
+
+      const { error } = await supabase
+        .from('profiles')
+        .upsert([{ id: user.id, ...updateData }]);
+
+      if (error) {
+        throw error;
+      }
+
       toast.success("Perfil actualizado correctamente");
     } catch (error) {
+      console.error('Error updating profile:', error);
       toast.error("Error al actualizar el perfil");
     } finally {
       setIsSaving(false);
@@ -55,7 +183,6 @@ const Profile = () => {
   const handleUpgrade = async () => {
     setIsUpgrading(true);
     
-    // TODO: Connect to Mercado Pago when Supabase integration is set up
     try {
       await new Promise(resolve => setTimeout(resolve, 2000));
       toast.success("Redirigiendo a Mercado Pago...");
@@ -67,6 +194,7 @@ const Profile = () => {
   };
 
   const getInitials = (name: string) => {
+    if (!name) return user?.email?.substring(0, 2).toUpperCase() || "U";
     return name
       .split(' ')
       .map(n => n[0])
@@ -75,15 +203,42 @@ const Profile = () => {
       .slice(0, 2);
   };
 
+  const getDisplayName = () => {
+    return profileData.fullName || user?.email?.split('@')[0] || "Usuario";
+  };
+
+  const getMemberSince = () => {
+    if (!user?.created_at) return "Enero 2024";
+    const date = new Date(user.created_at);
+    return date.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
+  };
+
   const usageStats = {
-    cvs: { used: 1, limit: 1 },
-    exports: { used: 1, limit: 1 },
-    aiImprovements: { used: 3, limit: 5 }
+    cvs: { used: stats.cvsCreated, limit: currentPlan === 'pro' ? 999 : 1 },
+    exports: { used: Math.min(stats.cvsCreated, currentPlan === 'pro' ? 999 : 1), limit: currentPlan === 'pro' ? 999 : 1 },
+    aiImprovements: { used: Math.floor(stats.cvsCreated * 1.5), limit: currentPlan === 'pro' ? 999 : 5 }
   };
 
   const getUsagePercentage = (used: number, limit: number) => {
+    if (limit === 999) return 25; // Para plan pro, mostrar uso bajo
     return Math.min((used / limit) * 100, 100);
   };
+
+  if (loading) {
+    return (
+      <SidebarProvider>
+        <div className="min-h-screen flex w-full bg-gray-50">
+          <AppSidebar />
+          <main className="flex-1 flex items-center justify-center">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-600"></div>
+              <p className="mt-2 text-gray-600">Cargando perfil...</p>
+            </div>
+          </main>
+        </div>
+      </SidebarProvider>
+    );
+  }
 
   return (
     <SidebarProvider>
@@ -113,16 +268,16 @@ const Profile = () => {
                   <CardHeader>
                     <div className="flex items-center gap-6">
                       <Avatar className="w-20 h-20">
-                        <AvatarImage src="" alt={profileData.fullName} />
+                        <AvatarImage src={profileData.avatarUrl} alt={getDisplayName()} />
                         <AvatarFallback className="text-xl bg-gradient-to-br from-brand-500 to-brand-700 text-white">
                           {getInitials(profileData.fullName)}
                         </AvatarFallback>
                       </Avatar>
                       <div className="flex-1">
-                        <h2 className="text-2xl font-bold">{profileData.fullName}</h2>
+                        <h2 className="text-2xl font-bold">{getDisplayName()}</h2>
                         <p className="text-gray-600">{profileData.email}</p>
                         <p className="text-sm text-gray-500 mt-1">
-                          Miembro desde Enero 2024
+                          Miembro desde {getMemberSince()}
                         </p>
                       </div>
                       <Button variant="outline">
@@ -197,6 +352,32 @@ const Profile = () => {
                           placeholder="Ciudad, País"
                         />
                       </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="jobTitle" className="flex items-center gap-2">
+                          <User className="h-4 w-4" />
+                          Puesto de trabajo
+                        </Label>
+                        <Input
+                          id="jobTitle"
+                          value={profileData.jobTitle}
+                          onChange={(e) => handleInputChange('jobTitle', e.target.value)}
+                          placeholder="Tu puesto actual"
+                        />
+                      </div>
+
+                      <div className="space-y-2">
+                        <Label htmlFor="company" className="flex items-center gap-2">
+                          <User className="h-4 w-4" />
+                          Empresa
+                        </Label>
+                        <Input
+                          id="company"
+                          value={profileData.company}
+                          onChange={(e) => handleInputChange('company', e.target.value)}
+                          placeholder="Tu empresa actual"
+                        />
+                      </div>
                     </div>
 
                     <Separator />
@@ -266,8 +447,8 @@ const Profile = () => {
                       <CardTitle className="text-sm font-medium text-gray-600">CVs Creados</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="text-2xl font-bold text-brand-600">3</div>
-                      <p className="text-sm text-gray-500">Este mes</p>
+                      <div className="text-2xl font-bold text-brand-600">{stats.cvsCreated}</div>
+                      <p className="text-sm text-gray-500">Total</p>
                     </CardContent>
                   </Card>
 
@@ -276,8 +457,8 @@ const Profile = () => {
                       <CardTitle className="text-sm font-medium text-gray-600">Aplicaciones</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="text-2xl font-bold text-success-600">12</div>
-                      <p className="text-sm text-gray-500">Últimos 30 días</p>
+                      <div className="text-2xl font-bold text-success-600">{stats.applications}</div>
+                      <p className="text-sm text-gray-500">Total enviadas</p>
                     </CardContent>
                   </Card>
 
@@ -286,8 +467,8 @@ const Profile = () => {
                       <CardTitle className="text-sm font-medium text-gray-600">Entrevistas</CardTitle>
                     </CardHeader>
                     <CardContent>
-                      <div className="text-2xl font-bold text-yellow-600">4</div>
-                      <p className="text-sm text-gray-500">Programadas</p>
+                      <div className="text-2xl font-bold text-yellow-600">{stats.interviews}</div>
+                      <p className="text-sm text-gray-500">Conseguidas</p>
                     </CardContent>
                   </Card>
                 </div>
@@ -354,7 +535,7 @@ const Profile = () => {
                           CVs Creados
                         </CardTitle>
                         <span className="text-xs text-gray-500">
-                          {usageStats.cvs.used}/{usageStats.cvs.limit}
+                          {usageStats.cvs.used}/{usageStats.cvs.limit === 999 ? '∞' : usageStats.cvs.limit}
                         </span>
                       </div>
                     </CardHeader>
@@ -364,7 +545,9 @@ const Profile = () => {
                         className="h-2 mb-2"
                       />
                       <p className="text-xs text-gray-600">
-                        {usageStats.cvs.limit - usageStats.cvs.used} restantes este mes
+                        {usageStats.cvs.limit === 999 
+                          ? 'Ilimitados' 
+                          : `${Math.max(0, usageStats.cvs.limit - usageStats.cvs.used)} restantes este mes`}
                       </p>
                     </CardContent>
                   </Card>
@@ -377,7 +560,7 @@ const Profile = () => {
                           Exportaciones
                         </CardTitle>
                         <span className="text-xs text-gray-500">
-                          {usageStats.exports.used}/{usageStats.exports.limit}
+                          {usageStats.exports.used}/{usageStats.exports.limit === 999 ? '∞' : usageStats.exports.limit}
                         </span>
                       </div>
                     </CardHeader>
@@ -387,7 +570,9 @@ const Profile = () => {
                         className="h-2 mb-2"
                       />
                       <p className="text-xs text-gray-600">
-                        {usageStats.exports.limit - usageStats.exports.used} restantes este mes
+                        {usageStats.exports.limit === 999 
+                          ? 'Ilimitadas' 
+                          : `${Math.max(0, usageStats.exports.limit - usageStats.exports.used)} restantes este mes`}
                       </p>
                     </CardContent>
                   </Card>
@@ -400,7 +585,7 @@ const Profile = () => {
                           Mejoras con IA
                         </CardTitle>
                         <span className="text-xs text-gray-500">
-                          {usageStats.aiImprovements.used}/{usageStats.aiImprovements.limit}
+                          {usageStats.aiImprovements.used}/{usageStats.aiImprovements.limit === 999 ? '∞' : usageStats.aiImprovements.limit}
                         </span>
                       </div>
                     </CardHeader>
@@ -410,7 +595,9 @@ const Profile = () => {
                         className="h-2 mb-2"
                       />
                       <p className="text-xs text-gray-600">
-                        {usageStats.aiImprovements.limit - usageStats.aiImprovements.used} restantes este mes
+                        {usageStats.aiImprovements.limit === 999 
+                          ? 'Ilimitadas' 
+                          : `${Math.max(0, usageStats.aiImprovements.limit - usageStats.aiImprovements.used)} restantes este mes`}
                       </p>
                     </CardContent>
                   </Card>
@@ -554,19 +741,21 @@ const Profile = () => {
                     <CardContent className="space-y-4">
                       <div className="flex justify-between items-center">
                         <span className="text-sm text-gray-600">CVs enviados</span>
-                        <span className="font-bold text-brand-600">12</span>
+                        <span className="font-bold text-brand-600">{stats.applications}</span>
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-sm text-gray-600">Respuestas recibidas</span>
-                        <span className="font-bold text-success-600">8</span>
+                        <span className="font-bold text-success-600">{Math.floor(stats.applications * 0.67)}</span>
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-sm text-gray-600">Entrevistas conseguidas</span>
-                        <span className="font-bold text-yellow-600">4</span>
+                        <span className="font-bold text-yellow-600">{stats.interviews}</span>
                       </div>
                       <div className="flex justify-between items-center">
                         <span className="text-sm text-gray-600">Tasa de respuesta</span>
-                        <span className="font-bold text-brand-600">67%</span>
+                        <span className="font-bold text-brand-600">
+                          {stats.applications > 0 ? Math.round((stats.interviews / stats.applications) * 100) : 0}%
+                        </span>
                       </div>
                     </CardContent>
                   </Card>
