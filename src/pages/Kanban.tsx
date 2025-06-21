@@ -331,7 +331,7 @@ const Kanban = () => {
                 Archived
               </button>
             </div>
-            
+
             {/* Search and Filters */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
@@ -401,7 +401,7 @@ const Kanban = () => {
               </div>
             </div>
           </header>
-        
+         
           {/* Kanban Board */}
           <div className="p-6">
             <DragDropContext onDragEnd={handleDragEnd}>
