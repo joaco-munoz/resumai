@@ -756,7 +756,7 @@ export type Database = {
         | "failed"
         | "refunded"
         | "cancelled"
-      subscription_tier: "free" | "basic" | "premium" | "enterprise"
+      subscription_tier: "free" | "basic" | "premium" | "enterprise" | "pro"
       user_status: "active" | "inactive" | "churned" | "at_risk"
     }
     CompositeTypes: {
@@ -898,7 +898,7 @@ export const Constants = {
         "refunded",
         "cancelled",
       ],
-      subscription_tier: ["free", "basic", "premium", "enterprise"],
+      subscription_tier: ["free", "basic", "premium", "enterprise", "pro"],
       user_status: ["active", "inactive", "churned", "at_risk"],
     },
   },
