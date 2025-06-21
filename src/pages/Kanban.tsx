@@ -197,6 +197,117 @@ const Kanban = () => {
                 </div>
               </div>
 
+              <div className="flex items-center gap-3">
+                <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+                  <DialogTrigger asChild>
+                    <Button className="bg-blue-600 hover:bg-blue-700">
+                      <Plus className="h-4 w-4 mr-2" />
+                      Añadir postulación
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-2xl">
+                    <DialogHeader>
+                      <DialogTitle>
+                        {selectedInterview ? 'Editar Aplicación' : 'Nueva Aplicación'}
+                      </DialogTitle>
+                      <DialogDescription>
+                        {selectedInterview ? 'Actualiza los detalles de tu aplicación' : 'Agrega una nueva aplicación de trabajo a tu tablero'}
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="position">Posición *</Label>
+                          <Input
+                            id="position"
+                            value={formData.position}
+                            onChange={(e) => setFormData({ ...formData, position: e.target.value })}
+                            placeholder="ej. Frontend Developer"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="company">Empresa *</Label>
+                          <Input
+                            id="company"
+                            value={formData.company}
+                            onChange={(e) => setFormData({ ...formData, company: e.target.value })}
+                            placeholder="ej. TechCorp"
+                          />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="jobType">Tipo de Trabajo</Label>
+                          <Select value={formData.jobType} onValueChange={(value) => setFormData({ ...formData, jobType: value })}>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Seleccionar tipo" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="full-time">Full-time</SelectItem>
+                              <SelectItem value="part-time">Part-time</SelectItem>
+                              <SelectItem value="contract">Contract</SelectItem>
+                              <SelectItem value="internship">Internship</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="location">Ubicación</Label>
+                          <Input
+                            id="location"
+                            value={formData.location}
+                            onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                            placeholder="ej. Remote, Madrid, etc."
+                          />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="date">Fecha Entrevista</Label>
+                          <Input
+                            id="date"
+                            type="date"
+                            value={formData.date}
+                            onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="link">Enlace Entrevista</Label>
+                          <Input
+                            id="link"
+                            value={formData.link}
+                            onChange={(e) => setFormData({ ...formData, link: e.target.value })}
+                            placeholder="https://meet.google.com/..."
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="notes">Notas</Label>
+                        <Textarea
+                          id="notes"
+                          value={formData.notes}
+                          onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
+                          placeholder="Notas sobre la aplicación, contactos, etc."
+                          rows={3}
+                        />
+                      </div>
+                      <div className="flex gap-2 justify-end">
+                        <Button variant="outline" onClick={() => {
+                          setIsModalOpen(false);
+                          setSelectedInterview(null);
+                          setFormData({ position: '', company: '', notes: '', date: '', link: '', jobType: '', location: '' });
+                        }}>
+                          Cancelar
+                        </Button>
+                        <Button onClick={selectedInterview ? handleUpdateInterview : handleAddInterview}>
+                          {selectedInterview ? 'Actualizar' : 'Agregar'} Aplicación
+                        </Button>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            </div>
+
             {/* Status Tabs */}
             <div className="flex items-center gap-6 mb-4">
               <button
@@ -220,9 +331,9 @@ const Kanban = () => {
                 Archived
               </button>
             </div>
-
+            
             {/* Search and Filters */}
-            {/*<div className="flex items-center justify-between">
+            <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <div className="relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
@@ -289,8 +400,8 @@ const Kanban = () => {
                 </Button>
               </div>
             </div>
-          </header>*/}
-         
+          </header>
+        
           {/* Kanban Board */}
           <div className="p-6">
             <DragDropContext onDragEnd={handleDragEnd}>
