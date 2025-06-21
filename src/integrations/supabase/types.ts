@@ -275,6 +275,54 @@ export type Database = {
           },
         ]
       }
+      job_applications_tracking: {
+        Row: {
+          applied_date: string
+          company: string
+          created_at: string
+          id: string
+          interview_date: string | null
+          interview_link: string | null
+          job_type: string | null
+          location: string | null
+          notes: string | null
+          position: string
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          applied_date?: string
+          company: string
+          created_at?: string
+          id?: string
+          interview_date?: string | null
+          interview_link?: string | null
+          job_type?: string | null
+          location?: string | null
+          notes?: string | null
+          position: string
+          status?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          applied_date?: string
+          company?: string
+          created_at?: string
+          id?: string
+          interview_date?: string | null
+          interview_link?: string | null
+          job_type?: string | null
+          location?: string | null
+          notes?: string | null
+          position?: string
+          status?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       job_descriptions: {
         Row: {
           benefits: Json | null
