@@ -167,7 +167,7 @@ const Auth = () => {
                 <Input
                   id="name"
                   type="text"
-                  placeholder="Your "
+                  placeholder="Nombre"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   className="bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500 focus:border-blue-500 focus:ring-blue-500 h-12"
@@ -234,8 +234,8 @@ const Auth = () => {
               disabled={loading}
             >
               {loading 
-                ? (isSignUp ? "Creating account..." : "Signing in...") 
-                : (isSignUp ? "Create your account" : "Ingresar")
+                ? (isSignUp ? "Creando cuenta..." : "Ingresando...") 
+                : (isSignUp ? "Crea tu cuenta" : "Ingresar")
               }
             </Button>
           </form>
