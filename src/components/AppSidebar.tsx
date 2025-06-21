@@ -167,7 +167,7 @@ export function AppSidebar() {
               <NavLink 
                 to={profileItem.url} 
                 className={isActive(profileItem.url)
-                  ? "bg-blue-500 text-white font-medium hover:bg-blue-600" 
+                  ? "bg-blue-500 text-white font-medium hover:bg-blue-600 hover:text-white" 
                   : "hover:bg-gray-100"
                 }
               >
@@ -181,7 +181,7 @@ export function AppSidebar() {
               <Button
                 variant="ghost"
                 onClick={signOut}
-                className="w-full justify-start h-10 px-2 text-gray-700"
+                className="w-full justify-start h-10 px-2 text-gray-700 hover:bg-gray-100"
               >
                 <LogOut className="h-4 w-4" />
                 {!isCollapsed && <span>Cerrar Sesión</span>}
