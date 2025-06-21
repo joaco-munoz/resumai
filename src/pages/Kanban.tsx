@@ -9,12 +9,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Calendar, ExternalLink, Edit, Search, Filter, Download, Upload, MoreHorizontal } from "lucide-react";
+import { Plus, Calendar, ExternalLink, Edit, Search, Filter, Download, Upload, MoreHorizontal, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { DragDropContext, Droppable, Draggable, DropResult } from "react-beautiful-dnd";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import FireworksAnimation from "@/components/FireworksAnimation";
+import { DeleteConfirmDialog } from "@/components/DeleteConfirmDialog";
 
 interface Interview {
   id: string;
@@ -54,6 +55,8 @@ const Kanban = () => {
   const [isClient, setIsClient] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showFireworks, setShowFireworks] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Fetch company suggestions when the user types in the company field
   useEffect(() => {
@@ -240,6 +243,40 @@ const Kanban = () => {
       toast.error('Error al actualizar la postulación');
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleDeleteInterview = async () => {
+    if (!selectedInterview || !user) return;
+
+    setIsDeleting(true);
+
+    try {
+      const { error } = await supabase
+        .from('job_applications_tracking')
+        .delete()
+        .eq('id', selectedInterview.id)
+        .eq('user_id', user.id);
+
+      if (error) {
+        console.error('Error deleting interview:', error);
+        toast.error('Error al eliminar la postulación');
+        return;
+      }
+
+      // Refresh the interviews list
+      await fetchInterviews();
+      
+      setSelectedInterview(null);
+      setFormData({ position: '', company: '', notes: '', interview_date: '', interview_link: '', job_type: '', location: '' });
+      setIsModalOpen(false);
+      setIsDeleteDialogOpen(false);
+      toast.success("Postulación eliminada correctamente");
+    } catch (error) {
+      console.error('Error deleting interview:', error);
+      toast.error('Error al eliminar la postulación');
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -455,20 +492,34 @@ const Kanban = () => {
                           rows={3}
                         />
                       </div>
-                      <div className="flex gap-2 justify-end">
-                        <Button variant="outline" onClick={() => {
-                          setIsModalOpen(false);
-                          setSelectedInterview(null);
-                          setFormData({ position: '', company: '', notes: '', interview_date: '', interview_link: '', job_type: '', location: '' });
-                        }}>
-                          Cancelar
-                        </Button>
-                        <Button 
-                          onClick={selectedInterview ? handleUpdateInterview : handleAddInterview}
-                          disabled={isSubmitting}
-                        >
-                          {isSubmitting ? 'Guardando...' : (selectedInterview ? 'Actualizar' : 'Agregar')} Postulación
-                        </Button>
+                      <div className="flex gap-2 justify-between">
+                        <div>
+                          {selectedInterview && (
+                            <Button 
+                              variant="destructive" 
+                              onClick={() => setIsDeleteDialogOpen(true)}
+                              disabled={isSubmitting}
+                            >
+                              <Trash2 className="h-4 w-4 mr-2" />
+                              Eliminar
+                            </Button>
+                          )}
+                        </div>
+                        <div className="flex gap-2">
+                          <Button variant="outline" onClick={() => {
+                            setIsModalOpen(false);
+                            setSelectedInterview(null);
+                            setFormData({ position: '', company: '', notes: '', interview_date: '', interview_link: '', job_type: '', location: '' });
+                          }}>
+                            Cancelar
+                          </Button>
+                          <Button 
+                            onClick={selectedInterview ? handleUpdateInterview : handleAddInterview}
+                            disabled={isSubmitting}
+                          >
+                            {isSubmitting ? 'Guardando...' : (selectedInterview ? 'Actualizar' : 'Agregar')} Postulación
+                          </Button>
+                        </div>
                       </div>
                     </div>
                   </DialogContent>
@@ -612,6 +663,15 @@ const Kanban = () => {
           </div>
         </main>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <DeleteConfirmDialog
+        isOpen={isDeleteDialogOpen}
+        onClose={() => setIsDeleteDialogOpen(false)}
+        onConfirm={handleDeleteInterview}
+        title={selectedInterview ? `${selectedInterview.position} en ${selectedInterview.company}` : ''}
+        isDeleting={isDeleting}
+      />
 
       {/* Fireworks Animation */}
       <FireworksAnimation 

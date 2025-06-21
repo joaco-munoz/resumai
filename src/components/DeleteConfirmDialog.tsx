@@ -16,6 +16,7 @@ interface DeleteConfirmDialogProps {
   onConfirm: () => void;
   title: string;
   isDeleting?: boolean;
+  type?: 'cv' | 'postulacion';
 }
 
 export const DeleteConfirmDialog = ({ 
@@ -23,15 +24,19 @@ export const DeleteConfirmDialog = ({
   onClose, 
   onConfirm, 
   title, 
-  isDeleting = false 
+  isDeleting = false,
+  type = 'cv'
 }: DeleteConfirmDialogProps) => {
+  const itemType = type === 'cv' ? 'CV' : 'postulación';
+  const action = type === 'cv' ? 'eliminar' : 'eliminar';
+
   return (
     <AlertDialog open={isOpen} onOpenChange={onClose}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>¿Eliminar CV?</AlertDialogTitle>
+          <AlertDialogTitle>¿Eliminar {itemType}?</AlertDialogTitle>
           <AlertDialogDescription>
-            ¿Estás seguro de que quieres eliminar "{title}"? Esta acción no se puede deshacer.
+            ¿Estás seguro de que quieres {action} "{title}"? Esta acción no se puede deshacer.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
