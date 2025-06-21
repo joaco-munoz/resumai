@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { CVData } from "@/types/cv";
+import { CVAdaptationPreviewModal } from "./CVAdaptationPreviewModal";
 
 interface MatchResult {
   score: number;
@@ -38,6 +39,9 @@ export const CVAdaptationModal = ({
   onSave 
 }: CVAdaptationModalProps) => {
   const [isAdapting, setIsAdapting] = useState(false);
+  const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [originalCvData, setOriginalCvData] = useState<CVData | null>(null);
+  const [adaptedCvData, setAdaptedCvData] = useState<CVData | null>(null);
   const { user } = useAuth();
 
   const extractJobDetailsFromDescription = (description: string): { company: string; position: string } => {
@@ -80,6 +84,56 @@ export const CVAdaptationModal = ({
     return { company: company || jobDetails.company, position: position || jobDetails.title };
   };
 
+  const applyAIImprovements = (cvData: CVData, matchResult: MatchResult): CVData => {
+    const adaptedCV = { ...cvData };
+    
+    // Mejorar el resumen con keywords faltantes
+    if (matchResult.missingKeywords.length > 0) {
+      const keywordsToAdd = matchResult.missingKeywords.slice(0, 3);
+      const currentSummary = adaptedCV.summary || '';
+      
+      // Si el resumen no contiene las keywords, las agregamos de forma natural
+      keywordsToAdd.forEach(keyword => {
+        if (!currentSummary.toLowerCase().includes(keyword.toLowerCase())) {
+          if (currentSummary.includes('experiencia en')) {
+            adaptedCV.summary = currentSummary.replace(
+              'experiencia en',
+              `experiencia en ${keyword},`
+            );
+          } else {
+            adaptedCV.summary = `${currentSummary} Experiencia con ${keyword}.`;
+          }
+        }
+      });
+    }
+
+    // Agregar skills faltantes
+    const newSkills = [...adaptedCV.skills];
+    matchResult.missingKeywords.forEach(keyword => {
+      if (!newSkills.some(skill => skill.toLowerCase().includes(keyword.toLowerCase()))) {
+        newSkills.push(keyword);
+      }
+    });
+    adaptedCV.skills = newSkills;
+
+    // Mejorar descripciones de experiencia con bullets sugeridos
+    if (matchResult.suggestedBullets.length > 0 && adaptedCV.experience.length > 0) {
+      const latestExperience = adaptedCV.experience[0];
+      const currentDescription = latestExperience.description || '';
+      const newBullets = matchResult.suggestedBullets.slice(0, 2);
+      
+      // Agregar bullets sugeridos al trabajo más reciente
+      const enhancedDescription = currentDescription + '\n' + newBullets.map(bullet => `• ${bullet}`).join('\n');
+      
+      adaptedCV.experience[0] = {
+        ...latestExperience,
+        description: enhancedDescription
+      };
+    }
+
+    return adaptedCV;
+  };
+
   const handleAdaptCV = async () => {
     if (!user || !matchResult) {
       toast.error("Información insuficiente para adaptar el CV");
@@ -109,74 +163,20 @@ export const CVAdaptationModal = ({
 
       // Cast the content to CVData type
       const cvContent = generalCV.content as unknown as CVData;
-
+      
+      // Aplicar mejoras de IA al CV
+      const adaptedCV = applyAIImprovements(cvContent, matchResult);
+      
       // Extraer detalles del trabajo desde la descripción si están disponibles
       const jobDescription = localStorage.getItem('currentJobDescription') || '';
       const extractedDetails = extractJobDetailsFromDescription(jobDescription);
       
-      // Generar nombre para el CV adaptado
-      const now = new Date();
-      const dateTime = now.toLocaleString('es-ES', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
-
-      let cvTitle;
-      if (extractedDetails.company && extractedDetails.position) {
-        cvTitle = `CV - ${extractedDetails.position} en ${extractedDetails.company}`;
-      } else if (extractedDetails.company) {
-        cvTitle = `CV - ${extractedDetails.company}`;
-      } else if (extractedDetails.position) {
-        cvTitle = `CV - ${extractedDetails.position}`;
-      } else {
-        cvTitle = `CV - ${cvContent?.personalInfo?.fullName || 'Adaptado'} - ${dateTime}`;
-      }
-
-      // Crear el CV adaptado
-      const { data: adaptedCV, error: adaptError } = await supabase
-        .from('cvs')
-        .insert({
-          user_id: user.id,
-          title: cvTitle,
-          content: generalCV.content,
-          status: 'draft',
-          template_name: 'modern',
-          cv_source: 'job_matcher',
-          ai_score: matchResult.score
-        })
-        .select()
-        .single();
-
-      if (adaptError || !adaptedCV) {
-        console.error('Error creating adapted CV:', adaptError);
-        toast.error("Error al crear el CV adaptado");
-        return;
-      }
-
-      // Guardar en seguimiento de postulaciones
-      const { error: trackingError } = await supabase
-        .from('job_applications_tracking')
-        .insert({
-          user_id: user.id,
-          position: extractedDetails.position || 'Posición sin especificar',
-          company: extractedDetails.company || 'Empresa sin especificar',
-          status: 'saved',
-          applied_date: new Date().toISOString().split('T')[0],
-          notes: `CV adaptado automáticamente. Puntuación de compatibilidad: ${matchResult.score}%`
-        });
-
-      if (trackingError) {
-        console.error('Error saving to job tracking:', trackingError);
-        // No bloqueamos el flujo por este error, solo logueamos
-        console.log('CV saved but failed to add to job tracking');
-      }
-
-      toast.success("CV adaptado y guardado exitosamente");
-      onSave();
-      onClose();
+      setOriginalCvData(cvContent);
+      setAdaptedCvData(adaptedCV);
+      setShowPreviewModal(true);
+      
+      toast.success("CV adaptado generado exitosamente");
+      
     } catch (error) {
       console.error('Error adapting CV:', error);
       toast.error("Error al adaptar el CV");
@@ -200,110 +200,133 @@ export const CVAdaptationModal = ({
   if (!matchResult) return null;
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Target className="h-5 w-5 text-brand-500" />
-            Adaptar CV para esta Oferta
-          </DialogTitle>
-          <DialogDescription>
-            Revisa el análisis de compatibilidad y adapta tu CV para esta posición específica
-          </DialogDescription>
-        </DialogHeader>
+    <>
+      {/* Modal Principal */}
+      <Dialog open={isOpen && !showPreviewModal} onOpenChange={onClose}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Target className="h-5 w-5 text-brand-500" />
+              Adaptar CV para esta Oferta
+            </DialogTitle>
+            <DialogDescription>
+              Revisa el análisis de compatibilidad y adapta tu CV para esta posición específica
+            </DialogDescription>
+          </DialogHeader>
 
-        <div className="space-y-6">
-          {/* Score Summary */}
-          <div className={`p-4 rounded-lg border-2 ${getScoreBg(matchResult.score)}`}>
-            <div className="text-center">
-              <div className={`text-3xl font-bold ${getScoreColor(matchResult.score)} mb-2`}>
-                {matchResult.score}%
-              </div>
-              <p className="text-sm text-gray-600">
-                Compatibilidad con: <strong>{jobDetails.title}</strong> en <strong>{jobDetails.company}</strong>
-              </p>
-              <Progress value={matchResult.score} className="mt-3 h-2" />
-            </div>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-6">
-            {/* Strengths */}
-            <div className="space-y-4">
-              <h3 className="font-semibold text-success-600 flex items-center gap-2">
-                <CheckCircle className="h-4 w-4" />
-                Fortalezas Detectadas
-              </h3>
-              <ul className="space-y-2">
-                {matchResult.strengths.slice(0, 3).map((strength, index) => (
-                  <li key={index} className="flex items-start gap-2 text-sm">
-                    <CheckCircle className="h-3 w-3 text-success-500 mt-1 flex-shrink-0" />
-                    <span>{strength}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-
-            {/* Missing Keywords */}
-            <div className="space-y-4">
-              <h3 className="font-semibold text-red-600 flex items-center gap-2">
-                <AlertCircle className="h-4 w-4" />
-                Keywords Faltantes
-              </h3>
-              <div className="flex flex-wrap gap-2">
-                {matchResult.missingKeywords.slice(0, 6).map((keyword) => (
-                  <Badge key={keyword} variant="destructive" className="text-xs">
-                    {keyword}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          {/* Suggested Improvements */}
-          <div className="space-y-4">
-            <h3 className="font-semibold text-brand-600 flex items-center gap-2">
-              <TrendingUp className="h-4 w-4" />
-              Mejoras Sugeridas
-            </h3>
-            <div className="space-y-2">
-              {matchResult.improvements.slice(0, 2).map((improvement, index) => (
-                <div key={index} className="p-3 bg-brand-50 rounded-lg border border-brand-200">
-                  <p className="text-sm">{improvement}</p>
+          <div className="space-y-6">
+            {/* Score Summary */}
+            <div className={`p-4 rounded-lg border-2 ${getScoreBg(matchResult.score)}`}>
+              <div className="text-center">
+                <div className={`text-3xl font-bold ${getScoreColor(matchResult.score)} mb-2`}>
+                  {matchResult.score}%
                 </div>
-              ))}
+                <p className="text-sm text-gray-600">
+                  Compatibilidad con: <strong>{jobDetails.title}</strong> en <strong>{jobDetails.company}</strong>
+                </p>
+                <Progress value={matchResult.score} className="mt-3 h-2" />
+              </div>
+            </div>
+
+            {/* Resto del contenido existente */}
+            <div className="grid md:grid-cols-2 gap-6">
+              {/* Strengths */}
+              <div className="space-y-4">
+                <h3 className="font-semibold text-success-600 flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4" />
+                  Fortalezas Detectadas
+                </h3>
+                <ul className="space-y-2">
+                  {matchResult.strengths.slice(0, 3).map((strength, index) => (
+                    <li key={index} className="flex items-start gap-2 text-sm">
+                      <CheckCircle className="h-3 w-3 text-success-500 mt-1 flex-shrink-0" />
+                      <span>{strength}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Missing Keywords */}
+              <div className="space-y-4">
+                <h3 className="font-semibold text-red-600 flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4" />
+                  Keywords Faltantes
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {matchResult.missingKeywords.slice(0, 6).map((keyword) => (
+                    <Badge key={keyword} variant="destructive" className="text-xs">
+                      {keyword}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Suggested Improvements */}
+            <div className="space-y-4">
+              <h3 className="font-semibold text-brand-600 flex items-center gap-2">
+                <TrendingUp className="h-4 w-4" />
+                Mejoras que se Aplicarán
+              </h3>
+              <div className="space-y-2">
+                {matchResult.improvements.slice(0, 2).map((improvement, index) => (
+                  <div key={index} className="p-3 bg-brand-50 rounded-lg border border-brand-200">
+                    <p className="text-sm">{improvement}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex gap-4 pt-6 border-t">
+              <Button 
+                variant="outline" 
+                onClick={onClose}
+                className="flex-1"
+                disabled={isAdapting}
+              >
+                Cancelar
+              </Button>
+              <Button 
+                onClick={handleAdaptCV}
+                disabled={isAdapting}
+                className="flex-1 bg-blue-600 hover:bg-blue-700"
+              >
+                {isAdapting ? (
+                  <>
+                    <Sparkles className="h-4 w-4 mr-2 animate-spin" />
+                    Adaptando CV...
+                  </>
+                ) : (
+                  <>
+                    <Target className="h-4 w-4 mr-2" />
+                    Adaptar CV
+                  </>
+                )}
+              </Button>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
 
-          {/* Action Buttons */}
-          <div className="flex gap-4 pt-6 border-t">
-            <Button 
-              variant="outline" 
-              onClick={onClose}
-              className="flex-1"
-              disabled={isAdapting}
-            >
-              Cancelar
-            </Button>
-            <Button 
-              onClick={handleAdaptCV}
-              disabled={isAdapting}
-              className="flex-1 bg-blue-600 hover:bg-blue-700"
-            >
-              {isAdapting ? (
-                <>
-                  <Sparkles className="h-4 w-4 mr-2 animate-spin" />
-                  Adaptando CV...
-                </>
-              ) : (
-                <>
-                  <Target className="h-4 w-4 mr-2" />
-                  Adaptar CV
-                </>
-              )}
-            </Button>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
+      {/* Modal de Vista Previa */}
+      {showPreviewModal && originalCvData && adaptedCvData && (
+        <CVAdaptationPreviewModal
+          isOpen={showPreviewModal}
+          onClose={() => {
+            setShowPreviewModal(false);
+            onClose();
+          }}
+          originalCvData={originalCvData}
+          adaptedCvData={adaptedCvData}
+          jobTitle={jobDetails.title}
+          companyName={jobDetails.company}
+          onSave={() => {
+            setShowPreviewModal(false);
+            onSave();
+          }}
+        />
+      )}
+    </>
   );
 };
