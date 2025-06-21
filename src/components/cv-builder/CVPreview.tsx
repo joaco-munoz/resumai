@@ -14,7 +14,12 @@ export const CVPreview = ({ cvData }: CVPreviewProps) => {
         <div className="text-center border-b border-gray-400 pb-4">
           <h1 className="text-3xl font-bold text-black mb-2">{cvData.personalInfo.fullName}</h1>
           <div className="text-sm text-black">
-            {cvData.personalInfo.location} • {cvData.personalInfo.linkedin} • {cvData.personalInfo.phone} • {cvData.personalInfo.email}
+            <span>{cvData.personalInfo.email}</span>
+            <span>•</span>
+            <span>{cvData.personalInfo.phone}</span>
+            <span>•</span>
+            <span>{cvData.personalInfo.location}</span>
+             • {cvData.personalInfo.linkedin} •  • 
             {cvData.personalInfo.website && <span> • {cvData.personalInfo.website}</span>}
           </div>
         </div>
