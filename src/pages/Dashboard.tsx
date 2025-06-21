@@ -133,7 +133,7 @@ const Dashboard = () => {
         <SidebarInset>
           <header className="bg-white border-b px-6 py-4">
             <div className="flex items-center gap-4">
-              <SidebarTrigger />
+              {/*<SidebarTrigger />*/}
               <div className="flex justify-between items-center w-full">
                 <div>
                   <h1 className="text-3xl font-bold gradient-text">Dashboard</h1>
