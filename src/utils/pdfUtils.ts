@@ -54,7 +54,7 @@ export const downloadCVAsPDF = (cvData: any, filename: string) => {
     pdf.setDrawColor(0, 0, 0);
     pdf.setLineWidth(0.3);
     pdf.line(margin, yPosition, pageWidth - margin, yPosition);
-    yPosition += 2;
+    yPosition += 4;
     
     // Summary Section (italic paragraph)
     if (cvData.summary && cvData.summary.trim()) {
