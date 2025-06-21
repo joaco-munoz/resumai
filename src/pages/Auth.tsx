@@ -136,14 +136,16 @@ const Auth = () => {
               Continue with Google
             </Button>
             
-            <Button 
-              variant="outline" 
-              className="w-full bg-slate-800/50 border-slate-700 text-white hover:bg-slate-700/50 hover:border-slate-600 h-12"
-              disabled={loading}
-            >
-              <Github className="h-5 w-5 mr-3" />
-              Continue with GitHub
-            </Button>
+            {isSignUp && (
+              <Button 
+                variant="outline" 
+                className="w-full bg-slate-800/50 border-slate-700 text-white hover:bg-slate-700/50 hover:border-slate-600 h-12"
+                disabled={loading}
+              >
+                <Github className="h-5 w-5 mr-3" />
+                Continue with GitHub
+              </Button>
+            )}
           </div>
 
           {/* Divider */}
