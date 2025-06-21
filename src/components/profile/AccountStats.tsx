@@ -23,9 +23,6 @@ export const AccountStats = ({
         </CardContent>
       </Card>
 
-      <Card>
-        
-        
-      </Card>
+      
     </div>;
 };
