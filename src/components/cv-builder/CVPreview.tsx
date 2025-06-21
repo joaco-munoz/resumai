@@ -16,11 +16,11 @@ export const CVPreview = ({ cvData }: CVPreviewProps) => {
           <div className="flex flex-wrap justify-center gap-2 text-black text-sm">
             <span>{cvData.personalInfo.email}</span>
             <span>•</span>
+            <span>{cvData.personalInfo.linkedin}</span>
+            <span>•</span>
             <span>{cvData.personalInfo.phone}</span>
             <span>•</span>
             <span>{cvData.personalInfo.location}</span>
-            <span>•</span>
-            <span>{cvData.personalInfo.linkedin}</span>
           </div>
         </div>
 
