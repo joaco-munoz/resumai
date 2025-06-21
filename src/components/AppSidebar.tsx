@@ -106,7 +106,7 @@ export function AppSidebar() {
         </div>
       </div>
 
-      <SidebarTrigger className="m-2 self-start" />
+      
 
       <SidebarContent>
         <SidebarGroup>
