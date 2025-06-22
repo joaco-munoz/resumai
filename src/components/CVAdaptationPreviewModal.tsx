@@ -217,8 +217,7 @@ export const CVAdaptationPreviewModal = ({
                     <Label htmlFor="fullName">Nombre Completo</Label>
                     <Input
                       id="fullName"
-                      value={cvData.personal
-INFO?.fullName || ''}
+                      value={cvData.personalInfo?.fullName || ''}
                       onChange={(e) => setCvData(prev => prev ? ({
                         ...prev,
                         personalInfo: { ...prev.personalInfo, fullName: e.target.value }
