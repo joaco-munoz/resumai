@@ -35,9 +35,6 @@ export const ProfileHeader = ({
               Miembro desde {memberSince}
             </p>
           </div>
-          <Button variant="outline">
-            Cambiar Foto
-          </Button>
         </div>
       </CardHeader>
     </Card>
