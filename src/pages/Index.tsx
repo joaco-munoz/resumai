@@ -316,7 +316,7 @@ Ahorra horas adaptando tu currículum: nuestra plataforma usa IA para convertir 
               </div>
               <CardHeader className="text-center">
                 <CardTitle className="text-2xl text-white">Pro</CardTitle>
-                <div className="text-4xl font-bold text-blue-400 mt-4">$29</div>
+                <div className="text-4xl font-bold text-blue-400 mt-4">$6.990<span className="text-lg font-normal text-blue-300"> CLP/mes</span></div>
                 <CardDescription className="text-slate-300">CVs sin límites, inscríbete hoy</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
