@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -35,14 +35,46 @@ export const CVAdaptationPreviewModal = ({
   existingCVId,
   onSave
 }: CVAdaptationPreviewModalProps) => {
-  const [cvData, setCvData] = useState<CVData>(adaptedCvData);
+  const [cvData, setCvData] = useState<CVData | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const { user } = useAuth();
 
+  // Initialize CV data when props change
+  useEffect(() => {
+    console.log('CVAdaptationPreviewModal props:', {
+      originalCvData,
+      adaptedCvData,
+      jobTitle,
+      companyName,
+      existingCVId
+    });
+
+    if (adaptedCvData) {
+      setCvData(adaptedCvData);
+    } else if (originalCvData) {
+      // If no adapted data, use original as fallback
+      setCvData(originalCvData);
+    } else {
+      console.error('No CV data provided to CVAdaptationPreviewModal');
+      toast.error("No se encontraron datos del CV");
+      onClose();
+    }
+  }, [adaptedCvData, originalCvData, jobTitle, companyName, existingCVId, onClose]);
+
+  // Don't render if no CV data
+  if (!cvData) {
+    return null;
+  }
+
   const handleSave = async () => {
     if (!user) {
       toast.error("Debes estar autenticado para guardar el CV");
+      return;
+    }
+
+    if (!cvData) {
+      toast.error("No hay datos del CV para guardar");
       return;
     }
 
@@ -85,7 +117,7 @@ export const CVAdaptationPreviewModal = ({
         } else if (jobTitle) {
           cvTitle = `CV - ${jobTitle}`;
         } else {
-          cvTitle = `CV - ${cvData.personalInfo.fullName} - ${dateTime}`;
+          cvTitle = `CV - ${cvData.personalInfo?.fullName || 'Sin nombre'} - ${dateTime}`;
         }
 
         // Crear el CV adaptado
@@ -138,19 +170,25 @@ export const CVAdaptationPreviewModal = ({
   };
 
   const handleEditSkills = (newSkills: string[]) => {
-    setCvData(prev => ({
+    if (!cvData) return;
+    
+    setCvData(prev => prev ? ({
       ...prev,
       skills: newSkills
-    }));
+    }) : null);
   };
 
   const addSkill = (skill: string) => {
+    if (!cvData) return;
+    
     if (skill.trim() && !cvData.skills.includes(skill.trim())) {
       handleEditSkills([...cvData.skills, skill.trim()]);
     }
   };
 
   const removeSkill = (skillToRemove: string) => {
+    if (!cvData) return;
+    
     handleEditSkills(cvData.skills.filter(skill => skill !== skillToRemove));
   };
 
@@ -179,11 +217,12 @@ export const CVAdaptationPreviewModal = ({
                     <Label htmlFor="fullName">Nombre Completo</Label>
                     <Input
                       id="fullName"
-                      value={cvData.personalInfo.fullName}
-                      onChange={(e) => setCvData(prev => ({
+                      value={cvData.personal
+INFO?.fullName || ''}
+                      onChange={(e) => setCvData(prev => prev ? ({
                         ...prev,
                         personalInfo: { ...prev.personalInfo, fullName: e.target.value }
-                      }))}
+                      }) : null)}
                     />
                   </div>
                   <div>
@@ -191,33 +230,33 @@ export const CVAdaptationPreviewModal = ({
                     <Input
                       id="email"
                       type="email"
-                      value={cvData.personalInfo.email}
-                      onChange={(e) => setCvData(prev => ({
+                      value={cvData.personalInfo?.email || ''}
+                      onChange={(e) => setCvData(prev => prev ? ({
                         ...prev,
                         personalInfo: { ...prev.personalInfo, email: e.target.value }
-                      }))}
+                      }) : null)}
                     />
                   </div>
                   <div>
                     <Label htmlFor="phone">Teléfono</Label>
                     <Input
                       id="phone"
-                      value={cvData.personalInfo.phone}
-                      onChange={(e) => setCvData(prev => ({
+                      value={cvData.personalInfo?.phone || ''}
+                      onChange={(e) => setCvData(prev => prev ? ({
                         ...prev,
                         personalInfo: { ...prev.personalInfo, phone: e.target.value }
-                      }))}
+                      }) : null)}
                     />
                   </div>
                   <div>
                     <Label htmlFor="location">Ubicación</Label>
                     <Input
                       id="location"
-                      value={cvData.personalInfo.location}
-                      onChange={(e) => setCvData(prev => ({
+                      value={cvData.personalInfo?.location || ''}
+                      onChange={(e) => setCvData(prev => prev ? ({
                         ...prev,
                         personalInfo: { ...prev.personalInfo, location: e.target.value }
-                      }))}
+                      }) : null)}
                     />
                   </div>
                 </div>
@@ -229,8 +268,8 @@ export const CVAdaptationPreviewModal = ({
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">Resumen Profesional</h3>
                 <Textarea
-                  value={cvData.summary}
-                  onChange={(e) => setCvData(prev => ({ ...prev, summary: e.target.value }))}
+                  value={cvData.summary || ''}
+                  onChange={(e) => setCvData(prev => prev ? ({ ...prev, summary: e.target.value }) : null)}
                   rows={4}
                   placeholder="Describe tu perfil profesional..."
                 />
@@ -242,7 +281,7 @@ export const CVAdaptationPreviewModal = ({
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">Habilidades</h3>
                 <div className="flex flex-wrap gap-2 mb-3">
-                  {cvData.skills.map((skill) => (
+                  {cvData.skills?.map((skill) => (
                     <Badge key={skill} variant="secondary" className="cursor-pointer" onClick={() => removeSkill(skill)}>
                       {skill} ×
                     </Badge>
@@ -266,28 +305,30 @@ export const CVAdaptationPreviewModal = ({
               {/* Experiencia */}
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold">Experiencia Profesional</h3>
-                {cvData.experience.map((exp, index) => (
-                  <div key={exp.id} className="space-y-3 p-4 border rounded-lg">
+                {cvData.experience?.map((exp, index) => (
+                  <div key={exp.id || index} className="space-y-3 p-4 border rounded-lg">
                     <div className="grid grid-cols-2 gap-4">
                       <div>
                         <Label>Cargo</Label>
                         <Input
-                          value={exp.position}
+                          value={exp.position || ''}
                           onChange={(e) => {
-                            const newExp = [...cvData.experience];
+                            if (!cvData) return;
+                            const newExp = [...(cvData.experience || [])];
                             newExp[index] = { ...newExp[index], position: e.target.value };
-                            setCvData(prev => ({ ...prev, experience: newExp }));
+                            setCvData(prev => prev ? ({ ...prev, experience: newExp }) : null);
                           }}
                         />
                       </div>
                       <div>
                         <Label>Empresa</Label>
                         <Input
-                          value={exp.company}
+                          value={exp.company || ''}
                           onChange={(e) => {
-                            const newExp = [...cvData.experience];
+                            if (!cvData) return;
+                            const newExp = [...(cvData.experience || [])];
                             newExp[index] = { ...newExp[index], company: e.target.value };
-                            setCvData(prev => ({ ...prev, experience: newExp }));
+                            setCvData(prev => prev ? ({ ...prev, experience: newExp }) : null);
                           }}
                         />
                       </div>
@@ -295,11 +336,12 @@ export const CVAdaptationPreviewModal = ({
                     <div>
                       <Label>Descripción</Label>
                       <Textarea
-                        value={exp.description}
+                        value={exp.description || ''}
                         onChange={(e) => {
-                          const newExp = [...cvData.experience];
+                          if (!cvData) return;
+                          const newExp = [...(cvData.experience || [])];
                           newExp[index] = { ...newExp[index], description: e.target.value };
-                          setCvData(prev => ({ ...prev, experience: newExp }));
+                          setCvData(prev => prev ? ({ ...prev, experience: newExp }) : null);
                         }}
                         rows={4}
                       />

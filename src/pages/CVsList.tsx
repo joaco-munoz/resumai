@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -146,11 +147,28 @@ export default function CVsList() {
   };
 
   const handleEditCV = (cv: CV) => {
+    console.log('Editing CV:', cv);
+    console.log('CV content:', cv.content);
+    console.log('General CV:', generalCV);
+    
     if (isJobReport(cv)) {
       // Para informes, mostrar la ventana de adaptación
       setAdaptationCV(cv);
     } else if (cv.cv_source === 'job_matcher') {
       // Para CVs de Job Matcher, abrir el modal de adaptación con vista previa
+      if (!generalCV || !generalCV.content) {
+        toast.error("No se encontró el CV principal para editar");
+        console.error('No general CV found for editing');
+        return;
+      }
+      
+      // Verificar que el CV de Job Matcher tenga contenido válido
+      if (!cv.content) {
+        toast.error("El CV adaptado no tiene contenido válido");
+        console.error('Job Matcher CV has no content');
+        return;
+      }
+      
       setEditingJobMatcherCV(cv);
     } else {
       // Para CVs del editor, ir al editor
@@ -484,16 +502,18 @@ export default function CVsList() {
         />
 
         {/* CV Adaptation Preview Modal for editing Job Matcher CVs */}
-        <CVAdaptationPreviewModal
-          isOpen={!!editingJobMatcherCV}
-          onClose={() => setEditingJobMatcherCV(null)}
-          originalCvData={generalCV?.content || null}
-          adaptedCvData={editingJobMatcherCV?.content || null}
-          jobTitle={editingJobMatcherCV?.content?.jobDetails?.title || ""}
-          companyName={editingJobMatcherCV?.content?.jobDetails?.company || ""}
-          existingCVId={editingJobMatcherCV?.id}
-          onSave={handleSaveEditedCV}
-        />
+        {editingJobMatcherCV && generalCV && (
+          <CVAdaptationPreviewModal
+            isOpen={!!editingJobMatcherCV}
+            onClose={() => setEditingJobMatcherCV(null)}
+            originalCvData={generalCV.content || null}
+            adaptedCvData={editingJobMatcherCV.content || null}
+            jobTitle={editingJobMatcherCV.title.split(' - ')[1]?.split(' en ')[0] || ""}
+            companyName={editingJobMatcherCV.title.split(' en ')[1] || ""}
+            existingCVId={editingJobMatcherCV.id}
+            onSave={handleSaveEditedCV}
+          />
+        )}
 
         {/* Delete Confirmation Dialog */}
         <DeleteConfirmDialog
