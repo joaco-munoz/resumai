@@ -145,10 +145,11 @@ export default function CVsList() {
   };
 
   const handleEditCV = (cv: CV) => {
-    if (isJobReport(cv)) {
-      // Para informes, mostrar la ventana de adaptación
+    if (cv.cv_source === 'job_matcher') {
+      // Para CVs de Job Matcher, abrir el modal de adaptación
       setAdaptationCV(cv);
     } else {
+      // Para CVs regulares, ir al editor
       navigate(`/app/cv/${cv.id}`);
     }
   };
