@@ -139,14 +139,6 @@ const Dashboard = () => {
                   <h1 className="text-3xl font-bold gradient-text">Dashboard</h1>
                   <p className="text-gray-600 mt-2">Resumen de tu actividad y progreso</p>
                 </div>
-                <Button 
-                  onClick={() => navigate("/")}
-                  variant="outline"
-                  className="text-gray-600 border-gray-300"
-                >
-                  <Home className="h-4 w-4 mr-2" />
-                  Landing (Test)
-                </Button>
               </div>
             </div>
           </header>
