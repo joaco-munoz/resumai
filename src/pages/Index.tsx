@@ -30,6 +30,14 @@ const Index = () => {
     navigate("/auth?mode=signup");
   };
 
+  // Smooth scroll helper
+  const scrollToSection = (id: string) => {
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
   const features = [{
     icon: <Sparkles className="h-8 w-8 text-blue-400" />,
     title: "IA Generativa",
@@ -58,7 +66,7 @@ const Index = () => {
   return <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
       {/* Header */}
       <header className="border-b border-slate-700 bg-slate-900/90 backdrop-blur-md sticky top-0 z-50">
-        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+        <div className="container mx-auto px-4 h-16 flex items-center">
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center">
               <FileText className="h-5 w-5 text-white" />
@@ -66,11 +74,13 @@ const Index = () => {
             <span className="font-bold text-xl text-white">ResumAI</span>
           </div>
           
-          <div className="flex items-center gap-4">
-            <Button variant="ghost" size="sm" className="text-slate-300 hover:text-white hover:bg-slate-800">Creador CV</Button>
-            <Button variant="ghost" size="sm" className="text-slate-300 hover:text-white hover:bg-slate-800">JD Match</Button>
-            <Button variant="ghost" size="sm" className="text-slate-300 hover:text-white hover:bg-slate-800">Precios</Button>
+          <div className="flex items-center gap-4 mx-auto">
+            <Button variant="ghost" size="sm" className="text-slate-300 hover:text-white hover:bg-slate-800" onClick={() => scrollToSection("empieza-gratis")}>Creador CV</Button>
+            <Button variant="ghost" size="sm" className="text-slate-300 hover:text-white hover:bg-slate-800" onClick={() => scrollToSection("caracteristicas-principales")}>JD Match</Button>
+            <Button variant="ghost" size="sm" className="text-slate-300 hover:text-white hover:bg-slate-800" onClick={() => scrollToSection("planes-simples")}>Precios</Button>
+          </div>
 
+          <div className="flex items-center gap-4">
             <Button onClick={handleAuthNavigation} size="sm" className="bg-slate-600 hover:bg-slate-700 text-white border border-slate-500">
               Iniciar Sesión
             </Button>
@@ -82,7 +92,7 @@ const Index = () => {
       </header>
 
       {/* Hero Section */}
-      <section className="relative py-20 overflow-hidden">
+      <section id="empieza-gratis" className="relative py-20 overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-cyan-600/10 animate-pulse"></div>
         <div className="container mx-auto px-4 text-center relative z-10">
           <Badge variant="secondary" className="mb-6 animate-fade-in bg-slate-800 text-blue-400 border-slate-700">
@@ -237,7 +247,7 @@ Ahorra horas adaptando tu currículum: nuestra plataforma usa IA para convertir 
       </section>
 
       {/* Features Section */}
-      <section className="py-20 bg-slate-800/50">
+      <section id="caracteristicas-principales" className="py-20 bg-slate-800/50">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold mb-4 text-white">Características Principales</h2>
@@ -265,7 +275,7 @@ Ahorra horas adaptando tu currículum: nuestra plataforma usa IA para convertir 
       </section>
 
       {/* Pricing Section */}
-      <section className="py-20 bg-slate-900/50">
+      <section id="planes-simples" className="py-20 bg-slate-900/50">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold mb-4 text-white">Planes Simples</h2>
