@@ -21,6 +21,7 @@ interface CVAdaptationPreviewModalProps {
   adaptedCvData: CVData;
   jobTitle: string;
   companyName: string;
+  existingCVId?: string; // ID del CV existente para sobrescribir
   onSave: () => void;
 }
 
@@ -31,6 +32,7 @@ export const CVAdaptationPreviewModal = ({
   adaptedCvData,
   jobTitle,
   companyName,
+  existingCVId,
   onSave
 }: CVAdaptationPreviewModalProps) => {
   const [cvData, setCvData] = useState<CVData>(adaptedCvData);
@@ -47,64 +49,84 @@ export const CVAdaptationPreviewModal = ({
     setIsSaving(true);
 
     try {
-      // Generar nombre para el CV adaptado
-      const now = new Date();
-      const dateTime = now.toLocaleString('es-ES', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit'
-      });
+      if (existingCVId) {
+        // Sobrescribir CV existente
+        const { error: updateError } = await supabase
+          .from('cvs')
+          .update({
+            content: cvData as any,
+            last_updated: new Date().toISOString()
+          })
+          .eq('id', existingCVId);
 
-      let cvTitle;
-      if (companyName && jobTitle) {
-        cvTitle = `CV - ${jobTitle} en ${companyName}`;
-      } else if (companyName) {
-        cvTitle = `CV - ${companyName}`;
-      } else if (jobTitle) {
-        cvTitle = `CV - ${jobTitle}`;
+        if (updateError) {
+          console.error('Error updating existing CV:', updateError);
+          toast.error("Error al actualizar el CV");
+          return;
+        }
+
+        toast.success("CV actualizado exitosamente");
       } else {
-        cvTitle = `CV - ${cvData.personalInfo.fullName} - ${dateTime}`;
-      }
-
-      // Crear el CV adaptado
-      const { data: adaptedCV, error: adaptError } = await supabase
-        .from('cvs')
-        .insert({
-          user_id: user.id,
-          title: cvTitle,
-          content: cvData as any,
-          status: 'draft',
-          template_name: 'modern',
-          cv_source: 'job_matcher'
-        })
-        .select()
-        .single();
-
-      if (adaptError || !adaptedCV) {
-        console.error('Error creating adapted CV:', adaptError);
-        toast.error("Error al crear el CV adaptado");
-        return;
-      }
-
-      // Guardar en seguimiento de postulaciones
-      const { error: trackingError } = await supabase
-        .from('job_applications_tracking')
-        .insert({
-          user_id: user.id,
-          position: jobTitle || 'Posición sin especificar',
-          company: companyName || 'Empresa sin especificar',
-          status: 'saved',
-          applied_date: new Date().toISOString().split('T')[0],
-          notes: `CV adaptado con Job Matcher`
+        // Crear nuevo CV (flujo original)
+        const now = new Date();
+        const dateTime = now.toLocaleString('es-ES', {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit'
         });
 
-      if (trackingError) {
-        console.error('Error saving to job tracking:', trackingError);
+        let cvTitle;
+        if (companyName && jobTitle) {
+          cvTitle = `CV - ${jobTitle} en ${companyName}`;
+        } else if (companyName) {
+          cvTitle = `CV - ${companyName}`;
+        } else if (jobTitle) {
+          cvTitle = `CV - ${jobTitle}`;
+        } else {
+          cvTitle = `CV - ${cvData.personalInfo.fullName} - ${dateTime}`;
+        }
+
+        // Crear el CV adaptado
+        const { data: adaptedCV, error: adaptError } = await supabase
+          .from('cvs')
+          .insert({
+            user_id: user.id,
+            title: cvTitle,
+            content: cvData as any,
+            status: 'draft',
+            template_name: 'modern',
+            cv_source: 'job_matcher'
+          })
+          .select()
+          .single();
+
+        if (adaptError || !adaptedCV) {
+          console.error('Error creating adapted CV:', adaptError);
+          toast.error("Error al crear el CV adaptado");
+          return;
+        }
+
+        // Guardar en seguimiento de postulaciones
+        const { error: trackingError } = await supabase
+          .from('job_applications_tracking')
+          .insert({
+            user_id: user.id,
+            position: jobTitle || 'Posición sin especificar',
+            company: companyName || 'Empresa sin especificar',
+            status: 'saved',
+            applied_date: new Date().toISOString().split('T')[0],
+            notes: `CV adaptado con Job Matcher`
+          });
+
+        if (trackingError) {
+          console.error('Error saving to job tracking:', trackingError);
+        }
+
+        toast.success("CV adaptado guardado exitosamente");
       }
 
-      toast.success("CV adaptado guardado exitosamente");
       onSave();
       onClose();
     } catch (error) {
@@ -138,7 +160,7 @@ export const CVAdaptationPreviewModal = ({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Eye className="h-5 w-5 text-brand-500" />
-            CV Adaptado - {jobTitle} {companyName && `en ${companyName}`}
+            {existingCVId ? 'Editar CV Adaptado' : 'CV Adaptado'} - {jobTitle} {companyName && `en ${companyName}`}
           </DialogTitle>
           <DialogDescription>
             {isEditing ? 'Edita tu CV adaptado antes de guardarlo' : 'Revisa tu CV adaptado antes de guardarlo'}
@@ -336,7 +358,7 @@ export const CVAdaptationPreviewModal = ({
             ) : (
               <>
                 <Save className="h-4 w-4 mr-2" />
-                Guardar CV
+                {existingCVId ? 'Actualizar CV' : 'Guardar CV'}
               </>
             )}
           </Button>
