@@ -41,18 +41,19 @@ const Dashboard = () => {
         .select('*', { count: 'exact', head: true })
         .eq('user_id', user.id);
 
-      // Fetch applications count
+      // Fetch applications count (status = 'applied')
       const { count: applicationsCount } = await supabase
-        .from('job_applications')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id);
-
-      // Fetch interviews count
-      const { count: interviewsCount } = await supabase
-        .from('job_applications')
+        .from('job_applications_tracking')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', user.id)
-        .eq('status', 'interview');
+        .eq('status', 'applied');
+
+      // Fetch interviews count (status = 'interviewing')
+      const { count: interviewsCount } = await supabase
+        .from('job_applications_tracking')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .eq('status', 'interviewing');
 
       // Calculate response rate
       const responseRate = applicationsCount && interviewsCount 
@@ -75,8 +76,8 @@ const Dashboard = () => {
         .limit(3);
 
       const { data: recentApplications } = await supabase
-        .from('job_applications')
-        .select('id, status, applied_date, job_descriptions(title)')
+        .from('job_applications_tracking')
+        .select('id, status, applied_date, position, company')
         .eq('user_id', user.id)
         .order('applied_date', { ascending: false })
         .limit(3);
@@ -92,7 +93,7 @@ const Dashboard = () => {
         ...(recentApplications || []).map(app => ({
           id: app.id,
           type: 'application_sent' as const,
-          title: app.job_descriptions?.title || 'Aplicación',
+          title: app.position || 'Aplicación',
           date: new Date(app.applied_date).toLocaleDateString('es-ES'),
           status: app.status
         }))
