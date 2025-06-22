@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -34,6 +33,8 @@ import { DeleteConfirmDialog } from "@/components/DeleteConfirmDialog";
 import { downloadCVAsPDF } from "@/utils/pdfUtils";
 import { JobReportModal } from "@/components/JobReportModal";
 import { CVAdaptationModal } from "@/components/CVAdaptationModal";
+import { CVAdaptationPreviewModal } from "@/components/CVAdaptationPreviewModal";
+import { CVData } from "@/types/cv";
 
 interface CV {
   id: string;
@@ -56,6 +57,7 @@ export default function CVsList() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [jobReportCV, setJobReportCV] = useState<CV | null>(null);
   const [adaptationCV, setAdaptationCV] = useState<CV | null>(null);
+  const [editJobMatcherCV, setEditJobMatcherCV] = useState<CV | null>(null);
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -146,8 +148,13 @@ export default function CVsList() {
 
   const handleEditCV = (cv: CV) => {
     if (cv.cv_source === 'job_matcher') {
-      // Para CVs de Job Matcher, abrir el modal de adaptación
-      setAdaptationCV(cv);
+      if (isJobReport(cv)) {
+        // Para informes, mostrar el modal de adaptación
+        setAdaptationCV(cv);
+      } else {
+        // Para CVs de Job Matcher, abrir el modal de edición directa
+        setEditJobMatcherCV(cv);
+      }
     } else {
       // Para CVs regulares, ir al editor
       navigate(`/app/cv/${cv.id}`);
@@ -470,6 +477,20 @@ export default function CVsList() {
           jobDetails={adaptationCV?.content?.jobDetails || { title: "", company: "" }}
           onSave={() => {
             setAdaptationCV(null);
+            loadCVs();
+          }}
+        />
+
+        {/* CV Adaptation Preview Modal for Job Matcher CVs */}
+        <CVAdaptationPreviewModal
+          isOpen={!!editJobMatcherCV}
+          onClose={() => setEditJobMatcherCV(null)}
+          originalCvData={editJobMatcherCV?.content as CVData || {} as CVData}
+          adaptedCvData={editJobMatcherCV?.content as CVData || {} as CVData}
+          jobTitle={editJobMatcherCV?.content?.jobDetails?.title || editJobMatcherCV?.title || ""}
+          companyName={editJobMatcherCV?.content?.jobDetails?.company || ""}
+          onSave={() => {
+            setEditJobMatcherCV(null);
             loadCVs();
           }}
         />
