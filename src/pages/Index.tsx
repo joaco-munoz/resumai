@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Sparkles, Target, FileText, CheckCircle, Users, Zap, Star, ArrowRight, Calendar, MoreHorizontal } from "lucide-react";
+import { Sparkles, Target, FileText, CheckCircle, Users, Zap, Star, Calendar, MoreHorizontal } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -20,9 +20,7 @@ const Index = () => {
     setEmail("");
   };
 
-  const handleTestAccess = () => {
-    navigate("/app");
-  };
+
 
   const handleAuthNavigation = () => {
     navigate("/auth");
@@ -72,10 +70,7 @@ const Index = () => {
             <Button variant="ghost" size="sm" className="text-slate-300 hover:text-white hover:bg-slate-800">Creador CV</Button>
             <Button variant="ghost" size="sm" className="text-slate-300 hover:text-white hover:bg-slate-800">JD Match</Button>
             <Button variant="ghost" size="sm" className="text-slate-300 hover:text-white hover:bg-slate-800">Precios</Button>
-            <Button onClick={handleTestAccess} variant="outline" size="sm" className="border-orange-500 text-orange-400 hover:bg-orange-500/10">
-              <ArrowRight className="h-4 w-4 mr-2" />
-              Acceso Directo (Test)
-            </Button>
+
             <Button onClick={handleAuthNavigation} size="sm" className="bg-slate-600 hover:bg-slate-700 text-white border border-slate-500">
               Iniciar Sesión
             </Button>
