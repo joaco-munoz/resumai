@@ -1,4 +1,15 @@
 
+export interface CV {
+  id: string;
+  title: string;
+  status: string;
+  created_at: string;
+  last_updated: string;
+  ai_score?: number;
+  content?: any;
+  cv_source: string;
+}
+
 export interface CVData {
   personalInfo: {
     fullName: string;

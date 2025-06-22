@@ -1,27 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { 
-  Search, 
-  Plus, 
-  FileText, 
-  Calendar, 
-  MoreHorizontal,
-  Eye,
-  Edit,
-  Download,
-  Trash2,
-  User,
-  Target
-} from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
@@ -34,18 +13,9 @@ import { downloadCVAsPDF } from "@/utils/pdfUtils";
 import { JobReportModal } from "@/components/JobReportModal";
 import { CVAdaptationModal } from "@/components/CVAdaptationModal";
 import { CVAdaptationPreviewModal } from "@/components/CVAdaptationPreviewModal";
-import { CVData } from "@/types/cv";
-
-interface CV {
-  id: string;
-  title: string;
-  status: string;
-  created_at: string;
-  last_updated: string;
-  ai_score?: number;
-  content?: any;
-  cv_source: string;
-}
+import { CV, CVData } from "@/types/cv";
+import { GeneralCVSection } from "@/components/cv-list/GeneralCVSection";
+import { JobMatcherCVsSection } from "@/components/cv-list/JobMatcherCVsSection";
 
 export default function CVsList() {
   const [searchTerm, setSearchTerm] = useState("");
@@ -61,13 +31,49 @@ export default function CVsList() {
   const navigate = useNavigate();
   const { user } = useAuth();
 
+  const loadCVs = useCallback(async () => {
+    try {
+      console.log('Loading CVs for user:', user?.id);
+
+      const { data, error } = await supabase
+        .from('cvs')
+        .select('id, title, status, created_at, last_updated, ai_score, content, cv_source')
+        .eq('user_id', user?.id)
+        .order('last_updated', { ascending: false });
+
+      if (error) {
+        console.error('Error loading CVs:', error);
+        toast.error(`Error al cargar los CVs: ${error.message}`);
+        return;
+      }
+
+      console.log('CVs loaded successfully:', data);
+
+      // Separate CVs by source
+      const editorCVs = data?.filter(cv => cv.cv_source === 'editor') || [];
+      const matcherCVs = data?.filter(cv => cv.cv_source === 'job_matcher') || [];
+
+      // Set the most recent editor CV as general CV
+      setGeneralCV(editorCVs.length > 0 ? editorCVs[0] : null);
+      setJobMatcherCVs(matcherCVs);
+
+    } catch (error) {
+      console.error('Error loading CVs:', error);
+      toast.error('Error al cargar los CVs');
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
+
   useEffect(() => {
     if (user) {
       loadCVs();
     }
-  }, [user]);
+  }, [user, loadCVs]);
 
-  const loadCVs = async () => {
+  /* Duplicate block (legacy) removed during refactor
+
+
     try {
       console.log('Loading CVs for user:', user?.id);
       
@@ -99,30 +105,35 @@ export default function CVsList() {
     } finally {
       setLoading(false);
     }
-  };
 
-  const filteredJobMatcherCVs = jobMatcherCVs.filter(cv => 
-    cv.title.toLowerCase().includes(searchTerm.toLowerCase())
+
+  */
+
+  const filteredJobMatcherCVs = useMemo(() =>
+    jobMatcherCVs.filter(cv =>
+      cv.title.toLowerCase().includes(searchTerm.toLowerCase())
+    ),
+    [jobMatcherCVs, searchTerm]
   );
 
-  const getScoreColor = (score?: number) => {
+  const getScoreColor = useCallback((score?: number) => {
     if (!score) return "bg-gray-100 text-gray-800";
     if (score >= 80) return "bg-green-100 text-green-800";
     if (score >= 60) return "bg-yellow-100 text-yellow-800";
     return "bg-red-100 text-red-800";
-  };
+  }, []);
 
-  const getStatusColor = (status: string) => {
-    return status === "active" 
-      ? "bg-green-100 text-green-800" 
-      : "bg-gray-100 text-gray-800";
-  };
+  const getStatusColor = useCallback((status: string) => (
+    status === "active"
+      ? "bg-green-100 text-green-800"
+      : "bg-gray-100 text-gray-800"
+  ), []);
 
-  const getStatusLabel = (status: string) => {
-    return status === "active" ? "Activo" : "Borrador";
-  };
+  const getStatusLabel = useCallback((status: string) => (
+    status === "active" ? "Activo" : "Borrador"
+  ), []);
 
-  const formatDate = (dateString: string) => {
+  const formatDate = useCallback((dateString: string) => {
     const date = new Date(dateString);
     const now = new Date();
     const diffTime = Math.abs(now.getTime() - date.getTime());
@@ -132,11 +143,9 @@ export default function CVsList() {
     if (diffDays < 30) return `hace ${diffDays} días`;
     if (diffDays < 365) return `hace ${Math.ceil(diffDays / 30)} meses`;
     return `hace ${Math.ceil(diffDays / 365)} años`;
-  };
+  }, []);
 
-  const isJobReport = (cv: CV) => {
-    return cv.content?.type === 'job_report';
-  };
+  const isJobReport = useCallback((cv: CV) => cv.content?.type === 'job_report', []);
 
   const handleViewCV = (cv: CV) => {
     if (isJobReport(cv)) {
@@ -209,81 +218,7 @@ export default function CVsList() {
     }
   };
 
-  const renderCVCard = (cv: CV) => {
-    const isReport = isJobReport(cv);
-    
-    return (
-      <div key={cv.id} className="grid grid-cols-12 gap-4 items-center py-3 border-b border-gray-100 hover:bg-gray-50 rounded-lg transition-colors">
-        <div className="col-span-5 flex items-center gap-3">
-          <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${isReport ? 'bg-yellow-100' : 'bg-blue-100'}`}>
-            {isReport ? (
-              <Target className="h-5 w-5 text-yellow-600" />
-            ) : (
-              <FileText className="h-5 w-5 text-blue-600" />
-            )}
-          </div>
-          <div>
-            <h3 className="font-medium text-gray-900">{cv.title}</h3>
-            <p className="text-sm text-gray-500">
-              {isReport ? "Informe de compatibilidad" : "CV adaptado"} - Creado {formatDate(cv.created_at)}
-            </p>
-          </div>
-        </div>
-        
-        <div className="col-span-2">
-          <Badge className={`${getScoreColor(cv.ai_score)} border-0`}>
-            {cv.ai_score ? `${cv.ai_score}%` : "Sin evaluar"}
-          </Badge>
-        </div>
-        
-        <div className="col-span-2">
-          <Badge className={`${getStatusColor(cv.status)} border-0`}>
-            {getStatusLabel(cv.status)}
-          </Badge>
-        </div>
-        
-        <div className="col-span-2 flex items-center gap-1 text-sm text-gray-500">
-          <Calendar className="h-4 w-4" />
-          {formatDate(cv.last_updated || cv.created_at)}
-        </div>
-        
-        <div className="col-span-1 flex justify-end">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm">
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => handleViewCV(cv)}>
-                <Eye className="h-4 w-4 mr-2" />
-                Ver
-              </DropdownMenuItem>
-              {!isReport && (
-                <DropdownMenuItem onClick={() => handleEditCV(cv)}>
-                  <Edit className="h-4 w-4 mr-2" />
-                  Editar
-                </DropdownMenuItem>
-              )}
-              {!isReport && (
-                <DropdownMenuItem onClick={() => handleDownloadCV(cv)}>
-                  <Download className="h-4 w-4 mr-2" />
-                  Descargar
-                </DropdownMenuItem>
-              )}
-              <DropdownMenuItem 
-                className="text-red-600"
-                onClick={() => handleDeleteCV(cv)}
-              >
-                <Trash2 className="h-4 w-4 mr-2" />
-                Eliminar
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </div>
-    );
-  };
+
 
   if (loading) {
     return (
@@ -329,117 +264,35 @@ export default function CVsList() {
                 </div>
               </div>
 
-              {/* CV General Section */}
-              <Card className="mb-8">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <User className="h-5 w-5 text-blue-600" />
-                    CV Principal
-                  </CardTitle>
-                  <p className="text-sm text-gray-600">
-                    Tu CV principal que se actualiza cuando guardas desde el Editor de CVs
-                  </p>
-                </CardHeader>
-                <CardContent>
-                  {generalCV ? (
-                    <div className="space-y-4">
-                      <div className="grid grid-cols-12 gap-4 text-sm font-medium text-gray-500 border-b pb-3">
-                        <div className="col-span-5">CV</div>
-                        <div className="col-span-2">Puntuación</div>
-                        <div className="col-span-2">Estado</div>
-                        <div className="col-span-2">Actualizado</div>
-                        <div className="col-span-1"></div>
-                      </div>
-                      {renderCVCard(generalCV)}
-                    </div>
-                  ) : (
-                    <div className="text-center py-12">
-                      <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                      <h3 className="text-lg font-medium text-gray-900 mb-2">
-                        No tienes un CV Principal
-                      </h3>
-                      <p className="text-gray-500 mb-4">
-                        Crea tu primer CV para que aparezca aquí como tu CV Principal
-                      </p>
-                      <Button onClick={() => navigate("/app/cv/new")}>
-                        <Plus className="h-4 w-4 mr-2" />
-                        Crear CV Principal
-                      </Button>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+              <GeneralCVSection
+                generalCV={generalCV}
+                isJobReport={isJobReport}
+                formatDate={formatDate}
+                getScoreColor={getScoreColor}
+                getStatusColor={getStatusColor}
+                getStatusLabel={getStatusLabel}
+                onView={handleViewCV}
+                onEdit={handleEditCV}
+                onDownload={handleDownloadCV}
+                onDelete={handleDeleteCV}
+                onCreateNew={() => navigate("/app/cv/new")}
+              />
 
-              {/* Job Matcher CVs Section */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Target className="h-5 w-5 text-green-600" />
-                    CVs de Job Matcher
-                  </CardTitle>
-                  <p className="text-sm text-gray-600">
-                    CVs adaptados e informes de compatibilidad de ofertas de trabajo
-                  </p>
-                </CardHeader>
-                <CardContent>
-                  {/* Search for Job Matcher CVs */}
-                  <div className="mb-6">
-                    <div className="relative max-w-md">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-                      <Input
-                        placeholder="Buscar CVs de Job Matcher..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-10"
-                      />
-                    </div>
-                  </div>
-
-                  {filteredJobMatcherCVs.length === 0 ? (
-                    <div className="text-center py-12">
-                      <Target className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                      <h3 className="text-lg font-medium text-gray-900 mb-2">
-                        {jobMatcherCVs.length === 0 ? "No tienes CVs de Job Matcher" : "No se encontraron CVs"}
-                      </h3>
-                      <p className="text-gray-500 mb-4">
-                        {jobMatcherCVs.length === 0 
-                          ? "Los CVs adaptados e informes desde Job Matcher aparecerán aquí" 
-                          : "Intenta con otro término de búsqueda"
-                        }
-                      </p>
-                      {jobMatcherCVs.length === 0 && (
-                        <Button onClick={() => navigate("/app/match")}>
-                          <Target className="h-4 w-4 mr-2" />
-                          Ir a Job Matcher
-                        </Button>
-                      )}
-                    </div>
-                  ) : (
-                    <div className="space-y-4">
-                      {/* Table Header */}
-                      <div className="grid grid-cols-12 gap-4 text-sm font-medium text-gray-500 border-b pb-3">
-                        <div className="col-span-5">CV / Informe</div>
-                        <div className="col-span-2">Puntuación</div>
-                        <div className="col-span-2">Estado</div>
-                        <div className="col-span-2">Actualizado</div>
-                        <div className="col-span-1"></div>
-                      </div>
-
-                      {/* Table Rows */}
-                      {filteredJobMatcherCVs.map(cv => renderCVCard(cv))}
-                    </div>
-                  )}
-
-                  {/* Pagination Info */}
-                  {filteredJobMatcherCVs.length > 0 && (
-                    <div className="flex items-center justify-between mt-6 pt-4 border-t">
-                      <p className="text-sm text-gray-500">
-                        Mostrando 1 a {filteredJobMatcherCVs.length} de {filteredJobMatcherCVs.length} elementos de Job Matcher
-                      </p>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
+              <JobMatcherCVsSection
+                cvs={filteredJobMatcherCVs}
+                searchTerm={searchTerm}
+                onSearchChange={(value) => setSearchTerm(value)}
+                isJobReport={isJobReport}
+                formatDate={formatDate}
+                getScoreColor={getScoreColor}
+                getStatusColor={getStatusColor}
+                getStatusLabel={getStatusLabel}
+                onView={handleViewCV}
+                onEdit={handleEditCV}
+                onDownload={handleDownloadCV}
+                onDelete={handleDeleteCV}
+                onGoToJobMatcher={() => navigate("/app/match")}
+              />
             </div>
           </div>
         </SidebarInset>
