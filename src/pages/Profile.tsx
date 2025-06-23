@@ -279,7 +279,7 @@ const Profile = () => {
                   onUpgrade={handleUpgrade}
                 />
 
-                <UsageStats 
+                {/*<UsageStats 
                   usageStats={usageStats}
                   getUsagePercentage={getUsagePercentage}
                 />
@@ -287,7 +287,7 @@ const Profile = () => {
                 <ProgressMetrics 
                   stats={stats}
                   currentPlan={currentPlan}
-                />
+                />*/}
               </TabsContent>
             </Tabs>
           </div>
