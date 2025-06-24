@@ -71,7 +71,7 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
           toast.error("Error al iniciar sesión: " + error.message);
         }
       } else {
-        toast.success("¡Bienvenido de nuevo!");
+
         onOpenChange(false);
         setEmail("");
         setPassword("");

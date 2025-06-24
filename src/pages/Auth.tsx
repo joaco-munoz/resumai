@@ -65,7 +65,7 @@ const Auth = () => {
             toast.error("Error al iniciar sesión: " + error.message);
           }
         } else {
-          toast.success("¡Bienvenido de nuevo!");
+  
           navigate("/app");
         }
       }

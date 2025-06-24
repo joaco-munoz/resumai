@@ -46,7 +46,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           if (window.location.pathname === '/') {
             navigate('/app');
           }
-          toast.success("¡Bienvenido!");
+
         }
 
         if (event === 'SIGNED_OUT') {
