@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -38,19 +37,10 @@ export const ExperienceTab = ({
       <CardHeader>
         <CardTitle className="flex items-center justify-between">
           <span>Experiencia Laboral</span>
-          <div className="flex gap-2">
-            <AIButton
-              onClick={() => improveWithAI('experience')}
-              isLoading={isImproving === 'experience'}
-              disabled={cvData.experience.length === 0}
-            >
-              Optimizar con IA
-            </AIButton>
-            <Button onClick={addExperience} size="sm">
-              <Plus className="h-4 w-4 mr-2" />
-              Agregar
-            </Button>
-          </div>
+          <Button onClick={addExperience} size="sm">
+            <Plus className="h-4 w-4 mr-2" />
+            Agregar
+          </Button>
         </CardTitle>
         <CardDescription>
           Detalla tu experiencia profesional más relevante
@@ -122,7 +112,7 @@ export const ExperienceTab = ({
               <Label>Descripción</Label>
               {exp.description.split('\n').map((line, idx) => (
                 <div key={idx} className="space-y-1">
-                <div className="flex gap-2">
+                <div className="flex gap-2 items-start">
                   <Input
                     className="flex-1"
                     value={line}
@@ -137,6 +127,16 @@ export const ExperienceTab = ({
                     placeholder={`Responsabilidad o logro ${idx + 1}`}
                     maxLength={MAX_BULLET_CHARACTERS}
                   />
+                  <AIButton
+                    onClick={() => improveWithAI(`experience-${exp.id}-${idx}`)}
+                    isLoading={isImproving === `experience-${exp.id}-${idx}`}
+                    disabled={!line.trim()}
+                    size="sm"
+                    variant="secondary"
+                    className="shrink-0"
+                  >
+                    IA
+                  </AIButton>
                   {exp.description.split('\n').length > 1 && (
                     <Button
                       variant="outline"
@@ -146,7 +146,7 @@ export const ExperienceTab = ({
                         lines.splice(idx, 1);
                         updateExperience(exp.id, 'description', lines.join('\n'));
                       }}
-                      className="text-red-600 hover:text-red-700"
+                      className="text-red-600 hover:text-red-700 shrink-0"
                     >
                       <Trash2 className="h-4 w-4" />
                     </Button>
