@@ -10,6 +10,7 @@ import AIButton from "@/components/AIButton";
 import { CVData } from "@/types/cv";
 
 const MAX_BULLET_CHARACTERS = 250;
+const MAX_BULLET_POINTS = 5;
 
 interface ExperienceTabProps {
   cvData: CVData;
@@ -163,18 +164,28 @@ export const ExperienceTab = ({
                 </div>
               </div>
               ))}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  const lines = exp.description ? exp.description.split('\n') : [];
-                  lines.push('');
-                  updateExperience(exp.id, 'description', lines.join('\n'));
-                }}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Agregar bullet
-              </Button>
+              <div className="space-y-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const lines = exp.description ? exp.description.split('\n') : [];
+                    if (lines.length < MAX_BULLET_POINTS) {
+                      lines.push('');
+                      updateExperience(exp.id, 'description', lines.join('\n'));
+                    }
+                  }}
+                  disabled={exp.description.split('\n').length >= MAX_BULLET_POINTS}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Agregar bullet
+                </Button>
+                {exp.description.split('\n').length >= MAX_BULLET_POINTS && (
+                  <div className="text-xs text-amber-600 font-medium mt-1">
+                    Máximo de {MAX_BULLET_POINTS} bullet points alcanzado
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         ))}
