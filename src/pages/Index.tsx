@@ -75,7 +75,7 @@ const Index = () => {
           </div>
           
           <div className="flex items-center gap-4 mx-auto">
-            <Button variant="ghost" size="m" className="text-slate-300 hover:text-white hover:bg-slate-800" onClick={() => scrollToSection("empieza-gratis")}>Creador CV</Button>
+            <Button variant="ghost" size="sm" className="text-slate-300 hover:text-white hover:bg-slate-800" onClick={() => scrollToSection("empieza-gratis")}>Creador CV</Button>
             <Button variant="ghost" size="sm" className="text-slate-300 hover:text-white hover:bg-slate-800" onClick={() => scrollToSection("caracteristicas-principales")}>JD Match</Button>
             <Button variant="ghost" size="sm" className="text-slate-300 hover:text-white hover:bg-slate-800" onClick={() => scrollToSection("planes-simples")}>Precios</Button>
           </div>
