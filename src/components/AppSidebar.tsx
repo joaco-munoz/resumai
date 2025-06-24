@@ -177,7 +177,7 @@ export function AppSidebar() {
           </SidebarMenuItem>
 
           {/* Theme Toggle */}
-          {/*<SidebarMenuItem>
+          <SidebarMenuItem>
             <div className="px-2 py-1">
               <div className="flex items-center gap-2">
                 <ThemeToggle />
@@ -186,7 +186,7 @@ export function AppSidebar() {
                 )}
               </div>
             </div>
-          </SidebarMenuItem>*/}
+          </SidebarMenuItem>
 
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
