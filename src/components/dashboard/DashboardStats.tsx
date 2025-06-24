@@ -12,6 +12,12 @@ interface DashboardStatsProps {
 }
 
 export const DashboardStats = ({ stats }: DashboardStatsProps) => {
+  // Calculate response rate: interviews / (applications + interviews) * 100
+  const totalActiveApplications = stats.applications + stats.interviews;
+  const calculatedResponseRate = totalActiveApplications > 0 
+    ? Math.round((stats.interviews / totalActiveApplications) * 100) 
+    : 0;
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
       <Card>
@@ -53,7 +59,7 @@ export const DashboardStats = ({ stats }: DashboardStatsProps) => {
           <TrendingUp className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-brand-600">{stats.responseRate}%</div>
+          <div className="text-2xl font-bold text-brand-600">{calculatedResponseRate}%</div>
           <p className="text-xs text-muted-foreground">Respuestas positivas</p>
         </CardContent>
       </Card>

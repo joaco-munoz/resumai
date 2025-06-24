@@ -16,6 +16,12 @@ interface ProgressMetricsProps {
 }
 
 export const ProgressMetrics = ({ stats, currentPlan }: ProgressMetricsProps) => {
+  // Calculate response rate: interviews / (applications + interviews) * 100
+  const totalActiveApplications = stats.applications + stats.interviews;
+  const responseRate = totalActiveApplications > 0 
+    ? Math.round((stats.interviews / totalActiveApplications) * 100) 
+    : 0;
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       <Card>
@@ -32,7 +38,7 @@ export const ProgressMetrics = ({ stats, currentPlan }: ProgressMetricsProps) =>
           </div>
           <div className="flex justify-between items-center">
             <span className="text-sm text-gray-600">Respuestas recibidas</span>
-            <span className="font-bold text-success-600">{Math.floor(stats.applications * 0.67)}</span>
+            <span className="font-bold text-success-600">{totalActiveApplications}</span>
           </div>
           <div className="flex justify-between items-center">
             <span className="text-sm text-gray-600">Entrevistas conseguidas</span>
@@ -40,9 +46,7 @@ export const ProgressMetrics = ({ stats, currentPlan }: ProgressMetricsProps) =>
           </div>
           <div className="flex justify-between items-center">
             <span className="text-sm text-gray-600">Tasa de respuesta</span>
-            <span className="font-bold text-brand-600">
-              {stats.applications > 0 ? Math.round((stats.interviews / stats.applications) * 100) : 0}%
-            </span>
+            <span className="font-bold text-brand-600">{responseRate}%</span>
           </div>
         </CardContent>
       </Card>

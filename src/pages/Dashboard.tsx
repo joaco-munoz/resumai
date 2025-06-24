@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
@@ -44,27 +43,25 @@ const Dashboard = () => {
         .select('*', { count: 'exact', head: true })
         .eq('user_id', user.id);
 
+      // Count applications with status 'applied' (Postulado)
       const { count: applicationsCount } = await supabase
         .from('job_applications_tracking')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', user.id)
         .eq('status', 'applied');
 
+      // Count applications with status 'interviewing' (En entrevista)
       const { count: interviewsCount } = await supabase
         .from('job_applications_tracking')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', user.id)
         .eq('status', 'interviewing');
 
-      const responseRate = applicationsCount && interviewsCount 
-        ? Math.round((interviewsCount / applicationsCount) * 100)
-        : 0;
-
       setStats({
         cvsCreated: cvsCount || 0,
         applications: applicationsCount || 0,
         interviews: interviewsCount || 0,
-        responseRate
+        responseRate: 0 // This will be calculated in the component
       });
 
       // Fetch recent activities (last 5 CVs and applications)
