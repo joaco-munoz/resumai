@@ -309,13 +309,6 @@ const Auth = () => {
             ))}
           </div>
         </div>
-        
-        {/* Original quote moved to bottom corner */}
-        <div className="absolute bottom-8 right-8 bg-white/10 backdrop-blur-sm rounded-2xl p-4 max-w-xs">
-          <p className="text-white text-sm italic">
-            "Ask Lovable to build your blog."
-          </p>
-        </div>
       </div>
     </div>
   );
