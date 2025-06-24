@@ -3,7 +3,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
-import { ArrowRight } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { ArrowRight, HelpCircle } from "lucide-react";
 import { CVData } from "@/types/cv";
 
 interface PersonalInfoTabProps {
@@ -72,11 +78,24 @@ export const PersonalInfoTab = ({
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="website">Sitio web</Label>
+            <div className="flex items-center gap-1">
+              <Label htmlFor="website">Sitio web (opcional)</Label>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <HelpCircle className="h-4 w-4 text-gray-400 cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-xs">
+                    <p>Recomendado para profesionales con portafolio web, diseñadores, desarrolladores y creativos.</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
             <Input
               id="website"
               value={cvData.personalInfo.website}
               onChange={(e) => handlePersonalInfoChange('website', e.target.value)}
+              placeholder="ej. www.tuportafolio.com"
             />
           </div>
         </div>

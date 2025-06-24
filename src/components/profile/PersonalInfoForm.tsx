@@ -126,7 +126,7 @@ export const PersonalInfoForm = ({
           </div>
         </div>
 
-        <Separator />
+        {/*<Separator />
 
         <div className="space-y-4">
           <h3 className="text-lg font-medium">Enlaces Profesionales</h3>
@@ -172,7 +172,7 @@ export const PersonalInfoForm = ({
             </div>
           </div>
         </div>
-
+          */}
         <div className="flex justify-end pt-4">
           <Button 
             onClick={onSave}
