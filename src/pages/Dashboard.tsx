@@ -11,10 +11,13 @@ import { toast } from "sonner";
 import { DashboardStats } from "@/components/dashboard/DashboardStats";
 import { QuickActions } from "@/components/dashboard/QuickActions";
 import { RecentActivity } from "@/components/dashboard/RecentActivity";
+import { OnboardingModal } from "@/components/onboarding/OnboardingModal";
+import { useOnboarding } from "@/hooks/useOnboarding";
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { showOnboarding, isLoading: onboardingLoading, completeOnboarding } = useOnboarding();
   const [stats, setStats] = useState({
     cvsCreated: 0,
     applications: 0,
@@ -41,21 +44,18 @@ const Dashboard = () => {
         .select('*', { count: 'exact', head: true })
         .eq('user_id', user.id);
 
-      // Fetch applications count (status = 'applied')
       const { count: applicationsCount } = await supabase
         .from('job_applications_tracking')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', user.id)
         .eq('status', 'applied');
 
-      // Fetch interviews count (status = 'interviewing')
       const { count: interviewsCount } = await supabase
         .from('job_applications_tracking')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', user.id)
         .eq('status', 'interviewing');
 
-      // Calculate response rate
       const responseRate = applicationsCount && interviewsCount 
         ? Math.round((interviewsCount / applicationsCount) * 100)
         : 0;
@@ -109,7 +109,11 @@ const Dashboard = () => {
     }
   };
 
-  if (loading) {
+  const handleOnboardingClose = () => {
+    completeOnboarding();
+  };
+
+  if (loading || onboardingLoading) {
     return (
       <SidebarProvider>
         <div className="min-h-screen flex w-full bg-gray-50">
@@ -134,7 +138,6 @@ const Dashboard = () => {
         <SidebarInset>
           <header className="bg-white border-b px-6 py-4">
             <div className="flex items-center gap-4">
-              {/*<SidebarTrigger />*/}
               <div className="flex justify-between items-center w-full">
                 <div>
                   <h1 className="text-3xl font-bold gradient-text">Dashboard</h1>
@@ -156,6 +159,12 @@ const Dashboard = () => {
           </div>
         </SidebarInset>
       </div>
+
+      {/* Onboarding Modal */}
+      <OnboardingModal 
+        isOpen={showOnboarding} 
+        onClose={handleOnboardingClose}
+      />
     </SidebarProvider>
   );
 };
