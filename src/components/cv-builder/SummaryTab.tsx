@@ -15,6 +15,8 @@ interface SummaryTabProps {
   goToNextTab: () => void;
 }
 
+const MAX_CHARACTERS = 750;
+
 export const SummaryTab = ({ 
   cvData, 
   handleSummaryChange, 
@@ -23,6 +25,15 @@ export const SummaryTab = ({
   goToPreviousTab, 
   goToNextTab 
 }: SummaryTabProps) => {
+  const currentLength = cvData.summary.length;
+  const isAtLimit = currentLength >= MAX_CHARACTERS;
+
+  const handleTextChange = (value: string) => {
+    if (value.length <= MAX_CHARACTERS) {
+      handleSummaryChange(value);
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -41,12 +52,25 @@ export const SummaryTab = ({
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <Textarea
-          value={cvData.summary}
-          onChange={(e) => handleSummaryChange(e.target.value)}
-          rows={4}
-          placeholder="Describe tu perfil profesional, experiencia clave y objetivos..."
-        />
+        <div className="space-y-2">
+          <Textarea
+            value={cvData.summary}
+            onChange={(e) => handleTextChange(e.target.value)}
+            rows={4}
+            placeholder="Describe tu perfil profesional, experiencia clave y objetivos..."
+            maxLength={MAX_CHARACTERS}
+          />
+          <div className="flex justify-between items-center text-xs">
+            <span className={`${isAtLimit ? 'text-red-500' : 'text-gray-500'}`}>
+              {currentLength}/{MAX_CHARACTERS} caracteres
+            </span>
+            {isAtLimit && (
+              <span className="text-red-500 font-medium">
+                Límite máximo alcanzado
+              </span>
+            )}
+          </div>
+        </div>
         
         <div className="flex justify-between pt-4">
           <Button variant="outline" onClick={goToPreviousTab}>
