@@ -17,7 +17,6 @@ import { Sparkles, FileText, Target, User, CheckCircle, House, FolderOpen, LogOu
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { ThemeToggle } from "@/components/ThemeToggle";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -107,6 +106,8 @@ export function AppSidebar() {
         </div>
       </div>
 
+      {/*<SidebarTrigger className="m-2 self-start" />*/}
+
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupContent>
@@ -122,7 +123,7 @@ export function AppSidebar() {
                         to={item.url} 
                         className={active 
                           ? "bg-blue-500 text-white font-medium" 
-                          : "text-sidebar-foreground"
+                          : "text-gray-700"
                         }
                       >
                         <item.icon className="h-4 w-4" />
@@ -145,15 +146,15 @@ export function AppSidebar() {
               <div className="flex items-center gap-3">
                 <Avatar className="h-10 w-10">
                   <AvatarImage src={profile?.avatar_url || undefined} alt={getDisplayName()} />
-                  <AvatarFallback className="bg-blue-100 text-blue-600 font-medium dark:bg-blue-900 dark:text-blue-300">
+                  <AvatarFallback className="bg-blue-100 text-blue-600 font-medium">
                     {getInitials(profile?.full_name)}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-sidebar-foreground truncate">
+                  <p className="text-sm font-medium text-gray-900 truncate">
                     {getDisplayName()}
                   </p>
-                  <p className="text-xs text-muted-foreground truncate">
+                  <p className="text-xs text-gray-500 truncate">
                     {user.email}
                   </p>
                 </div>
@@ -167,7 +168,7 @@ export function AppSidebar() {
                 to={profileItem.url} 
                 className={isActive(profileItem.url)
                   ? "bg-blue-500 text-white font-medium" 
-                  : "text-sidebar-foreground"
+                  : "text-gray-700"
                 }
               >
                 <profileItem.icon className="h-4 w-4" />
@@ -175,25 +176,12 @@ export function AppSidebar() {
               </NavLink>
             </SidebarMenuButton>
           </SidebarMenuItem>
-
-          {/* Theme Toggle */}
-          <SidebarMenuItem>
-            <div className="px-2 py-1">
-              <div className="flex items-center gap-2">
-                <ThemeToggle />
-                {!isCollapsed && (
-                  <span className="text-sm text-sidebar-foreground">Tema</span>
-                )}
-              </div>
-            </div>
-          </SidebarMenuItem>
-
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
               <Button
                 variant="ghost"
                 onClick={signOut}
-                className="w-full justify-start h-10 px-2 text-sidebar-foreground hover:bg-sidebar-accent"
+                className="w-full justify-start h-10 px-2 text-gray-700 hover:bg-gray-100"
               >
                 <LogOut className="h-4 w-4" />
                 {!isCollapsed && <span>Cerrar Sesión</span>}
