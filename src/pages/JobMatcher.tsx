@@ -26,6 +26,8 @@ interface JobDetails {
   company: string;
 }
 
+const MAX_JOB_DESCRIPTION_CHARACTERS = 1500;
+
 const JobMatcher = () => {
   const [jobDescription, setJobDescription] = useState("");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -185,8 +187,9 @@ const JobMatcher = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <Textarea
-                  placeholder="Pega aquí la descripción del trabajo completa...
+                <div className="space-y-2">
+                  <Textarea
+                    placeholder="Pega aquí la descripción del trabajo completa...
 
 Ejemplo:
 - Estamos buscando un Frontend Developer con experiencia en React
@@ -194,11 +197,28 @@ Ejemplo:
 - Conocimientos en Node.js, APIs REST, Git
 - Experiencia con metodologías ágiles
 - Plus: Docker, Testing, GraphQL"
-                  value={jobDescription}
-                  onChange={(e) => setJobDescription(e.target.value)}
-                  rows={8}
-                  className="resize-none"
-                />
+                    value={jobDescription}
+                    onChange={(e) => {
+                      const newValue = e.target.value;
+                      if (newValue.length <= MAX_JOB_DESCRIPTION_CHARACTERS) {
+                        setJobDescription(newValue);
+                      }
+                    }}
+                    rows={8}
+                    className="resize-none"
+                    maxLength={MAX_JOB_DESCRIPTION_CHARACTERS}
+                  />
+                  <div className="flex justify-end items-center text-xs">
+                    <span className={`${jobDescription.length >= MAX_JOB_DESCRIPTION_CHARACTERS ? 'text-red-500' : 'text-gray-500'}`}>
+                      {jobDescription.length}/{MAX_JOB_DESCRIPTION_CHARACTERS} caracteres
+                    </span>
+                    {jobDescription.length >= MAX_JOB_DESCRIPTION_CHARACTERS && (
+                      <span className="text-red-500 font-medium ml-2">
+                        Límite máximo alcanzado
+                      </span>
+                    )}
+                  </div>
+                </div>
                 
                 <Button 
                   onClick={analyzeMatch}
