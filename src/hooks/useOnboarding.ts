@@ -33,16 +33,40 @@ export const useOnboarding = () => {
         return;
       }
 
-      // Si no ha completado el onboarding, mostrarlo
+      // Always set onboarding as completed to prevent welcome messages
       // Using type assertion temporarily until types are regenerated  
       const profileWithOnboarding = profile as any;
+      
+      // If onboarding is not completed, complete it automatically without showing modal
       if (!profileWithOnboarding?.onboarding_completed) {
-        setShowOnboarding(true);
+        await completeOnboardingAutomatically();
       }
+      
+      // Never show onboarding modal
+      setShowOnboarding(false);
     } catch (error) {
       console.error('Error in checkOnboardingStatus:', error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const completeOnboardingAutomatically = async () => {
+    if (!user) return;
+
+    try {
+      // Using type assertion temporarily until types are regenerated
+      const { error } = await supabase
+        .from('profiles')
+        .update({ onboarding_completed: true } as any)
+        .eq('id', user.id);
+
+      if (error) {
+        console.error('Error completing onboarding automatically:', error);
+        return;
+      }
+    } catch (error) {
+      console.error('Error in completeOnboardingAutomatically:', error);
     }
   };
 
@@ -68,7 +92,7 @@ export const useOnboarding = () => {
   };
 
   return {
-    showOnboarding,
+    showOnboarding: false, // Always return false to never show onboarding
     isLoading,
     completeOnboarding,
     setShowOnboarding
