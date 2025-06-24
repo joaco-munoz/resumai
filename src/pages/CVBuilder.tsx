@@ -203,50 +203,74 @@ const CVBuilder = () => {
     setIsImproving(section);
     
     try {
-      let content = '';
-      let context = '';
-      
       if (section === 'summary') {
-        content = cvData.summary;
-        context = `Profesional: ${cvData.personalInfo.fullName}, Experiencia: ${cvData.experience.map(exp => `${exp.position} en ${exp.company}`).join(', ')}`;
-      } else if (section === 'experience') {
-        const expToImprove = cvData.experience[0];
-        if (expToImprove) {
-          content = expToImprove.description;
-          context = `Posición: ${expToImprove.position} en ${expToImprove.company}`;
+        const content = cvData.summary;
+        const context = `Profesional: ${cvData.personalInfo.fullName}, Experiencia: ${cvData.experience.map(exp => `${exp.position} en ${exp.company}`).join(', ')}`;
+        
+        console.log('Calling improve-cv-content function for summary...');
+        
+        const { data, error } = await supabase.functions.invoke('improve-cv-content', {
+          body: {
+            content,
+            context
+          }
+        });
+
+        if (error) {
+          throw error;
         }
-      }
 
-      console.log('Calling improve-cv-content function...');
-      
-      const { data, error } = await supabase.functions.invoke('improve-cv-content', {
-        body: {
-          content,
-          type: section,
-          context
-        }
-      });
-
-      if (error) {
-        throw error;
-      }
-
-      if (data?.improvedContent) {
-        if (section === 'summary') {
+        if (data?.improvedContent) {
           setCvData(prev => ({
             ...prev,
             summary: data.improvedContent
           }));
-        } else if (section === 'experience' && cvData.experience[0]) {
+          toast.success('Resumen mejorado con IA');
+        }
+      } else if (section.startsWith('experience-')) {
+        // Extract experience ID and bullet point index from section
+        const parts = section.split('-');
+        const expId = parts[1];
+        const bulletIndex = parseInt(parts[2]);
+        
+        const experience = cvData.experience.find(exp => exp.id === expId);
+        if (!experience) return;
+        
+        const bulletPoints = experience.description.split('\n');
+        const bulletPoint = bulletPoints[bulletIndex];
+        
+        if (!bulletPoint || !bulletPoint.trim()) return;
+        
+        const context = `Posición: ${experience.position} en ${experience.company}`;
+        
+        console.log('Calling improve-bullet-point function...');
+        
+        const { data, error } = await supabase.functions.invoke('improve-bullet-point', {
+          body: {
+            bulletPoint,
+            context
+          }
+        });
+
+        if (error) {
+          throw error;
+        }
+
+        if (data?.improvedBulletPoint) {
+          const newBulletPoints = [...bulletPoints];
+          newBulletPoints[bulletIndex] = data.improvedBulletPoint;
+          
           setCvData(prev => ({
             ...prev,
-            experience: prev.experience.map((exp, index) => 
-              index === 0 ? { ...exp, description: data.improvedContent } : exp
+            experience: prev.experience.map(exp => 
+              exp.id === expId 
+                ? { ...exp, description: newBulletPoints.join('\n') }
+                : exp
             )
           }));
+          
+          toast.success('Bullet point mejorado con IA');
         }
-        
-        toast.success(`Sección ${section} mejorada con IA`);
       }
     } catch (error) {
       console.error('Error improving with AI:', error);
