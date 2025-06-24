@@ -27,6 +27,8 @@ import { EducationTab } from "@/components/cv-builder/EducationTab";
 import { SkillsTab } from "@/components/cv-builder/SkillsTab";
 import { CVPreview } from "@/components/cv-builder/CVPreview";
 
+const LOCAL_STORAGE_TAB_KEY = 'cv-editor-active-tab';
+
 const CVBuilder = () => {
   const { cvData, setCvData, isLoading, currentCvId, saveCV, saveAndAdapt } = useCVData();
   
@@ -38,6 +40,19 @@ const CVBuilder = () => {
   const [showSaveAnimation, setShowSaveAnimation] = useState(false);
   const navigate = useNavigate();
   const { user } = useAuth();
+
+  // Load active tab from localStorage on component mount
+  useEffect(() => {
+    const savedTab = localStorage.getItem(LOCAL_STORAGE_TAB_KEY);
+    if (savedTab) {
+      setActiveTab(savedTab);
+    }
+  }, []);
+
+  // Save active tab to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem(LOCAL_STORAGE_TAB_KEY, activeTab);
+  }, [activeTab]);
 
   // Validation functions
   const validatePersonalInfo = () => {

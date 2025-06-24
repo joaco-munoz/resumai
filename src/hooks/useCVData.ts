@@ -1,9 +1,13 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { CVData } from "@/types/cv";
+
+const LOCAL_STORAGE_KEY = 'cv-editor-data';
+const LOCAL_STORAGE_TAB_KEY = 'cv-editor-active-tab';
 
 export const useCVData = () => {
   const navigate = useNavigate();
@@ -46,6 +50,14 @@ export const useCVData = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [currentCvId, setCurrentCvId] = useState<string | null>(null);
 
+  // Save data to localStorage whenever cvData changes
+  useEffect(() => {
+    if (currentCvId) {
+      localStorage.setItem(`${LOCAL_STORAGE_KEY}-${currentCvId}`, JSON.stringify(cvData));
+    }
+  }, [cvData, currentCvId]);
+
+  // Load data from localStorage when component mounts or cvId changes
   useEffect(() => {
     if (user) {
       if (cvId && cvId !== 'new') {
@@ -61,6 +73,21 @@ export const useCVData = () => {
     try {
       console.log('Loading CV with ID:', id);
       
+      // First try to load from localStorage
+      const localData = localStorage.getItem(`${LOCAL_STORAGE_KEY}-${id}`);
+      if (localData) {
+        try {
+          const parsedData = JSON.parse(localData);
+          setCvData(parsedData);
+          setCurrentCvId(id);
+          console.log('CV loaded from localStorage:', parsedData);
+          setIsLoading(false);
+          return;
+        } catch (error) {
+          console.error('Error parsing localStorage data:', error);
+        }
+      }
+
       const { data, error } = await supabase
         .from('cvs')
         .select('*')
@@ -111,7 +138,22 @@ export const useCVData = () => {
 
       if (data && data.content) {
         console.log('Last CV loaded successfully:', data);
-        setCvData(data.content as unknown as CVData);
+        
+        // Check if we have local data for this CV
+        const localData = localStorage.getItem(`${LOCAL_STORAGE_KEY}-${data.id}`);
+        if (localData) {
+          try {
+            const parsedData = JSON.parse(localData);
+            setCvData(parsedData);
+            console.log('CV loaded from localStorage:', parsedData);
+          } catch (error) {
+            console.error('Error parsing localStorage data:', error);
+            setCvData(data.content as unknown as CVData);
+          }
+        } else {
+          setCvData(data.content as unknown as CVData);
+        }
+        
         setCurrentCvId(data.id);
         navigate(`/app/cv/${data.id}`, { replace: true });
       } else {
@@ -164,6 +206,8 @@ export const useCVData = () => {
           .select();
         
         setCurrentCvId(existingCV.id);
+        // Clear localStorage after successful save
+        localStorage.removeItem(`${LOCAL_STORAGE_KEY}-${existingCV.id}`);
       } else {
         // Create new general CV
         result = await supabase
@@ -180,6 +224,8 @@ export const useCVData = () => {
 
         if (result.data && result.data[0]) {
           setCurrentCvId(result.data[0].id);
+          // Clear localStorage after successful save
+          localStorage.removeItem(`${LOCAL_STORAGE_KEY}-${result.data[0].id}`);
           navigate(`/app/cv/${result.data[0].id}`, { replace: true });
         }
       }
@@ -236,6 +282,8 @@ export const useCVData = () => {
           .select();
         
         setCurrentCvId(existingCV.id);
+        // Clear localStorage after successful save
+        localStorage.removeItem(`${LOCAL_STORAGE_KEY}-${existingCV.id}`);
       } else {
         // Create new general CV
         result = await supabase
@@ -252,6 +300,8 @@ export const useCVData = () => {
 
         if (result.data && result.data[0]) {
           setCurrentCvId(result.data[0].id);
+          // Clear localStorage after successful save
+          localStorage.removeItem(`${LOCAL_STORAGE_KEY}-${result.data[0].id}`);
         }
       }
 
