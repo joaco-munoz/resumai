@@ -71,6 +71,15 @@ export const EducationTab = ({
                 />
               </div>
             </div>
+
+            <div className="space-y-2">
+              <Label>Ubicación</Label>
+              <Input
+                value={edu.location}
+                onChange={(e) => updateEducation(edu.id, 'location', e.target.value)}
+                placeholder="ej. Ciudad de México, México"
+              />
+            </div>
             
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">

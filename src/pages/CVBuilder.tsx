@@ -116,6 +116,7 @@ const CVBuilder = () => {
       id: Date.now().toString(),
       position: '',
       company: '',
+      location: '',
       startDate: '',
       endDate: '',
       current: false,
@@ -148,6 +149,7 @@ const CVBuilder = () => {
       id: Date.now().toString(),
       degree: '',
       institution: '',
+      location: '',
       year: '',
       description: ''
     };

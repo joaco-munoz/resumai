@@ -13,6 +13,7 @@ export interface CVData {
     id: string;
     position: string;
     company: string;
+    location: string;
     startDate: string;
     endDate: string;
     current: boolean;
@@ -22,6 +23,7 @@ export interface CVData {
     id: string;
     degree: string;
     institution: string;
+    location: string;
     year: string;
     description: string;
   }>;

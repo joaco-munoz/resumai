@@ -1,5 +1,7 @@
+
 import { Document, Paragraph, TextRun, HeadingLevel, AlignmentType, Packer, BorderStyle } from 'docx';
 import { saveAs } from 'file-saver';
+import { formatDateToSpanish } from './dateUtils';
 
 export const downloadCVAsWord = (cvData: any, filename: string) => {
   try {
@@ -81,7 +83,7 @@ export const downloadCVAsWord = (cvData: any, filename: string) => {
                       size: 20,
                     }),
                     new TextRun({
-                      text: `\t${cvData.personalInfo.location}`,
+                      text: `\t${exp.location || cvData.personalInfo.location}`,
                       bold: true,
                       size: 20,
                     }),
@@ -98,7 +100,7 @@ export const downloadCVAsWord = (cvData: any, filename: string) => {
                       size: 20,
                     }),
                     new TextRun({
-                      text: `\t${exp.startDate} - ${exp.current ? 'Presente' : exp.endDate}`,
+                      text: `\t${formatDateToSpanish(exp.startDate)} - ${exp.current ? 'Presente' : formatDateToSpanish(exp.endDate)}`,
                       italics: true,
                       size: 20,
                     }),
@@ -167,7 +169,7 @@ export const downloadCVAsWord = (cvData: any, filename: string) => {
                       size: 20,
                     }),
                     new TextRun({
-                      text: `\t${cvData.personalInfo.location}`,
+                      text: `\t${edu.location || cvData.personalInfo.location}`,
                       bold: true,
                       size: 20,
                     }),

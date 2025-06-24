@@ -1,3 +1,4 @@
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -36,7 +37,6 @@ export const ExperienceTab = ({
   // Estado para controlar qué experiencias están minimizadas
   const [minimizedExperiences, setMinimizedExperiences] = useState<Record<string, boolean>>({});
   
-  // Función para alternar el estado minimizado/maximizado de una experiencia
   const toggleMinimize = (id: string) => {
     setMinimizedExperiences(prev => ({
       ...prev,
@@ -44,20 +44,16 @@ export const ExperienceTab = ({
     }));
   };
   
-  // Función personalizada para agregar experiencia y minimizar las anteriores
   const addExperience = () => {
-    // Primero, minimizamos todas las experiencias existentes
     const updatedMinimized: Record<string, boolean> = {};
     cvData.experience.forEach(exp => {
-      updatedMinimized[exp.id] = true; // Minimizar todas las experiencias existentes
+      updatedMinimized[exp.id] = true;
     });
     
-    // Actualizamos el estado de minimización
     setMinimizedExperiences(updatedMinimized);
-    
-    // Llamamos a la función original para agregar la experiencia
     originalAddExperience();
   };
+
   return (
     <Card>
       <CardHeader>
@@ -121,6 +117,15 @@ export const ExperienceTab = ({
                     />
                   </div>
                 </div>
+
+                <div className="space-y-2">
+                  <Label>Ubicación</Label>
+                  <Input
+                    value={exp.location}
+                    onChange={(e) => updateExperience(exp.id, 'location', e.target.value)}
+                    placeholder="ej. Ciudad de México, México"
+                  />
+                </div>
                 
                 <div className="grid grid-cols-3 gap-4">
                   <div className="space-y-2">
@@ -152,81 +157,81 @@ export const ExperienceTab = ({
                 
                 <div className="space-y-2">
                   <Label>Descripción</Label>
-              {exp.description.split('\n').map((line, idx) => (
-                <div key={idx} className="space-y-1">
-                  <div className="flex gap-2 items-start">
-                    <Input
-                      className="flex-1"
-                      value={line}
-                      onChange={(e) => {
-                        const newValue = e.target.value;
-                        if (newValue.length <= MAX_BULLET_CHARACTERS) {
-                          const lines = exp.description.split('\n');
-                          lines[idx] = newValue;
+                  {exp.description.split('\n').map((line, idx) => (
+                    <div key={idx} className="space-y-1">
+                      <div className="flex gap-2 items-start">
+                        <Input
+                          className="flex-1"
+                          value={line}
+                          onChange={(e) => {
+                            const newValue = e.target.value;
+                            if (newValue.length <= MAX_BULLET_CHARACTERS) {
+                              const lines = exp.description.split('\n');
+                              lines[idx] = newValue;
+                              updateExperience(exp.id, 'description', lines.join('\n'));
+                            }
+                          }}
+                          placeholder={`Responsabilidad o logro ${idx + 1}`}
+                          maxLength={MAX_BULLET_CHARACTERS}
+                        />
+                        <AIButton
+                          onClick={() => improveWithAI(`experience-${exp.id}-${idx}`)}
+                          isLoading={isImproving === `experience-${exp.id}-${idx}`}
+                          disabled={!line.trim()}
+                          size="sm"
+                          className="shrink-0"
+                        >
+                          IA
+                        </AIButton>
+                        {exp.description.split('\n').length > 1 && (
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => {
+                              const lines = exp.description.split('\n');
+                              lines.splice(idx, 1);
+                              updateExperience(exp.id, 'description', lines.join('\n'));
+                            }}
+                            className="text-red-600 hover:text-red-700 shrink-0"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        )}
+                      </div>
+                      <div className="flex justify-end items-center text-xs">
+                        <span className={`${line.length >= MAX_BULLET_CHARACTERS ? 'text-red-500' : 'text-gray-500'}`}>
+                          {line.length}/{MAX_BULLET_CHARACTERS} caracteres
+                        </span>
+                        {line.length >= MAX_BULLET_CHARACTERS && (
+                          <span className="text-red-500 font-medium ml-2">
+                            Límite máximo alcanzado
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+                  <div className="space-y-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        const lines = exp.description ? exp.description.split('\n') : [];
+                        if (lines.length < MAX_BULLET_POINTS) {
+                          lines.push('');
                           updateExperience(exp.id, 'description', lines.join('\n'));
                         }
                       }}
-                      placeholder={`Responsabilidad o logro ${idx + 1}`}
-                      maxLength={MAX_BULLET_CHARACTERS}
-                    />
-                    <AIButton
-                      onClick={() => improveWithAI(`experience-${exp.id}-${idx}`)}
-                      isLoading={isImproving === `experience-${exp.id}-${idx}`}
-                      disabled={!line.trim()}
-                      size="sm"
-                      className="shrink-0"
+                      disabled={exp.description.split('\n').length >= MAX_BULLET_POINTS}
                     >
-                      IA
-                    </AIButton>
-                    {exp.description.split('\n').length > 1 && (
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={() => {
-                          const lines = exp.description.split('\n');
-                          lines.splice(idx, 1);
-                          updateExperience(exp.id, 'description', lines.join('\n'));
-                        }}
-                        className="text-red-600 hover:text-red-700 shrink-0"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
+                      <Plus className="h-4 w-4 mr-2" />
+                      Agregar bullet
+                    </Button>
+                    {exp.description.split('\n').length >= MAX_BULLET_POINTS && (
+                      <div className="text-xs text-amber-600 font-medium mt-1">
+                        Limitamos cada sección a {MAX_BULLET_POINTS} logros  para que tu CV sea claro, conciso y 100 % compatible con los sistemas ATS. Prioriza los resultados más relevantes y obtendrás mayor impacto ante reclutadores y software de filtrado.
+                      </div>
                     )}
                   </div>
-                  <div className="flex justify-end items-center text-xs">
-                    <span className={`${line.length >= MAX_BULLET_CHARACTERS ? 'text-red-500' : 'text-gray-500'}`}>
-                      {line.length}/{MAX_BULLET_CHARACTERS} caracteres
-                    </span>
-                    {line.length >= MAX_BULLET_CHARACTERS && (
-                      <span className="text-red-500 font-medium ml-2">
-                        Límite máximo alcanzado
-                      </span>
-                    )}
-                  </div>
-                </div>
-              ))}
-              <div className="space-y-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => {
-                    const lines = exp.description ? exp.description.split('\n') : [];
-                    if (lines.length < MAX_BULLET_POINTS) {
-                      lines.push('');
-                      updateExperience(exp.id, 'description', lines.join('\n'));
-                    }
-                  }}
-                  disabled={exp.description.split('\n').length >= MAX_BULLET_POINTS}
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Agregar bullet
-                </Button>
-                {exp.description.split('\n').length >= MAX_BULLET_POINTS && (
-                  <div className="text-xs text-amber-600 font-medium mt-1">
-                    Limitamos cada sección a {MAX_BULLET_POINTS} logros  para que tu CV sea claro, conciso y 100 % compatible con los sistemas ATS. Prioriza los resultados más relevantes y obtendrás mayor impacto ante reclutadores y software de filtrado.
-                  </div>
-                )}
-              </div>
                 </div>
               </div>
             )}

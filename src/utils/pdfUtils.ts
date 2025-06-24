@@ -1,5 +1,6 @@
 
 import { jsPDF } from 'jspdf';
+import { formatDateToSpanish } from './dateUtils';
 
 export const downloadCVAsPDF = (cvData: any, filename: string) => {
   try {
@@ -98,7 +99,7 @@ export const downloadCVAsPDF = (cvData: any, filename: string) => {
         pdf.setTextColor(0, 0, 0);
         pdf.text(exp.company, margin, yPosition);
         
-        const locationText = cvData.personalInfo.location;
+        const locationText = exp.location || cvData.personalInfo.location;
         const locationWidth = pdf.getTextWidth(locationText);
         pdf.text(locationText, pageWidth - margin - locationWidth, yPosition);
         yPosition += 5;
@@ -107,7 +108,7 @@ export const downloadCVAsPDF = (cvData: any, filename: string) => {
         pdf.setFont('times', 'italic');
         pdf.text(exp.position, margin, yPosition);
         
-        const dateRange = `${exp.startDate} - ${exp.current ? 'Presente' : exp.endDate}`;
+        const dateRange = `${formatDateToSpanish(exp.startDate)} - ${exp.current ? 'Presente' : formatDateToSpanish(exp.endDate)}`;
         const dateWidth = pdf.getTextWidth(dateRange);
         pdf.text(dateRange, pageWidth - margin - dateWidth, yPosition);
         yPosition += 6;
@@ -170,7 +171,7 @@ export const downloadCVAsPDF = (cvData: any, filename: string) => {
         pdf.setFont('times', 'bold');
         pdf.text(edu.institution.toUpperCase(), margin, yPosition);
         
-        const locationText = cvData.personalInfo.location;
+        const locationText = edu.location || cvData.personalInfo.location;
         const locationWidth = pdf.getTextWidth(locationText);
         pdf.text(locationText, pageWidth - margin - locationWidth, yPosition);
         yPosition += 5;

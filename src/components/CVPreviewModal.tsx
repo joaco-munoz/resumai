@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
+import { formatDateToSpanish } from "@/utils/dateUtils";
 
 interface CVData {
   personalInfo: {
@@ -18,6 +19,7 @@ interface CVData {
     id: string;
     position: string;
     company: string;
+    location: string;
     startDate: string;
     endDate: string;
     current: boolean;
@@ -27,6 +29,7 @@ interface CVData {
     id: string;
     degree: string;
     institution: string;
+    location: string;
     year: string;
     description: string;
   }>;
@@ -94,9 +97,9 @@ export const CVPreviewModal = ({ isOpen, onClose, cvData, cvTitle, onDownloadPDF
                         <p className="text-sm text-black italic">{exp.position}</p>
                       </div>
                       <div className="text-right">
-                        <div className="text-sm text-black font-bold">{cvData.personalInfo.location}</div>
+                        <div className="text-sm text-black font-bold">{exp.location || cvData.personalInfo.location}</div>
                         <div className="text-sm text-black italic">
-                          {exp.startDate} - {exp.current ? 'Presente' : exp.endDate}
+                          {formatDateToSpanish(exp.startDate)} - {exp.current ? 'Presente' : formatDateToSpanish(exp.endDate)}
                         </div>
                       </div>
                     </div>
@@ -128,7 +131,7 @@ export const CVPreviewModal = ({ isOpen, onClose, cvData, cvTitle, onDownloadPDF
                         {edu.description && <p className="text-sm text-black italic">{edu.description}</p>}
                       </div>
                       <div className="text-right">
-                        <div className="text-sm text-black font-bold">{cvData.personalInfo.location}</div>
+                        <div className="text-sm text-black font-bold">{edu.location || cvData.personalInfo.location}</div>
                         <div className="text-sm text-black italic">{edu.year}</div>
                       </div>
                     </div>

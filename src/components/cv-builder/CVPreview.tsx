@@ -1,6 +1,7 @@
 
 import { Badge } from "@/components/ui/badge";
 import { CVData } from "@/types/cv";
+import { formatDateToSpanish } from "@/utils/dateUtils";
 
 interface CVPreviewProps {
   cvData: CVData;
@@ -44,9 +45,9 @@ export const CVPreview = ({ cvData }: CVPreviewProps) => {
                       <p className="text-sm text-black italic">{exp.position}</p>
                     </div>
                     <div className="text-right">
-                      <div className="text-sm text-black font-bold">{cvData.personalInfo.location}</div>
+                      <div className="text-sm text-black font-bold">{exp.location || cvData.personalInfo.location}</div>
                       <div className="text-sm text-black italic">
-                        {exp.startDate} - {exp.current ? 'Presente' : exp.endDate}
+                        {formatDateToSpanish(exp.startDate)} - {exp.current ? 'Presente' : formatDateToSpanish(exp.endDate)}
                       </div>
                     </div>
                   </div>
@@ -78,7 +79,7 @@ export const CVPreview = ({ cvData }: CVPreviewProps) => {
                       {edu.description && <p className="text-sm text-black italic">{edu.description}</p>}
                     </div>
                     <div className="text-right">
-                      <div className="text-sm text-black font-bold">{cvData.personalInfo.location}</div>
+                      <div className="text-sm text-black font-bold">{edu.location || cvData.personalInfo.location}</div>
                       <div className="text-sm text-black italic">{edu.year}</div>
                     </div>
                   </div>
