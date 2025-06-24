@@ -9,6 +9,8 @@ import { Plus, Trash2, ArrowRight } from "lucide-react";
 import AIButton from "@/components/AIButton";
 import { CVData } from "@/types/cv";
 
+const MAX_BULLET_CHARACTERS = 250;
+
 interface ExperienceTabProps {
   cvData: CVData;
   updateExperience: (id: string, field: string, value: any) => void;
@@ -118,16 +120,21 @@ export const ExperienceTab = ({
             <div className="space-y-2">
               <Label>Descripción</Label>
               {exp.description.split('\n').map((line, idx) => (
-                <div key={idx} className="flex gap-2">
+                <div key={idx} className="space-y-1">
+                <div className="flex gap-2">
                   <Input
                     className="flex-1"
                     value={line}
                     onChange={(e) => {
-                      const lines = exp.description.split('\n');
-                      lines[idx] = e.target.value;
-                      updateExperience(exp.id, 'description', lines.join('\n'));
+                      const newValue = e.target.value;
+                      if (newValue.length <= MAX_BULLET_CHARACTERS) {
+                        const lines = exp.description.split('\n');
+                        lines[idx] = newValue;
+                        updateExperience(exp.id, 'description', lines.join('\n'));
+                      }
                     }}
                     placeholder={`Responsabilidad o logro ${idx + 1}`}
+                    maxLength={MAX_BULLET_CHARACTERS}
                   />
                   {exp.description.split('\n').length > 1 && (
                     <Button
@@ -144,6 +151,17 @@ export const ExperienceTab = ({
                     </Button>
                   )}
                 </div>
+                <div className="flex justify-end items-center text-xs">
+                  <span className={`${line.length >= MAX_BULLET_CHARACTERS ? 'text-red-500' : 'text-gray-500'}`}>
+                    {line.length}/{MAX_BULLET_CHARACTERS} caracteres
+                  </span>
+                  {line.length >= MAX_BULLET_CHARACTERS && (
+                    <span className="text-red-500 font-medium ml-2">
+                      Límite máximo alcanzado
+                    </span>
+                  )}
+                </div>
+              </div>
               ))}
               <Button
                 variant="outline"
