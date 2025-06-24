@@ -24,20 +24,6 @@ export const CVBuilderHeader = ({ currentCvId, exportPDF }: CVBuilderHeaderProps
             </p>
           </div>
         </div>
-        
-        <div className="flex items-center gap-4">
-          <div className="flex gap-3">
-            <Button 
-              variant="outline" 
-              onClick={exportPDF}
-              className="hover:bg-blue-50 hover:border-blue-300"
-            >
-              <Download className="h-4 w-4 mr-2" />
-              Descargar PDF
-            </Button>
-            <Badge variant="secondary">Guardado automático activado</Badge>
-          </div>
-        </div>
       </div>
     </header>
   );
