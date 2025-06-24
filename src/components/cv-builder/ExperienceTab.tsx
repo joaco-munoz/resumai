@@ -182,7 +182,7 @@ export const ExperienceTab = ({
                 </Button>
                 {exp.description.split('\n').length >= MAX_BULLET_POINTS && (
                   <div className="text-xs text-amber-600 font-medium mt-1">
-                    Limitamos cada sección a {MAX_BULLET_POINTS} logros  para que tu CV sea claro, conciso y 100 % compatible con los sistemas ATS. Prioriza los resultados más relevantes y obtendrás mayor impacto ante reclutadores y software de filtrado
+                    Limitamos cada sección a {MAX_BULLET_POINTS} logros  para que tu CV sea claro, conciso y 100 % compatible con los sistemas ATS. Prioriza los resultados más relevantes y obtendrás mayor impacto ante reclutadores y software de filtrado.
                   </div>
                 )}
               </div>
