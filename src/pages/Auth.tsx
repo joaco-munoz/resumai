@@ -256,7 +256,7 @@ const Auth = () => {
       </div>
 
       {/* Right side - Gradient */}
-      <div className="flex-1 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-500 relative overflow-hidden">
+      <div className="flex-1 bg-gradient-to-br from-blue-800 via-blue-600 to-sky-500 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
         <div className="absolute bottom-8 right-8 bg-white/10 backdrop-blur-sm rounded-2xl p-6 max-w-sm">
           <p className="text-white text-lg italic">
