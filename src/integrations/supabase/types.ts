@@ -502,6 +502,7 @@ export type Database = {
           last_login_date: string | null
           last_payment_date: string | null
           linkedin_url: string | null
+          onboarding_completed: boolean | null
           phone: string | null
           premium_expires_at: string | null
           referral_code: string | null
@@ -541,6 +542,7 @@ export type Database = {
           last_login_date?: string | null
           last_payment_date?: string | null
           linkedin_url?: string | null
+          onboarding_completed?: boolean | null
           phone?: string | null
           premium_expires_at?: string | null
           referral_code?: string | null
@@ -580,6 +582,7 @@ export type Database = {
           last_login_date?: string | null
           last_payment_date?: string | null
           linkedin_url?: string | null
+          onboarding_completed?: boolean | null
           phone?: string | null
           premium_expires_at?: string | null
           referral_code?: string | null

@@ -23,7 +23,7 @@ export const useOnboarding = () => {
       // Verificar si el usuario ya completó el onboarding
       const { data: profile, error } = await supabase
         .from('profiles')
-        .select('onboarding_completed')
+        .select('*')
         .eq('id', user.id)
         .single();
 
@@ -34,7 +34,9 @@ export const useOnboarding = () => {
       }
 
       // Si no ha completado el onboarding, mostrarlo
-      if (!profile?.onboarding_completed) {
+      // Using type assertion temporarily until types are regenerated  
+      const profileWithOnboarding = profile as any;
+      if (!profileWithOnboarding?.onboarding_completed) {
         setShowOnboarding(true);
       }
     } catch (error) {
@@ -48,9 +50,10 @@ export const useOnboarding = () => {
     if (!user) return;
 
     try {
+      // Using type assertion temporarily until types are regenerated
       const { error } = await supabase
         .from('profiles')
-        .update({ onboarding_completed: true })
+        .update({ onboarding_completed: true } as any)
         .eq('id', user.id);
 
       if (error) {
