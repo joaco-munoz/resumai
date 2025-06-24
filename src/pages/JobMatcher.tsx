@@ -166,8 +166,8 @@ const JobMatcher = () => {
             <div className="flex items-center gap-4">
               <SidebarTrigger />
               <div>
-                <h1 className="text-2xl font-bold gradient-text">Job Matcher</h1>
-                <p className="text-gray-600">Analiza la compatibilidad de tu CV con ofertas específicas</p>
+                <h1 className="text-2xl font-bold gradient-text">Match de Ofertas</h1>
+                <p className="text-gray-600">Compara tu currículum con una oferta y recibe recomendaciones para maximizar tu compatibilidad</p>
               </div>
             </div>
           </header>
@@ -181,7 +181,7 @@ const JobMatcher = () => {
                   Descripción del Trabajo
                 </CardTitle>
                 <CardDescription>
-                  Pega la descripción completa de la oferta de trabajo que te interesa
+                Pega aquí la descripción completa del puesto que te interesa (título, requisitos, responsabilidades y otros)
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">

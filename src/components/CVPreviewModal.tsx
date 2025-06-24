@@ -38,10 +38,11 @@ interface CVPreviewModalProps {
   onClose: () => void;
   cvData: CVData | null;
   cvTitle: string;
-  onDownload: () => void;
+  onDownloadPDF: () => void;
+  onDownloadWord: () => void;
 }
 
-export const CVPreviewModal = ({ isOpen, onClose, cvData, cvTitle, onDownload }: CVPreviewModalProps) => {
+export const CVPreviewModal = ({ isOpen, onClose, cvData, cvTitle, onDownloadPDF, onDownloadWord }: CVPreviewModalProps) => {
   if (!cvData) return null;
 
   return (
@@ -50,10 +51,16 @@ export const CVPreviewModal = ({ isOpen, onClose, cvData, cvTitle, onDownload }:
         <DialogHeader>
           <div className="flex items-center justify-between">
             <DialogTitle>{cvTitle}</DialogTitle>
-            <Button onClick={onDownload} size="sm">
-              <Download className="h-4 w-4 mr-2" />
-              Descargar PDF
-            </Button>
+            <div className="flex gap-2">
+              <Button onClick={onDownloadPDF} size="sm" variant="outline">
+                <Download className="h-4 w-4 mr-2" />
+                PDF
+              </Button>
+              <Button onClick={onDownloadWord} size="sm" variant="outline">
+                <Download className="h-4 w-4 mr-2" />
+                Word
+              </Button>
+            </div>
           </div>
         </DialogHeader>
         

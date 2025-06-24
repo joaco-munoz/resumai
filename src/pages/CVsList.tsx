@@ -32,6 +32,7 @@ import { toast } from "sonner";
 import { CVPreviewModal } from "@/components/CVPreviewModal";
 import { DeleteConfirmDialog } from "@/components/DeleteConfirmDialog";
 import { downloadCVAsPDF } from "@/utils/pdfUtils";
+import { downloadCVAsWord } from "@/utils/wordUtils";
 import { JobReportModal } from "@/components/JobReportModal";
 import { CVAdaptationModal } from "@/components/CVAdaptationModal";
 import { CVAdaptationPreviewModal } from "@/components/CVAdaptationPreviewModal";
@@ -176,15 +177,20 @@ export default function CVsList() {
     }
   };
 
-  const handleDownloadCV = (cv: CV) => {
+  const handleDownloadCV = (cv: CV, format: 'pdf' | 'word' = 'pdf') => {
     if (isJobReport(cv)) {
       toast.error("Los informes no se pueden descargar");
       return;
     }
     
     if (cv.content) {
-      downloadCVAsPDF(cv.content, cv.title);
-      toast.success("CV descargado exitosamente");
+      if (format === 'pdf') {
+        downloadCVAsPDF(cv.content, cv.title);
+        toast.success("CV descargado como PDF exitosamente");
+      } else if (format === 'word') {
+        downloadCVAsWord(cv.content, cv.title);
+        toast.success("CV descargado como Word exitosamente");
+      }
     } else {
       toast.error("No se pudo descargar el CV");
     }
@@ -286,10 +292,24 @@ export default function CVsList() {
                 </DropdownMenuItem>
               )}
               {!isReport && (
-                <DropdownMenuItem onClick={() => handleDownloadCV(cv)}>
-                  <Download className="h-4 w-4 mr-2" />
-                  Descargar
-                </DropdownMenuItem>
+                <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <DropdownMenuItem>
+                    <Download className="h-4 w-4 mr-2" />
+                    Descargar
+                  </DropdownMenuItem>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-40">
+                  <DropdownMenuItem onClick={() => handleDownloadCV(cv, 'pdf')}>
+                    <Download className="h-4 w-4 mr-2" />
+                    PDF
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleDownloadCV(cv, 'word')}>
+                    <Download className="h-4 w-4 mr-2" />
+                    Word
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
               )}
               <DropdownMenuItem 
                 className="text-red-600"
@@ -333,9 +353,9 @@ export default function CVsList() {
               {/* Header */}
               <div className="flex items-center justify-between mb-8">
                 <div>
-                  <h1 className="text-3xl font-bold text-gray-900">Mis CVs</h1>
+                  <h1 className="text-3xl font-bold text-gray-900">Mis Currículums</h1>
                   <p className="text-gray-600 mt-2">
-                    Gestiona tu CV Principal y los CVs adaptados por Job Matcher
+                    Gestiona tu Currículum Principal y los currículums adaptados por Match de Ofertas
                   </p>
                 </div>
                 <div className="flex items-center gap-3">
@@ -354,10 +374,10 @@ export default function CVsList() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <User className="h-5 w-5 text-blue-600" />
-                    CV Principal
+                    Currículum Principal
                   </CardTitle>
                   <p className="text-sm text-gray-600">
-                    Tu CV principal que se actualiza cuando guardas desde el Editor de CVs
+                    Tu Currículum principal que se actualiza cuando guardas desde el Editor de Currículums
                   </p>
                 </CardHeader>
                 <CardContent>
@@ -395,10 +415,10 @@ export default function CVsList() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Target className="h-5 w-5 text-green-600" />
-                    CVs de Job Matcher
+                    Currículums del Match de Ofertas
                   </CardTitle>
                   <p className="text-sm text-gray-600">
-                    CVs adaptados e informes de compatibilidad de ofertas de trabajo
+                    Currículums adaptados e informes de compatibilidad de ofertas de trabajo
                   </p>
                 </CardHeader>
                 <CardContent>
@@ -407,7 +427,7 @@ export default function CVsList() {
                     <div className="relative max-w-md">
                       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                       <Input
-                        placeholder="Buscar CVs de Job Matcher..."
+                        placeholder="Buscar currículums del Match de Ofertas..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         className="pl-10"
@@ -419,11 +439,11 @@ export default function CVsList() {
                     <div className="text-center py-12">
                       <Target className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                       <h3 className="text-lg font-medium text-gray-900 mb-2">
-                        {jobMatcherCVs.length === 0 ? "No tienes CVs de Job Matcher" : "No se encontraron CVs"}
+                        {jobMatcherCVs.length === 0 ? "No tienes currículums del Match de Ofertas" : "No se encontraron currículums"}
                       </h3>
                       <p className="text-gray-500 mb-4">
                         {jobMatcherCVs.length === 0 
-                          ? "Los CVs adaptados e informes desde Job Matcher aparecerán aquí" 
+                          ? "Los currículums adaptados e informes desde Match de Ofertas aparecerán aquí" 
                           : "Intenta con otro término de búsqueda"
                         }
                       </p>
@@ -454,7 +474,7 @@ export default function CVsList() {
                   {filteredJobMatcherCVs.length > 0 && (
                     <div className="flex items-center justify-between mt-6 pt-4 border-t">
                       <p className="text-sm text-gray-500">
-                        Mostrando 1 a {filteredJobMatcherCVs.length} de {filteredJobMatcherCVs.length} elementos de Job Matcher
+                        Mostrando 1 a {filteredJobMatcherCVs.length} de {filteredJobMatcherCVs.length} elementos de Match de Ofertas
                       </p>
                     </div>
                   )}
@@ -470,9 +490,14 @@ export default function CVsList() {
           onClose={() => setPreviewCV(null)}
           cvData={previewCV?.content || null}
           cvTitle={previewCV?.title || ""}
-          onDownload={() => {
+          onDownloadPDF={() => {
             if (previewCV) {
-              handleDownloadCV(previewCV);
+              handleDownloadCV(previewCV, 'pdf');
+            }
+          }}
+          onDownloadWord={() => {
+            if (previewCV) {
+              handleDownloadCV(previewCV, 'word');
             }
           }}
         />

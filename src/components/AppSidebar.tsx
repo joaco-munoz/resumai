@@ -21,11 +21,11 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 const mainMenuItems = [
-  { title: "Dashboard", url: "/app", icon: House },
-  { title: "Mis CVs", url: "/app/cvs", icon: FolderOpen },
-  { title: "Editor de CVs", url: "/app/cv/new", icon: FileText },
-  { title: "Job Matcher", url: "/app/match", icon: Target },
-  { title: "Seguimiento Postulaciones", url: "/app/kanban", icon: CheckCircle },
+  { title: "Inicio", url: "/app", icon: House },
+  { title: "Mis currículums", url: "/app/cvs", icon: FolderOpen },
+  { title: "Editor de CV principal", url: "/app/cv/new", icon: FileText },
+  { title: "Match de Ofertas", url: "/app/match", icon: Target },
+  { title: "Seguimiento de postulaciones", url: "/app/kanban", icon: CheckCircle },
 ];
 
 const profileItem = { title: "Mi Perfil", url: "/app/profile", icon: User };
