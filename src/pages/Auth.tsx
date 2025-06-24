@@ -21,9 +21,34 @@ const Auth = () => {
   const { signUp, signIn, signInWithGoogle } = useAuth();
   const navigate = useNavigate();
 
+  // Rotating tips state
+  const [currentTipIndex, setCurrentTipIndex] = useState(0);
+  const [fadeClass, setFadeClass] = useState("opacity-100");
+
+  const tips = [
+    "Optimiza tu CV en 2 min",
+    "Compara con la oferta en un clic", 
+    "ResumAI habla ATS por ti",
+    "Genera CVs personalizados al instante"
+  ];
+
   useEffect(() => {
     setIsSignUp(isSignUpFromUrl);
   }, [isSignUpFromUrl]);
+
+  // Tips rotation effect
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setFadeClass("opacity-0");
+      
+      setTimeout(() => {
+        setCurrentTipIndex((prevIndex) => (prevIndex + 1) % tips.length);
+        setFadeClass("opacity-100");
+      }, 300);
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [tips.length]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -255,11 +280,39 @@ const Auth = () => {
         </div>
       </div>
 
-      {/* Right side - Gradient */}
-      <div className="flex-1 bg-gradient-to-br from-blue-800 via-blue-600 to-sky-500 relative overflow-hidden">
+      {/* Right side - Gradient with Rotating Tips */}
+      <div className="flex-1 bg-gradient-to-br from-blue-800 via-blue-600 to-sky-500 relative overflow-hidden flex items-center justify-center">
         <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
-        <div className="absolute bottom-8 right-8 bg-white/10 backdrop-blur-sm rounded-2xl p-6 max-w-sm">
-          <p className="text-white text-lg italic">
+        
+        {/* Rotating Tips */}
+        <div className="relative z-10 text-center px-8 max-w-md">
+          <div className="mb-6">
+            <Sparkles className="h-16 w-16 text-white/80 mx-auto mb-4" />
+          </div>
+          
+          <h2 
+            className={`text-3xl font-bold text-white mb-4 transition-opacity duration-300 ${fadeClass}`}
+          >
+            {tips[currentTipIndex]}
+          </h2>
+          
+          <div className="flex justify-center space-x-2 mt-6">
+            {tips.map((_, index) => (
+              <div
+                key={index}
+                className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                  index === currentTipIndex 
+                    ? 'bg-white' 
+                    : 'bg-white/40'
+                }`}
+              />
+            ))}
+          </div>
+        </div>
+        
+        {/* Original quote moved to bottom corner */}
+        <div className="absolute bottom-8 right-8 bg-white/10 backdrop-blur-sm rounded-2xl p-4 max-w-xs">
+          <p className="text-white text-sm italic">
             "Ask Lovable to build your blog."
           </p>
         </div>
