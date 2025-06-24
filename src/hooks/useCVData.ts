@@ -29,6 +29,7 @@ export const useCVData = () => {
         id: '1',
         position: 'Frontend Developer',
         company: 'TechCorp',
+        location: 'Santiago, Chile',
         startDate: '2022-01',
         endDate: '',
         current: true,
@@ -40,6 +41,7 @@ export const useCVData = () => {
         id: '1',
         degree: 'Ingeniería Informática',
         institution: 'Universidad Politécnica de Madrid',
+        location: 'Madrid, España',
         year: '2020',
         description: 'Especialización en Desarrollo de Software'
       }
