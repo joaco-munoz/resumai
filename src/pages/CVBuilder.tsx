@@ -173,7 +173,16 @@ const CVBuilder = () => {
     }));
   };
 
-  const addSkill = () => {
+  const addSkill = (skillName?: string) => {
+    if (skillName && skillName.trim() !== "") {
+      setCvData(prev => ({
+        ...prev,
+        skills: [...prev.skills, skillName.trim()]
+      }));
+      return;
+    }
+
+    // Fallback to prompt (backward compatibility)
     const newSkill = prompt("Enter new skill:");
     if (newSkill && newSkill.trim() !== "") {
       setCvData(prev => ({

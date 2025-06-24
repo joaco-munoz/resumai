@@ -2,12 +2,13 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, X } from "lucide-react";
+import { X } from "lucide-react";
 import { CVData } from "@/types/cv";
+import { SkillInput } from "./SkillInput";
 
 interface SkillsTabProps {
   cvData: CVData;
-  addSkill: () => void;
+  addSkill: (skill: string) => void;
   removeSkill: (skill: string) => void;
   goToPreviousTab: () => void;
   saveCV: () => void;
@@ -25,18 +26,17 @@ export const SkillsTab = ({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          <span>Habilidades</span>
-          <Button onClick={addSkill} size="sm">
-            <Plus className="h-4 w-4 mr-2" />
-            Agregar
-          </Button>
-        </CardTitle>
+        <CardTitle>Habilidades</CardTitle>
         <CardDescription>
           Lista tus habilidades técnicas y profesionales más relevantes
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
+        <SkillInput 
+          onAddSkill={addSkill}
+          existingSkills={cvData.skills}
+        />
+
         <div className="flex flex-wrap gap-2">
           {cvData.skills.map((skill) => (
             <Badge key={skill} variant="outline" className="text-sm flex items-center gap-1">
@@ -50,7 +50,7 @@ export const SkillsTab = ({
             </Badge>
           ))}
           {cvData.skills.length === 0 && (
-            <p className="text-gray-500 text-sm">No hay habilidades agregadas. Haz clic en "Agregar" para comenzar.</p>
+            <p className="text-gray-500 text-sm">No hay habilidades agregadas. Escribe una habilidad arriba y haz clic en "Agregar".</p>
           )}
         </div>
 
