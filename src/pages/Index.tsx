@@ -333,7 +333,7 @@ Ahorra horas adaptando tu currículum: nuestra plataforma usa IA para convertir 
               </Button>
 
               {/* Feature highlights */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
+              {/*<div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
                 <div className="text-center">
                   <div className="flex items-center justify-center mb-3">
                     <Zap className="h-6 w-6 text-blue-400" />
@@ -363,14 +363,14 @@ Ahorra horas adaptando tu currículum: nuestra plataforma usa IA para convertir 
                     Aumenta la velocidad de aplicación e impulsa el impacto de ingresos con exportaciones totalmente integradas.
                   </p>
                 </div>
-              </div>
+              </div>*/}
             </div>
           </div>
         </div>
       </section>
 
       {/* Features Section */}
-      <section id="py-20 bg-gradient-to-r from-slate-800/50 to-slate-900/50">
+      <section id="caracteristicas-principales" className="py-20 bg-slate-800/50">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold mb-4 text-white">Características Principales</h2>
