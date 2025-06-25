@@ -297,11 +297,15 @@ Ahorra horas adaptando tu currículum: nuestra plataforma usa IA para convertir 
                 </div>
                 <div className="flex items-center gap-3">
                   <CheckCircle className="h-5 w-5 text-cyan-400" />
-                  <span className="text-slate-300">1 exportación PDF gratis</span>
+                  <span className="text-slate-300">1 exportación PDF sin marca de agua</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <CheckCircle className="h-5 w-5 text-cyan-400" />
-                  <span className="text-slate-300">Análisis básico ATS</span>
+                  <span className="text-slate-300">5 mejoras inteligentes al mes</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <CheckCircle className="h-5 w-5 text-cyan-400" />
+                  <span className="text-slate-300">Análisis ATS básico para pasar filtros</span>
                 </div>
                 <Button className="w-full mt-6 bg-slate-700 hover:bg-slate-600 text-white border border-slate-600" onClick={handleSignUpNavigation}>
                   Empezar Gratis
@@ -322,23 +326,23 @@ Ahorra horas adaptando tu currículum: nuestra plataforma usa IA para convertir 
               <CardContent className="space-y-4">
                 <div className="flex items-center gap-3">
                   <CheckCircle className="h-5 w-5 text-cyan-400" />
-                  <span className="text-slate-300">Genera CVs sin límite, impulsados por IA</span>
+                  <span className="text-slate-300">CVs ilimitados con IA</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <CheckCircle className="h-5 w-5 text-cyan-400" />
-                  <span className="text-slate-300">Exporta sin limites</span>
+                  <span className="text-slate-300">Exportaciones ilimitadas en PDF y Word</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <CheckCircle className="h-5 w-5 text-cyan-400" />
-                  <span className="text-slate-300">DOCX y JSON export</span>
+                  <span className="text-slate-300">Job Matcher avanzado con recomendaciones precisas</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <CheckCircle className="h-5 w-5 text-cyan-400" />
-                  <span className="text-slate-300">Job Matcher avanzado</span>
+                  <span className="text-slate-300">Mejoras IA ilimitadas</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <CheckCircle className="h-5 w-5 text-cyan-400" />
-                  <span className="text-slate-300">Soporte prioritario</span>
+                  <span className="text-slate-300">Acceso a novedades antes que nadie</span>
                 </div>
                 <Button className="w-full mt-6 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white" onClick={handleSignUpNavigation}>
                   <Zap className="h-4 w-4 mr-2" />

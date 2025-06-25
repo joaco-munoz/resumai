@@ -148,19 +148,19 @@ export const PlanCard = ({ currentPlan, isUpgrading, onUpgrade }: PlanCardProps)
                 <ul className="space-y-2 text-sm">
                   <li className="flex items-center gap-2">
                     <CheckCircle className="h-4 w-4 text-success-500" />
-                    1 CV con IA
+                    1 CV optimizado con IA
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckCircle className="h-4 w-4 text-success-500" />
-                    1 exportación PDF gratis
+                    1 exportación PDF sin marca de agua
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckCircle className="h-4 w-4 text-success-500" />
-                    5 mejoras con IA/mes
+                    5 mejoras inteligentes al mes
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckCircle className="h-4 w-4 text-success-500" />
-                    Análisis básico ATS
+                    Análisis ATS básico para pasar filtros
                   </li>
                 </ul>
               </div>
@@ -179,15 +179,11 @@ export const PlanCard = ({ currentPlan, isUpgrading, onUpgrade }: PlanCardProps)
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckCircle className="h-4 w-4 text-success-500" />
-                    Exportaciones ilimitadas
+                    Exportaciones ilimitadas en PDF y Word
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckCircle className="h-4 w-4 text-success-500" />
-                    DOCX y JSON export
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-success-500" />
-                    Job Matcher avanzado
+                    Job Matcher avanzado con recomendaciones precisas
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckCircle className="h-4 w-4 text-success-500" />
@@ -195,11 +191,7 @@ export const PlanCard = ({ currentPlan, isUpgrading, onUpgrade }: PlanCardProps)
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckCircle className="h-4 w-4 text-success-500" />
-                    Plantillas premium
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <CheckCircle className="h-4 w-4 text-success-500" />
-                    Soporte prioritario
+                    Acceso a novedades antes que nadie
                   </li>
                 </ul>
                 <Button 
