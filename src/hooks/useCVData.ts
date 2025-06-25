@@ -71,16 +71,14 @@ export const useCVData = () => {
     try {
       console.log('Loading CV with ID:', id);
       
-      // First try to load from localStorage
+      // Try to pre-populate quickly with cached data while we fetch the latest version
       const localData = localStorage.getItem(`${LOCAL_STORAGE_KEY}-${id}`);
       if (localData) {
         try {
           const parsedData = JSON.parse(localData);
           setCvData(parsedData);
           setCurrentCvId(id);
-          console.log('CV loaded from localStorage:', parsedData);
-          setIsLoading(false);
-          return;
+          console.log('CV pre-populated from localStorage (will refresh with latest):', parsedData);
         } catch (error) {
           console.error('Error parsing localStorage data:', error);
         }
