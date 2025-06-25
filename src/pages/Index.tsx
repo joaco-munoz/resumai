@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,8 +21,6 @@ const Index = () => {
     setEmail("");
   };
 
-
-
   const handleAuthNavigation = () => {
     navigate("/auth");
   };
@@ -38,35 +37,45 @@ const Index = () => {
     }
   };
 
-  const features = [{
-    icon: <Sparkles className="h-8 w-8 text-blue-400" />,
-    title: "IA Generativa",
-    description: "Mejora automáticamente tu CV con sugerencias de IA basadas en ofertas específicas"
-  }, {
-    icon: <Target className="h-8 w-8 text-cyan-400" />,
-    title: "ATS Optimizer",
-    description: "Supera los filtros automáticos con nuestro formato optimizado para sistemas ATS"
-  }, {
-    icon: <FileText className="h-8 w-8 text-blue-400" />,
-    title: "Múltiples Formatos",
-    description: "Exporta en PDF, DOCX y JSON. Compatible con todas las plataformas de empleo"
-  }];
+  const features = [
+    {
+      icon: <Sparkles className="h-8 w-8 text-blue-400" />,
+      title: "IA Generativa",
+      description: "Mejora automáticamente tu CV con sugerencias de IA basadas en ofertas específicas"
+    },
+    {
+      icon: <Target className="h-8 w-8 text-cyan-400" />,
+      title: "ATS Optimizer",
+      description: "Supera los filtros automáticos con nuestro formato optimizado para sistemas ATS"
+    },
+    {
+      icon: <FileText className="h-8 w-8 text-blue-400" />,
+      title: "Múltiples Formatos",
+      description: "Exporta en PDF, DOCX y JSON. Compatible con todas las plataformas de empleo"
+    }
+  ];
 
-  const faqItems = [{
-    question: "¿Cómo funciona el optimizador ATS?",
-    answer: "Transformamos tu CV en el formato que el algoritmo ATS entiende y prioriza, acercándote directo al reclutador."
-  }, {
-    question: "¿Puedo usar mi propio contenido?",
-    answer: "Tu experiencia se mantiene; la IA solo la hace brillar."
-  }, {
-    question: "¿Qué incluye el plan Pro?",
-    answer: "Todo lo que necesitas para destacar: CVs ilimitados con IA, exportaciones sin tope, análisis de compatibilidad preciso, plantillas premium y soporte prioritario."
-  }];
+  const faqItems = [
+    {
+      question: "¿Cómo funciona el optimizador ATS?",
+      answer: "Transformamos tu CV en el formato que el algoritmo ATS entiende y prioriza, acercándote directo al reclutador."
+    },
+    {
+      question: "¿Puedo usar mi propio contenido?",
+      answer: "Tu experiencia se mantiene; la IA solo la hace brillar."
+    },
+    {
+      question: "¿Qué incluye el plan Pro?",
+      answer: "Todo lo que necesitas para destacar: CVs ilimitados con IA, exportaciones sin tope, análisis de compatibilidad preciso, plantillas premium y soporte prioritario."
+    }
+  ];
 
-  return <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
       {/* Header */}
-      <header className="border-b border-slate-700 bg-slate-900/90 backdrop-blur-md sticky top-0 z-50">
-        <div className="container mx-auto px-4 h-16 flex items-center">
+      <header className="border-b border-slate-700/30 bg-slate-900/95 backdrop-blur-md sticky top-0 z-50">
+        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+          {/* Logo */}
           <div className="flex items-center gap-2">
             <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center">
               <FileText className="h-5 w-5 text-white" />
@@ -74,17 +83,49 @@ const Index = () => {
             <span className="font-bold text-xl text-white">ResumAI</span>
           </div>
           
-          <div className="flex items-center gap-4 mx-auto">
-            <Button variant="ghost" size="sm" className="text-slate-300 hover:text-white hover:bg-slate-800" onClick={() => scrollToSection("empieza-gratis")}>Creador CV</Button>
-            <Button variant="ghost" size="sm" className="text-slate-300 hover:text-white hover:bg-slate-800" onClick={() => scrollToSection("caracteristicas-principales")}>Match de Ofertas</Button>
-            <Button variant="ghost" size="sm" className="text-slate-300 hover:text-white hover:bg-slate-800" onClick={() => scrollToSection("planes-simples")}>Precios</Button>
-          </div>
+          {/* Navigation */}
+          <nav className="hidden md:flex items-center gap-8">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="text-slate-300 hover:text-white hover:bg-slate-800/50 font-medium" 
+              onClick={() => scrollToSection("empieza-gratis")}
+            >
+              Creador CV
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="text-slate-300 hover:text-white hover:bg-slate-800/50 font-medium" 
+              onClick={() => scrollToSection("caracteristicas-principales")}
+            >
+              Match de Ofertas
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="text-slate-300 hover:text-white hover:bg-slate-800/50 font-medium" 
+              onClick={() => scrollToSection("planes-simples")}
+            >
+              Precios
+            </Button>
+          </nav>
 
-          <div className="flex items-center gap-4">
-            <Button onClick={handleAuthNavigation} size="sm" className="bg-slate-600 hover:bg-slate-700 text-white border border-slate-500">
+          {/* Auth Buttons */}
+          <div className="flex items-center gap-3">
+            <Button 
+              onClick={handleAuthNavigation} 
+              variant="ghost"
+              size="sm" 
+              className="text-slate-300 hover:text-white hover:bg-slate-800/50 font-medium"
+            >
               Iniciar Sesión
             </Button>
-            <Button onClick={handleSignUpNavigation} size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
+            <Button 
+              onClick={handleSignUpNavigation} 
+              size="sm" 
+              className="bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-medium px-6 py-2 rounded-full shadow-lg hover:shadow-xl transition-all duration-200"
+            >
               Regístrate
             </Button>
           </div>
@@ -423,6 +464,8 @@ Ahorra horas adaptando tu currículum: nuestra plataforma usa IA para convertir 
           </div>
         </div>
       </footer>
-    </div>;
+    </div>
+  );
 };
+
 export default Index;
