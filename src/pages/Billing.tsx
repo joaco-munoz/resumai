@@ -9,7 +9,6 @@ import { Progress } from "@/components/ui/progress";
 import { CreditCard, Crown, Download, FileText, Zap, CheckCircle, Calendar, TrendingUp, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-import { MercadoPagoSubscription } from "@/components/profile/MercadoPagoSubscription";
 
 const Billing = () => {
   const [currentPlan, setCurrentPlan] = useState('free'); // 'free' or 'pro'
@@ -59,12 +58,7 @@ const Billing = () => {
           <div className="p-6 max-w-6xl mx-auto">
             <div className="space-y-6">
               {/* MercadoPago Subscription Component */}
-              <MercadoPagoSubscription 
-                currentPlan={currentPlan}
-                onPlanChange={setCurrentPlan}
-              />
-
-              {/* Usage Statistics */}
+                            {/* Usage Statistics */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <Card>
                   <CardHeader className="pb-3">
