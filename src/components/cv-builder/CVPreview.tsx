@@ -36,7 +36,7 @@ export const CVPreview = ({ cvData }: CVPreviewProps) => {
         {cvData.experience && cvData.experience.length > 0 && (
           <div>
             <h2 className="text-base font-bold text-black mb-1 uppercase tracking-wide border-b border-gray-400 pb-0">Experiencia Profesional</h2>
-            <div className="space-y-4 mt-3">
+            <div className="space-y-3 mt-3">
               {cvData.experience.map((exp) => (
                 <div key={exp.id}>
                   <div className="flex justify-between items-start mb-1">
