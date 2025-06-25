@@ -14,40 +14,36 @@ export const useCVData = () => {
   const { user } = useAuth();
   const { id: cvId } = useParams();
   
+  // Obtener el nombre completo del usuario desde su perfil
+  const userFullName = user?.user_metadata?.full_name || '';
+  
   const [cvData, setCvData] = useState<CVData>({
     personalInfo: {
-      fullName: 'Andrés Hernandez',
-      email: 'andres.hernandez@gmail.com',
-      phone: '+569 9876 5432',
-      location: 'Valparaíso, Chile',
-      linkedin: 'linkedin.com/in/andreshernandez',
-      website: 'juanperez.dev'
+      fullName: userFullName, // Usar solo el nombre del usuario desde su perfil
+      email: '',
+      phone: '',
+      location: '',
+      linkedin: '',
+      website: ''
     },
-    summary: 'Desarrollador Frontend con 3+ años de experiencia en React, TypeScript y Node.js. Especializado en crear aplicaciones web modernas y escalables.',
-    experience: [
-      {
-        id: '1',
-        position: 'Frontend Developer',
-        company: 'TechCorp',
-        location: 'Santiago, Chile',
-        startDate: '2022-01',
-        endDate: '',
-        current: true,
-        description: '• Desarrollé aplicaciones React con TypeScript\n• Implementé arquitecturas escalables\n• Colaboré con equipos multidisciplinarios'
-      }
-    ],
-    education: [
-      {
-        id: '1',
-        degree: 'Ingeniería Informática',
-        institution: 'Universidad Politécnica de Madrid',
-        location: 'Madrid, España',
-        year: '2020',
-        description: 'Especialización en Desarrollo de Software'
-      }
-    ],
-    skills: ['React', 'TypeScript', 'JavaScript', 'Node.js', 'Python', 'SQL', 'Git', 'Docker']
+    summary: '',
+    experience: [],
+    education: [],
+    skills: []
   });
+  
+  // Actualizar el nombre si cambia el usuario
+  useEffect(() => {
+    if (user?.user_metadata?.full_name && !cvData.personalInfo.fullName) {
+      setCvData(prev => ({
+        ...prev,
+        personalInfo: {
+          ...prev.personalInfo,
+          fullName: user.user_metadata.full_name
+        }
+      }));
+    }
+  }, [user]);
 
   const [isLoading, setIsLoading] = useState(false);
   const [currentCvId, setCurrentCvId] = useState<string | null>(null);
