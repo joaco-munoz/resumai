@@ -9,7 +9,7 @@ interface CVPreviewProps {
 
 export const CVPreview = ({ cvData }: CVPreviewProps) => {
   return (
-    <div className="bg-white rounded-lg shadow-lg p-8 max-w-3xl mx-auto font-serif">
+    <div className="bg-white rounded-lg shadow-lg p-8 max-w-3xl mx-auto font-stix">
       <div className="space-y-6">
         {/* Header - Harvard style centered */}
         <div className="text-center border-b border-gray-400 pb-4">

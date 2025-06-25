@@ -1,40 +1,48 @@
 
 import { jsPDF } from 'jspdf';
 import { formatDateToSpanish } from './dateUtils';
+import { CVData } from '@/types/cv';
 
-export const downloadCVAsPDF = (cvData: any, filename: string) => {
+export const downloadCVAsPDF = (cvData: CVData, filename: string) => {
   try {
-    // Create new PDF document
-    const pdf = new jsPDF();
+    // Create new PDF document - A4 size
+    const pdf = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4'
+    });
     
-    // Set font to Times (closest to serif for Harvard style)
-    pdf.setFont('times');
+    // Configurar la fuente STIX Two Text para coincidir con el preview
+    // Como jsPDF no tiene nativamente STIX Two Text, la configuración de fuente
+    // debe aproximarse con la mejor alternativa disponible
+    // Se recomienda usar la librería vfs_fonts.js con STIX Two Text si se necesita exactamente
+    pdf.setFont('times', 'normal'); // Usar times como la mejor aproximación por defecto
     
-    let yPosition = 25;
+    let yPosition = 15;
     const pageWidth = pdf.internal.pageSize.width;
     const pageHeight = pdf.internal.pageSize.height;
-    const margin = 20;
+    const margin = 12; // Reducido significativamente para que el contenido esté más cerca de los bordes
     const contentWidth = pageWidth - (margin * 2);
     
     // Helper function to check for new page
     const checkNewPage = (additionalSpace: number = 15) => {
-      if (yPosition + additionalSpace > pageHeight - 25) {
+      if (yPosition + additionalSpace > pageHeight - 15) {
         pdf.addPage();
-        yPosition = 25;
+        yPosition = 15;
       }
     };
     
-    // Header - Harvard style (centered)
-    pdf.setFontSize(20);
+    // Header - Harvard style (centered) - Matching text-3xl (24px) in preview
+    pdf.setFontSize(20); // Aumentado ligeramente para mayor impacto visual
     pdf.setFont('times', 'bold');
     pdf.setTextColor(0, 0, 0);
     const nameWidth = pdf.getTextWidth(cvData.personalInfo.fullName);
     const nameX = (pageWidth - nameWidth) / 2;
     pdf.text(cvData.personalInfo.fullName, nameX, yPosition);
-    yPosition += 6;
+    yPosition += 5;
     
     // Contact info (centered, single line - Harvard style)
-    pdf.setFontSize(10);
+    pdf.setFontSize(9); // Equivalent to text-sm in preview
     pdf.setFont('times', 'normal');
     pdf.setTextColor(0, 0, 0);
     
@@ -49,18 +57,18 @@ export const downloadCVAsPDF = (cvData: any, filename: string) => {
     const contactWidth = pdf.getTextWidth(contactInfo);
     const contactX = (pageWidth - contactWidth) / 2;
     pdf.text(contactInfo, contactX, yPosition);
-    yPosition += 6;
+    yPosition += 4;
     
     // Header separator line
     pdf.setDrawColor(0, 0, 0);
     pdf.setLineWidth(0.3);
     pdf.line(margin, yPosition, pageWidth - margin, yPosition);
-    yPosition += 5;
+    yPosition += 4;
     
     // Summary Section (italic paragraph)
     if (cvData.summary && cvData.summary.trim()) {
       checkNewPage(20);
-      pdf.setFontSize(10);
+      pdf.setFontSize(9); // Equivalent to text-sm in preview
       pdf.setFont('times', 'italic');
       pdf.setTextColor(0, 0, 0);
       
@@ -68,9 +76,9 @@ export const downloadCVAsPDF = (cvData: any, filename: string) => {
       summaryLines.forEach((line: string) => {
         checkNewPage(5);
         pdf.text(line, margin, yPosition);
-        yPosition += 4.5;
+        yPosition += 4;
       });
-      yPosition += 8;
+      yPosition += 6;
     }
     
     // Experience Section
@@ -78,8 +86,8 @@ export const downloadCVAsPDF = (cvData: any, filename: string) => {
       checkNewPage(25);
       
       // Section header
-      pdf.setFontSize(11);
-      pdf.setFont('times', 'bold');
+      pdf.setFontSize(10); // Equivalent to text-base in preview
+      pdf.setFont('serif', 'bold');
       pdf.setTextColor(0, 0, 0);
       pdf.text('EXPERIENCIA PROFESIONAL', margin, yPosition);
       yPosition += 2;
@@ -88,13 +96,13 @@ export const downloadCVAsPDF = (cvData: any, filename: string) => {
       pdf.setDrawColor(0, 0, 0);
       pdf.setLineWidth(0.3);
       pdf.line(margin, yPosition, pageWidth - margin, yPosition);
-      yPosition += 8;
+      yPosition += 4;
       
       cvData.experience.forEach((exp: any, index: number) => {
         checkNewPage(30);
         
         // Company name (left, bold) and Location (right, bold)
-        pdf.setFontSize(10);
+        pdf.setFontSize(9); // Equivalent to text-sm in preview
         pdf.setFont('times', 'bold');
         pdf.setTextColor(0, 0, 0);
         pdf.text(exp.company, margin, yPosition);
@@ -102,16 +110,16 @@ export const downloadCVAsPDF = (cvData: any, filename: string) => {
         const locationText = exp.location || cvData.personalInfo.location;
         const locationWidth = pdf.getTextWidth(locationText);
         pdf.text(locationText, pageWidth - margin - locationWidth, yPosition);
-        yPosition += 5;
+        yPosition += 4;
         
         // Position (left, italic) and dates (right, italic)
-        pdf.setFont('times', 'italic');
+        pdf.setFont('serif', 'italic');
         pdf.text(exp.position, margin, yPosition);
         
         const dateRange = `${formatDateToSpanish(exp.startDate)} - ${exp.current ? 'Presente' : formatDateToSpanish(exp.endDate)}`;
         const dateWidth = pdf.getTextWidth(dateRange);
         pdf.text(dateRange, pageWidth - margin - dateWidth, yPosition);
-        yPosition += 6;
+        yPosition += 5;
         
         // Description as bullet points
         if (exp.description && exp.description.trim()) {
@@ -129,21 +137,21 @@ export const downloadCVAsPDF = (cvData: any, filename: string) => {
             bulletLines.forEach((bulletLine: string, lineIndex: number) => {
               if (lineIndex > 0) {
                 checkNewPage(5);
-                yPosition += 4.5;
+                yPosition += 4;
               }
               pdf.text(bulletLine, margin + 6, yPosition);
             });
-            yPosition += 4.5;
+            yPosition += 4; // Reduced spacing to match preview's mb-1
           });
         }
         
         // Add spacing after each experience entry except the last
         if (index < cvData.experience.length - 1) {
-          yPosition += 6;
+          yPosition += 4;
         }
       });
       
-      yPosition += 8;
+      yPosition += 6;
     }
     
     // Education Section
@@ -151,8 +159,8 @@ export const downloadCVAsPDF = (cvData: any, filename: string) => {
       checkNewPage(25);
       
       // Section header
-      pdf.setFontSize(11);
-      pdf.setFont('times', 'bold');
+      pdf.setFontSize(10); // Equivalent to text-base in preview
+      pdf.setFont('serif', 'bold');
       pdf.setTextColor(0, 0, 0);
       pdf.text('EDUCACIÓN', margin, yPosition);
       yPosition += 2;
@@ -161,20 +169,20 @@ export const downloadCVAsPDF = (cvData: any, filename: string) => {
       pdf.setDrawColor(0, 0, 0);
       pdf.setLineWidth(0.3);
       pdf.line(margin, yPosition, pageWidth - margin, yPosition);
-      yPosition += 8;
+      yPosition += 4;
       
       cvData.education.forEach((edu: any, index: number) => {
         checkNewPage(25);
         
         // Institution (left, bold uppercase) and Location (right, bold)
-        pdf.setFontSize(10);
-        pdf.setFont('times', 'bold');
+        pdf.setFontSize(9); // Equivalent to text-sm in preview
+        pdf.setFont('serif', 'bold');
         pdf.text(edu.institution.toUpperCase(), margin, yPosition);
         
         const locationText = edu.location || cvData.personalInfo.location;
         const locationWidth = pdf.getTextWidth(locationText);
         pdf.text(locationText, pageWidth - margin - locationWidth, yPosition);
-        yPosition += 5;
+        yPosition += 4;
         
         // Degree (left) and year (right, italic)
         pdf.setFont('times', 'normal');
@@ -183,7 +191,7 @@ export const downloadCVAsPDF = (cvData: any, filename: string) => {
         pdf.setFont('times', 'italic');
         const yearWidth = pdf.getTextWidth(edu.year);
         pdf.text(edu.year, pageWidth - margin - yearWidth, yPosition);
-        yPosition += 5;
+        yPosition += 4;
         
         // Description if exists (italic)
         if (edu.description && edu.description.trim()) {
@@ -193,17 +201,17 @@ export const downloadCVAsPDF = (cvData: any, filename: string) => {
           eduDescLines.forEach((line: string) => {
             checkNewPage(5);
             pdf.text(line, margin, yPosition);
-            yPosition += 4.5;
+            yPosition += 4;
           });
         }
         
         // Add spacing after each education entry except the last
         if (index < cvData.education.length - 1) {
-          yPosition += 6;
+          yPosition += 4;
         }
       });
       
-      yPosition += 8;
+      yPosition += 6;
     }
     
     // Skills Section
@@ -211,8 +219,8 @@ export const downloadCVAsPDF = (cvData: any, filename: string) => {
       checkNewPage(20);
       
       // Section header
-      pdf.setFontSize(11);
-      pdf.setFont('times', 'bold');
+      pdf.setFontSize(10); // Equivalent to text-base in preview
+      pdf.setFont('serif', 'bold');
       pdf.setTextColor(0, 0, 0);
       pdf.text('SKILLS ADICIONALES', margin, yPosition);
       yPosition += 2;
@@ -221,38 +229,47 @@ export const downloadCVAsPDF = (cvData: any, filename: string) => {
       pdf.setDrawColor(0, 0, 0);
       pdf.setLineWidth(0.3);
       pdf.line(margin, yPosition, pageWidth - margin, yPosition);
-      yPosition += 8;
+      yPosition += 4;
       
       // Skills as bullet points - improved layout to match preview
-      pdf.setFontSize(10);
+      pdf.setFontSize(9); // Equivalent to text-sm in preview
       pdf.setFont('times', 'normal');
       
-      let currentLine = '';
-      let currentX = margin;
-      const skillSpacing = 20; // Space between skills horizontally
-      const maxWidth = contentWidth - 20; // Leave some margin
+      // Implementación de skills en formato horizontal como en el preview
+      const skillsPerRow = 4; // Número aproximado de skills por fila
+      const skillRows = [];
+      let currentRow = [];
       
-      cvData.skills.forEach((skill: string, index: number) => {
-        const skillText = `• ${skill}`;
-        const skillWidth = pdf.getTextWidth(skillText);
-        
-        // Check if we need to move to next line
-        if (currentX + skillWidth > margin + maxWidth && currentX > margin) {
-          yPosition += 5;
-          currentX = margin;
-          checkNewPage(5);
+      // Agrupar skills en filas
+      cvData.skills.forEach((skill, index) => {
+        currentRow.push(skill);
+        if (currentRow.length === skillsPerRow || index === cvData.skills.length - 1) {
+          skillRows.push([...currentRow]);
+          currentRow = [];
         }
+      });
+      
+      // Renderizar skills en filas horizontales
+      skillRows.forEach((row, rowIndex) => {
+        let currentX = margin;
         
-        pdf.text(skillText, currentX, yPosition);
-        currentX += skillWidth + skillSpacing;
-        
-        // If this is the last skill or we're close to the right margin, move to next line
-        if (index === cvData.skills.length - 1 || currentX > margin + maxWidth - 50) {
-          if (index < cvData.skills.length - 1) {
-            yPosition += 5;
+        row.forEach((skill, index) => {
+          const skillText = `• ${skill}`;
+          const skillWidth = pdf.getTextWidth(skillText);
+          
+          // Si no hay espacio suficiente, pasar a la siguiente línea
+          if (currentX + skillWidth > pageWidth - margin) {
+            yPosition += 4.5;
             currentX = margin;
-            checkNewPage(5);
           }
+          
+          pdf.text(skillText, currentX, yPosition);
+          currentX += skillWidth + 12; // Espaciado horizontal reducido entre skills
+        });
+        
+        // Pasar a la siguiente fila
+        if (rowIndex < skillRows.length - 1) {
+          yPosition += 4.5;
         }
       });
     }

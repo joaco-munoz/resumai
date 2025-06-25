@@ -18,6 +18,10 @@ export default {
 				'2xl': '1400px'
 			}
 		},
+		fontFamily: {
+			'stix': ['"STIX Two Text"', 'serif'],
+			'serif': ['"STIX Two Text"', 'serif'],
+		},
 		extend: {
 			colors: {
 				border: 'hsl(var(--border))',
