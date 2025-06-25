@@ -35,8 +35,8 @@ export const CVPreview = ({ cvData }: CVPreviewProps) => {
         {/* Experience */}
         {cvData.experience && cvData.experience.length > 0 && (
           <div>
-            <h2 className="text-base font-bold text-black mb-3 uppercase tracking-wide border-b border-gray-400 pb-1">Experiencia Profesional</h2>
-            <div className="space-y-4">
+            <h2 className="text-base font-bold text-black mb-1 uppercase tracking-wide border-b border-gray-400 pb-0">Experiencia Profesional</h2>
+            <div className="space-y-4 mt-3">
               {cvData.experience.map((exp) => (
                 <div key={exp.id}>
                   <div className="flex justify-between items-start mb-1">
@@ -68,8 +68,8 @@ export const CVPreview = ({ cvData }: CVPreviewProps) => {
         {/* Education */}
         {cvData.education && cvData.education.length > 0 && (
           <div>
-            <h2 className="text-base font-bold text-black mb-3 uppercase tracking-wide border-b border-gray-400 pb-1">Educación</h2>
-            <div className="space-y-3">
+            <h2 className="text-base font-bold text-black mb-1 uppercase tracking-wide border-b border-gray-400 pb-0">Educación</h2>
+            <div className="space-y-3 mt-3">
               {cvData.education.map((edu) => (
                 <div key={edu.id}>
                   <div className="flex justify-between items-start">
@@ -92,8 +92,8 @@ export const CVPreview = ({ cvData }: CVPreviewProps) => {
         {/* Skills */}
         {cvData.skills && cvData.skills.length > 0 && (
           <div>
-            <h2 className="text-base font-bold text-black mb-3 uppercase tracking-wide border-b border-gray-400 pb-1">Skills Adicionales</h2>
-            <ul className="text-sm text-black flex flex-wrap gap-x-4 gap-y-2">
+            <h2 className="text-base font-bold text-black mb-1 uppercase tracking-wide border-b border-gray-400 pb-0">Skills Adicionales</h2>
+            <ul className="text-sm text-black flex flex-wrap gap-x-4 gap-y-2 mt-3">
               {cvData.skills.map((skill, index) => (
                 <li key={index} className="flex items-center">
                   <span className="mr-1">•</span>
