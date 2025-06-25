@@ -333,11 +333,14 @@ Ejemplo:
                   </CardHeader>
                   <CardContent>
                     <div className="flex flex-wrap gap-2">
-                      {matchResult.missingKeywords.map((keyword) => (
-                        <Badge key={keyword} variant="destructive">
-                          {keyword}
-                        </Badge>
-                      ))}
+                      {matchResult.missingKeywords.map((keyword) => {
+                        const cap = keyword.charAt(0).toUpperCase() + keyword.slice(1);
+                        return (
+                          <Badge key={keyword} variant="destructive">
+                            {cap}
+                          </Badge>
+                        );
+                      })}
                     </div>
                   </CardContent>
                 </Card>

@@ -110,8 +110,9 @@ export const CVAdaptationModal = ({
     // Agregar skills faltantes
     const newSkills = [...adaptedCV.skills];
     matchResult.missingKeywords.forEach(keyword => {
-      if (!newSkills.some(skill => skill.toLowerCase().includes(keyword.toLowerCase()))) {
-        newSkills.push(keyword);
+      const cap = keyword.charAt(0).toUpperCase() + keyword.slice(1);
+      if (!newSkills.some(skill => skill.toLowerCase() === cap.toLowerCase())) {
+        newSkills.push(cap);
       }
     });
     adaptedCV.skills = newSkills;
@@ -123,7 +124,17 @@ export const CVAdaptationModal = ({
       const newBullets = matchResult.suggestedBullets.slice(0, 2);
       
       // Agregar bullets sugeridos al trabajo más reciente
-      const enhancedDescription = currentDescription + '\n' + newBullets.map(bullet => `• ${bullet}`).join('\n');
+      const enhancedDescription = [
+  ...currentDescription
+    .split('\n')
+    .map(line => line.trim())
+    .filter(line => line.length > 0),
+  ...newBullets.map(bullet => {
+    // Eliminar cualquier viñeta o espacio inicial
+    const sanitized = bullet.replace(/^\s*(?:[•\-*]\s*)+/, '').trim();
+    return sanitized;
+  })
+].join('\n');
       
       adaptedCV.experience[0] = {
         ...latestExperience,
