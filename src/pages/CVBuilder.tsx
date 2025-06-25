@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
@@ -428,6 +429,7 @@ const CVBuilder = () => {
                     isImproving={isImproving}
                     goToPreviousTab={goToPreviousTab}
                     goToNextTab={goToNextTab}
+                    setCvData={setCvData}
                   />
                 </TabsContent>
 
@@ -439,6 +441,7 @@ const CVBuilder = () => {
                     removeEducation={removeEducation}
                     goToPreviousTab={goToPreviousTab}
                     goToNextTab={goToNextTab}
+                    setCvData={setCvData}
                   />
                 </TabsContent>
 

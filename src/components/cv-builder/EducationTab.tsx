@@ -1,12 +1,11 @@
 
+import React, { useState } from 'react';
+import { DragDropContext, Droppable, DropResult } from 'react-beautiful-dnd';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Plus, Trash2, ArrowRight, ChevronUp, ChevronDown } from "lucide-react";
+import { Plus, ArrowRight } from "lucide-react";
 import { CVData } from "@/types/cv";
-import { useState } from "react";
+import { DraggableEducationItem } from "./DraggableEducationItem";
 
 interface EducationTabProps {
   cvData: CVData;
@@ -15,6 +14,7 @@ interface EducationTabProps {
   removeEducation: (id: string) => void;
   goToPreviousTab: () => void;
   goToNextTab: () => void;
+  setCvData: React.Dispatch<React.SetStateAction<CVData>>;
 }
 
 export const EducationTab = ({ 
@@ -23,9 +23,9 @@ export const EducationTab = ({
   addEducation: originalAddEducation, 
   removeEducation, 
   goToPreviousTab, 
-  goToNextTab 
+  goToNextTab,
+  setCvData
 }: EducationTabProps) => {
-  // Estado para controlar qué entradas de educación están minimizadas
   const [minimizedEducations, setMinimizedEducations] = useState<Record<string, boolean>>({});
   
   const toggleMinimize = (id: string) => {
@@ -36,7 +36,6 @@ export const EducationTab = ({
   };
   
   const addEducation = () => {
-    // Minimizamos todas las entradas de educación existentes
     const updatedMinimized: Record<string, boolean> = {};
     cvData.education.forEach(edu => {
       updatedMinimized[edu.id] = true;
@@ -45,6 +44,20 @@ export const EducationTab = ({
     setMinimizedEducations(updatedMinimized);
     originalAddEducation();
   };
+
+  const handleDragEnd = (result: DropResult) => {
+    if (!result.destination) return;
+
+    const items = Array.from(cvData.education);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
+
+    setCvData(prev => ({
+      ...prev,
+      education: items
+    }));
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -56,98 +69,34 @@ export const EducationTab = ({
           </Button>
         </CardTitle>
         <CardDescription>
-          Incluye tu formación académica más relevante
+          Incluye tu formación académica más relevante. Arrastra para reordenar.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
-        {cvData.education.map((edu) => (
-          <div key={edu.id} className="border rounded-lg p-4 space-y-4">
-            <div className="flex justify-between items-start">
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="p-0 h-auto"
-                  onClick={() => toggleMinimize(edu.id)}
-                >
-                  {minimizedEducations[edu.id] ? (
-                    <ChevronDown className="h-5 w-5 text-gray-500" />
-                  ) : (
-                    <ChevronUp className="h-5 w-5 text-gray-500" />
-                  )}
-                </Button>
-                <h3 className="font-medium">{edu.degree || 'Título/Grado'} en {edu.institution || 'Institución'}</h3>
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => removeEducation(edu.id)}
-                className="text-red-600 hover:text-red-700"
+        <DragDropContext onDragEnd={handleDragEnd}>
+          <Droppable droppableId="education-list">
+            {(provided) => (
+              <div
+                {...provided.droppableProps}
+                ref={provided.innerRef}
+                className="space-y-4"
               >
-                <Trash2 className="h-4 w-4" />
-              </Button>
-            </div>
-            
-            {!minimizedEducations[edu.id] && (
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Título/Grado</Label>
-                    <Input
-                      value={edu.degree}
-                      onChange={(e) => updateEducation(edu.id, 'degree', e.target.value)}
-                      placeholder="ej. Ingeniería Informática"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Institución</Label>
-                    <Input
-                      value={edu.institution}
-                      onChange={(e) => updateEducation(edu.id, 'institution', e.target.value)}
-                      placeholder="ej. Universidad XYZ"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Ubicación</Label>
-                  <Input
-                    value={edu.location}
-                    onChange={(e) => updateEducation(edu.id, 'location', e.target.value)}
-                    placeholder="ej. Ciudad de México, México"
+                {cvData.education.map((edu, index) => (
+                  <DraggableEducationItem
+                    key={edu.id}
+                    edu={edu}
+                    index={index}
+                    updateEducation={updateEducation}
+                    removeEducation={removeEducation}
+                    isMinimized={minimizedEducations[edu.id]}
+                    toggleMinimize={toggleMinimize}
                   />
-                </div>
-                
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Año</Label>
-                    <Input
-                      value={edu.year}
-                      onChange={(e) => updateEducation(edu.id, 'year', e.target.value)}
-                      placeholder="ej. 2020"
-                    />
-                  </div>
-                  <div></div>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label>Descripción (opcional)</Label>
-                  <Textarea
-                    value={edu.description}
-                    onChange={(e) => updateEducation(edu.id, 'description', e.target.value)}
-                    rows={2}
-                    placeholder="ej. Especialización en Desarrollo de Software"
-                  />
-                </div>
+                ))}
+                {provided.placeholder}
               </div>
             )}
-            {minimizedEducations[edu.id] && (
-              <div className="text-sm text-gray-500 italic mt-1">
-                Educación minimizada. Haz clic en el botón para expandir.
-              </div>
-            )}
-          </div>
-        ))}
+          </Droppable>
+        </DragDropContext>
 
         <div className="flex justify-between pt-4">
           <Button variant="outline" onClick={goToPreviousTab}>
