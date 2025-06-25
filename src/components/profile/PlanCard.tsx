@@ -85,11 +85,36 @@ export const PlanCard = ({ currentPlan, isUpgrading, onUpgrade }: PlanCardProps)
                 <CardDescription>
                   {currentPlan === 'pro' 
                     ? 'Acceso completo a todas las funciones premium'
-                    : 'Disfruta de las funciones básicas de nuestro generador de CV'
+                    : 'Actualiza a Pro para acceder a todas las funciones premium'
                   }
                 </CardDescription>
               </div>
             </div>
+            
+            {currentPlan === 'free' && (
+              <div className="text-right">
+                <div className="text-2xl font-bold text-brand-600 mb-1">
+                  $6.990 <span className="text-sm font-normal text-gray-500">CLP/mes</span>
+                </div>
+                <Button 
+                  onClick={handleCreateSubscription}
+                  disabled={isCreatingSubscription}
+                  className="bg-gradient-to-r from-brand-500 to-brand-700 hover:from-brand-600 hover:to-brand-800"
+                >
+                  {isCreatingSubscription ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Procesando...
+                    </>
+                  ) : (
+                    <>
+                      <Crown className="h-4 w-4 mr-2" />
+                      Suscribirse a Pro
+                    </>
+                  )}
+                </Button>
+              </div>
+            )}
           </div>
         </CardHeader>
         {currentPlan === 'pro' && (
@@ -106,14 +131,20 @@ export const PlanCard = ({ currentPlan, isUpgrading, onUpgrade }: PlanCardProps)
       {currentPlan === 'free' && (
         <Card>
           <CardHeader>
-            <CardTitle>Funciones Disponibles</CardTitle>
+            <CardTitle>Desbloquea Todo el Potencial</CardTitle>
             <CardDescription>
-              Tu plan actual incluye estas funciones
+              Compara los beneficios del plan Pro vs Gratuito
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
+            <div className="grid md:grid-cols-2 gap-8">
+              {/* Free Plan */}
               <div className="space-y-4">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-lg font-semibold">Plan Gratuito</h3>
+                  <Badge variant="secondary">Actual</Badge>
+                </div>
+                <div className="text-2xl font-bold">$0<span className="text-sm font-normal text-gray-500">/mes</span></div>
                 <ul className="space-y-2 text-sm">
                   <li className="flex items-center gap-2">
                     <CheckCircle className="h-4 w-4 text-success-500" />
@@ -132,6 +163,54 @@ export const PlanCard = ({ currentPlan, isUpgrading, onUpgrade }: PlanCardProps)
                     Análisis ATS básico para pasar filtros
                   </li>
                 </ul>
+              </div>
+
+              {/* Pro Plan */}
+              <div className="space-y-4 p-4 bg-gradient-to-br from-brand-50 to-purple-50 rounded-lg border border-brand-200">
+                <div className="flex items-center gap-2">
+                  <h3 className="text-lg font-semibold">Plan Pro</h3>
+                  <Badge className="bg-brand-100 text-brand-700">Recomendado</Badge>
+                </div>
+                <div className="text-2xl font-bold">$6.990<span className="text-sm font-normal text-gray-500"> CLP/mes</span></div>
+                <ul className="space-y-2 text-sm">
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-success-500" />
+                    CVs ilimitados con IA
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-success-500" />
+                    Exportaciones ilimitadas en PDF y Word
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-success-500" />
+                    Job Matcher avanzado con recomendaciones precisas
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-success-500" />
+                    Mejoras IA ilimitadas
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <CheckCircle className="h-4 w-4 text-success-500" />
+                    Acceso a novedades antes que nadie
+                  </li>
+                </ul>
+                <Button 
+                  onClick={handleCreateSubscription}
+                  disabled={isCreatingSubscription}
+                  className="w-full bg-gradient-to-r from-brand-500 to-brand-700 hover:from-brand-600 hover:to-brand-800"
+                >
+                  {isCreatingSubscription ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Procesando...
+                    </>
+                  ) : (
+                    <>
+                      <Crown className="h-4 w-4 mr-2" />
+                      Suscribirse a Pro
+                    </>
+                  )}
+                </Button>
               </div>
             </div>
           </CardContent>
