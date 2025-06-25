@@ -370,7 +370,7 @@ Ahorra horas adaptando tu currículum: nuestra plataforma usa IA para convertir 
       </section>
 
       {/* Features Section */}
-      <section id="caracteristicas-principales" className="py-20 bg-slate-800/50">
+      <section id="py-20 bg-gradient-to-r from-slate-800/50 to-slate-900/50">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold mb-4 text-white">Características Principales</h2>
