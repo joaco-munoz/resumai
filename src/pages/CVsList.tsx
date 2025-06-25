@@ -59,6 +59,45 @@ export default function CVsList() {
   const [jobReportCV, setJobReportCV] = useState<CV | null>(null);
   const [adaptationCV, setAdaptationCV] = useState<CV | null>(null);
   const [editingJobMatcherCV, setEditingJobMatcherCV] = useState<CV | null>(null);
+  const [renamingCVId, setRenamingCVId] = useState<string | null>(null);
+  const [renamingTitle, setRenamingTitle] = useState<string>("");
+  const [savingRename, setSavingRename] = useState(false);
+  const startRenameCV = (cv: CV) => {
+    setRenamingCVId(cv.id);
+    setRenamingTitle(cv.title);
+  };
+
+  const handleRenameSave = async () => {
+    if (!renamingCVId || renamingTitle.trim() === "") {
+      setRenamingCVId(null);
+      return;
+    }
+    setSavingRename(true);
+    try {
+      const { error } = await supabase
+        .from('cvs')
+        .update({ title: renamingTitle.trim() })
+        .eq('id', renamingCVId);
+      if (error) {
+        console.error('Error renaming CV:', error);
+        toast.error(`Error al renombrar el CV: ${error.message}`);
+      } else {
+        toast.success("CV renombrado exitosamente");
+        loadCVs();
+      }
+    } catch (err) {
+      console.error('Error renaming CV:', err);
+      toast.error("Error al renombrar el CV");
+    } finally {
+      setSavingRename(false);
+      setRenamingCVId(null);
+    }
+  };
+
+  const handleRenameCancel = () => {
+    setRenamingCVId(null);
+  };
+
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -249,7 +288,24 @@ export default function CVsList() {
             )}
           </div>
           <div>
-            <h3 className="font-medium text-gray-900">{cv.title}</h3>
+            {renamingCVId === cv.id ? (
+              <div className="flex items-center gap-2">
+                <Input
+                  value={renamingTitle}
+                  onChange={e => setRenamingTitle(e.target.value)}
+                  className="h-8 py-1"
+                  autoFocus
+                />
+                <Button size="sm" disabled={savingRename} onClick={handleRenameSave}>
+                  Guardar
+                </Button>
+                <Button size="sm" variant="outline" onClick={handleRenameCancel}>
+                  Cancelar
+                </Button>
+              </div>
+            ) : (
+              <h3 className="font-medium text-gray-900">{cv.title}</h3>
+            )}
             <p className="text-sm text-gray-500">
               {isReport ? "Informe de compatibilidad" : "CV adaptado"} - Creado {formatDate(cv.created_at)}
             </p>
@@ -289,6 +345,12 @@ export default function CVsList() {
                 <DropdownMenuItem onClick={() => handleEditCV(cv)}>
                   <Edit className="h-4 w-4 mr-2" />
                   Editar
+                </DropdownMenuItem>
+              )}
+              {cv.cv_source === 'job_matcher' && (
+                <DropdownMenuItem onClick={() => startRenameCV(cv)}>
+                  <Edit className="h-4 w-4 mr-2" />
+                  Renombrar
                 </DropdownMenuItem>
               )}
               {!isReport && (
