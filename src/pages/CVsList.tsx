@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,6 +35,7 @@ import { downloadCVAsWord } from "@/utils/wordUtils";
 import { JobReportModal } from "@/components/JobReportModal";
 import { CVAdaptationModal } from "@/components/CVAdaptationModal";
 import { CVAdaptationPreviewModal } from "@/components/CVAdaptationPreviewModal";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface CV {
   id: string;
@@ -62,6 +62,8 @@ export default function CVsList() {
   const [renamingCVId, setRenamingCVId] = useState<string | null>(null);
   const [renamingTitle, setRenamingTitle] = useState<string>("");
   const [savingRename, setSavingRename] = useState(false);
+  const isMobile = useIsMobile();
+
   const startRenameCV = (cv: CV) => {
     setRenamingCVId(cv.id);
     setRenamingTitle(cv.title);
@@ -146,16 +148,16 @@ export default function CVsList() {
   );
 
   const getScoreColor = (score?: number) => {
-    if (!score) return "bg-gray-100 text-gray-800";
-    if (score >= 80) return "bg-green-100 text-green-800";
-    if (score >= 60) return "bg-yellow-100 text-yellow-800";
-    return "bg-red-100 text-red-800";
+    if (!score) return "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200";
+    if (score >= 80) return "bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-200";
+    if (score >= 60) return "bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-200";
+    return "bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-200";
   };
 
   const getStatusColor = (status: string) => {
     return status === "active" 
-      ? "bg-green-100 text-green-800" 
-      : "bg-gray-100 text-gray-800";
+      ? "bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-200" 
+      : "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200";
   };
 
   const getStatusLabel = (status: string) => {
@@ -167,25 +169,20 @@ export default function CVsList() {
     const now = new Date();
     const diffTime = Math.abs(now.getTime() - date.getTime());
     
-    // Calcular diferencias en varias unidades de tiempo
     const diffMinutes = Math.floor(diffTime / (1000 * 60));
     const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
     const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
     
-    // Mostrar en tiempo real para actualizaciones recientes
     if (diffMinutes < 1) return "ahora mismo";
     if (diffMinutes === 1) return "hace 1 minuto";
     if (diffMinutes < 60) return `hace ${diffMinutes} minutos`;
     
-    // Mostrar en horas para el mismo día
     if (diffHours === 1) return "hace 1 hora";
     if (diffHours < 24) return `hace ${diffHours} horas`;
     
-    // Mostrar en días
     if (diffDays === 1) return "hace 1 día";
     if (diffDays < 30) return `hace ${diffDays} días`;
     
-    // Mostrar en meses/años para fechas más antiguas
     if (diffDays < 365) return `hace ${Math.ceil(diffDays / 30)} meses`;
     return `hace ${Math.ceil(diffDays / 365)} años`;
   };
@@ -208,17 +205,14 @@ export default function CVsList() {
     console.log('General CV:', generalCV);
     
     if (isJobReport(cv)) {
-      // Para informes, mostrar la ventana de adaptación
       setAdaptationCV(cv);
     } else if (cv.cv_source === 'job_matcher') {
-      // Para CVs de Job Matcher, abrir el modal de adaptación con vista previa
       if (!generalCV || !generalCV.content) {
         toast.error("No se encontró el CV principal para editar");
         console.error('No general CV found for editing');
         return;
       }
       
-      // Verificar que el CV de Job Matcher tenga contenido válido
       if (!cv.content) {
         toast.error("El CV adaptado no tiene contenido válido");
         console.error('Job Matcher CV has no content');
@@ -227,7 +221,6 @@ export default function CVsList() {
       
       setEditingJobMatcherCV(cv);
     } else {
-      // Para CVs del editor, ir al editor
       navigate(`/app/cv/${cv.id}`);
     }
   };
@@ -275,7 +268,7 @@ export default function CVsList() {
 
       console.log('CV deleted successfully');
       toast.success("CV eliminado exitosamente");
-      loadCVs(); // Reload the list
+      loadCVs();
       setDeleteCV(null);
     } catch (error) {
       console.error('Error deleting CV:', error);
@@ -287,23 +280,23 @@ export default function CVsList() {
 
   const handleSaveEditedCV = () => {
     setEditingJobMatcherCV(null);
-    loadCVs(); // Reload the list to show updated CV
+    loadCVs();
   };
 
   const renderCVCard = (cv: CV) => {
     const isReport = isJobReport(cv);
     
     return (
-      <div key={cv.id} className="grid grid-cols-12 gap-4 items-center py-3 border-b border-gray-100 hover:bg-gray-50 rounded-lg transition-colors">
-        <div className="col-span-5 flex items-center gap-3">
-          <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${isReport ? 'bg-yellow-100' : 'bg-blue-100'}`}>
+      <div key={cv.id} className={`${isMobile ? 'space-y-3 p-4 border rounded-lg' : 'grid grid-cols-12 gap-4 items-center py-3'} border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition-colors`}>
+        <div className={`${isMobile ? 'w-full' : 'col-span-5'} flex items-center gap-3`}>
+          <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${isReport ? 'bg-yellow-100 dark:bg-yellow-900' : 'bg-blue-100 dark:bg-blue-900'} shrink-0`}>
             {isReport ? (
-              <Target className="h-5 w-5 text-yellow-600" />
+              <Target className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
             ) : (
-              <FileText className="h-5 w-5 text-blue-600" />
+              <FileText className="h-5 w-5 text-blue-600 dark:text-blue-400" />
             )}
           </div>
-          <div>
+          <div className="min-w-0 flex-1">
             {renamingCVId === cv.id ? (
               <div className="flex items-center gap-2">
                 <Input
@@ -320,85 +313,150 @@ export default function CVsList() {
                 </Button>
               </div>
             ) : (
-              <h3 className="font-medium text-gray-900">{cv.title}</h3>
+              <h3 className="font-medium text-gray-900 dark:text-gray-100 truncate">{cv.title}</h3>
             )}
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
               {isReport ? "Informe de compatibilidad" : "CV adaptado"} - Creado {formatDate(cv.created_at)}
             </p>
           </div>
         </div>
         
-        <div className="col-span-2">
-          <Badge className={`${getScoreColor(cv.ai_score)} border-0`}>
-            {cv.ai_score ? `${cv.ai_score}%` : "Sin evaluar"}
-          </Badge>
-        </div>
-        
-        <div className="col-span-2">
-          <Badge className={`${getStatusColor(cv.status)} border-0`}>
-            {getStatusLabel(cv.status)}
-          </Badge>
-        </div>
-        
-        <div className="col-span-2 flex items-center gap-1 text-sm text-gray-500">
-          <Calendar className="h-4 w-4" />
-          {formatDate(cv.last_updated || cv.created_at)}
-        </div>
-        
-        <div className="col-span-1 flex justify-end">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm">
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => handleViewCV(cv)}>
-                <Eye className="h-4 w-4 mr-2" />
-                Ver
-              </DropdownMenuItem>
-              {!isReport && (
-                <DropdownMenuItem onClick={() => handleEditCV(cv)}>
-                  <Edit className="h-4 w-4 mr-2" />
-                  Editar
-                </DropdownMenuItem>
-              )}
-              {cv.cv_source === 'job_matcher' && (
-                <DropdownMenuItem onClick={() => startRenameCV(cv)}>
-                  <Edit className="h-4 w-4 mr-2" />
-                  Renombrar
-                </DropdownMenuItem>
-              )}
-              {!isReport && (
-                <DropdownMenu>
+        {isMobile ? (
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Badge className={`${getScoreColor(cv.ai_score)} border-0 text-xs`}>
+                {cv.ai_score ? `${cv.ai_score}%` : "Sin evaluar"}
+              </Badge>
+              <Badge className={`${getStatusColor(cv.status)} border-0 text-xs`}>
+                {getStatusLabel(cv.status)}
+              </Badge>
+            </div>
+            
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-gray-500 dark:text-gray-400">
+                {formatDate(cv.last_updated || cv.created_at)}
+              </span>
+              <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <DropdownMenuItem>
-                    <Download className="h-4 w-4 mr-2" />
-                    Descargar
-                  </DropdownMenuItem>
+                  <Button variant="ghost" size="sm">
+                    <MoreHorizontal className="h-4 w-4" />
+                  </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-40">
-                  <DropdownMenuItem onClick={() => handleDownloadCV(cv, 'pdf')}>
-                    <Download className="h-4 w-4 mr-2" />
-                    PDF
+                <DropdownMenuContent align="end" className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+                  <DropdownMenuItem onClick={() => handleViewCV(cv)}>
+                    <Eye className="h-4 w-4 mr-2" />
+                    Ver
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleDownloadCV(cv, 'word')}>
-                    <Download className="h-4 w-4 mr-2" />
-                    Word
+                  {!isReport && (
+                    <DropdownMenuItem onClick={() => handleEditCV(cv)}>
+                      <Edit className="h-4 w-4 mr-2" />
+                      Editar
+                    </DropdownMenuItem>
+                  )}
+                  {cv.cv_source === 'job_matcher' && (
+                    <DropdownMenuItem onClick={() => startRenameCV(cv)}>
+                      <Edit className="h-4 w-4 mr-2" />
+                      Renombrar
+                    </DropdownMenuItem>
+                  )}
+                  {!isReport && (
+                    <>
+                      <DropdownMenuItem onClick={() => handleDownloadCV(cv, 'pdf')}>
+                        <Download className="h-4 w-4 mr-2" />
+                        Descargar PDF
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleDownloadCV(cv, 'word')}>
+                        <Download className="h-4 w-4 mr-2" />
+                        Descargar Word
+                      </DropdownMenuItem>
+                    </>
+                  )}
+                  <DropdownMenuItem 
+                    className="text-red-600 dark:text-red-400"
+                    onClick={() => handleDeleteCV(cv)}
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Eliminar
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
-              )}
-              <DropdownMenuItem 
-                className="text-red-600"
-                onClick={() => handleDeleteCV(cv)}
-              >
-                <Trash2 className="h-4 w-4 mr-2" />
-                Eliminar
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+            </div>
+          </div>
+        ) : (
+          <>
+            <div className="col-span-2">
+              <Badge className={`${getScoreColor(cv.ai_score)} border-0`}>
+                {cv.ai_score ? `${cv.ai_score}%` : "Sin evaluar"}
+              </Badge>
+            </div>
+            
+            <div className="col-span-2">
+              <Badge className={`${getStatusColor(cv.status)} border-0`}>
+                {getStatusLabel(cv.status)}
+              </Badge>
+            </div>
+            
+            <div className="col-span-2 flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400">
+              <Calendar className="h-4 w-4" />
+              {formatDate(cv.last_updated || cv.created_at)}
+            </div>
+            
+            <div className="col-span-1 flex justify-end">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm">
+                    <MoreHorizontal className="h-4 w-4" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+                  <DropdownMenuItem onClick={() => handleViewCV(cv)}>
+                    <Eye className="h-4 w-4 mr-2" />
+                    Ver
+                  </DropdownMenuItem>
+                  {!isReport && (
+                    <DropdownMenuItem onClick={() => handleEditCV(cv)}>
+                      <Edit className="h-4 w-4 mr-2" />
+                      Editar
+                    </DropdownMenuItem>
+                  )}
+                  {cv.cv_source === 'job_matcher' && (
+                    <DropdownMenuItem onClick={() => startRenameCV(cv)}>
+                      <Edit className="h-4 w-4 mr-2" />
+                      Renombrar
+                    </DropdownMenuItem>
+                  )}
+                  {!isReport && (
+                    <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <DropdownMenuItem>
+                        <Download className="h-4 w-4 mr-2" />
+                        Descargar
+                      </DropdownMenuItem>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-40 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+                      <DropdownMenuItem onClick={() => handleDownloadCV(cv, 'pdf')}>
+                        <Download className="h-4 w-4 mr-2" />
+                        PDF
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleDownloadCV(cv, 'word')}>
+                        <Download className="h-4 w-4 mr-2" />
+                        Word
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                  )}
+                  <DropdownMenuItem 
+                    className="text-red-600 dark:text-red-400"
+                    onClick={() => handleDeleteCV(cv)}
+                  >
+                    <Trash2 className="h-4 w-4 mr-2" />
+                    Eliminar
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          </>
+        )}
       </div>
     );
   };
@@ -409,10 +467,10 @@ export default function CVsList() {
         <div className="min-h-screen flex w-full">
           <AppSidebar />
           <SidebarInset>
-            <div className="min-h-screen bg-gray-50 p-6 flex items-center justify-center">
+            <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 sm:p-6 flex items-center justify-center">
               <div className="text-center">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                <p className="text-gray-600">Cargando CVs...</p>
+                <p className="text-gray-600 dark:text-gray-300">Cargando CVs...</p>
               </div>
             </div>
           </SidebarInset>
@@ -426,52 +484,53 @@ export default function CVsList() {
       <div className="min-h-screen flex w-full">
         <AppSidebar />
         <SidebarInset>
-          <div className="min-h-screen bg-gray-50 p-6">
+          <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 sm:p-6">
             <div className="max-w-7xl mx-auto">
               {/* Header */}
-              <div className="flex items-center justify-between mb-8">
-                <div>
-                  <h1 className="text-3xl font-bold text-gray-900">Mis Currículums</h1>
-                  <p className="text-gray-600 mt-2">
+              <div className="flex items-center justify-between mb-6 sm:mb-8">
+                <div className="min-w-0 flex-1">
+                  <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100 truncate">Mis Currículums</h1>
+                  <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 mt-2">
                     Gestiona tu Currículum Principal y los currículums adaptados por Match de Ofertas
                   </p>
                 </div>
-                {/* El botón de crear CV ha sido eliminado */}
               </div>
 
               {/* CV General Section */}
-              <Card className="mb-8">
+              <Card className="mb-6 sm:mb-8 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <User className="h-5 w-5 text-blue-600" />
+                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                    <User className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                     Currículum Principal
                   </CardTitle>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-gray-600 dark:text-gray-300">
                     Tu Currículum principal que se actualiza cuando guardas desde el Editor de Currículums
                   </p>
                 </CardHeader>
                 <CardContent>
                   {generalCV ? (
                     <div className="space-y-4">
-                      <div className="grid grid-cols-12 gap-4 text-sm font-medium text-gray-500 border-b pb-3">
-                        <div className="col-span-5">CV</div>
-                        <div className="col-span-2">Puntuación</div>
-                        <div className="col-span-2">Estado</div>
-                        <div className="col-span-2">Actualizado</div>
-                        <div className="col-span-1"></div>
-                      </div>
+                      {!isMobile && (
+                        <div className="grid grid-cols-12 gap-4 text-sm font-medium text-gray-500 dark:text-gray-400 border-b pb-3">
+                          <div className="col-span-5">CV</div>
+                          <div className="col-span-2">Puntuación</div>
+                          <div className="col-span-2">Estado</div>
+                          <div className="col-span-2">Actualizado</div>
+                          <div className="col-span-1"></div>
+                        </div>
+                      )}
                       {renderCVCard(generalCV)}
                     </div>
                   ) : (
-                    <div className="text-center py-12">
+                    <div className="text-center py-8 sm:py-12">
                       <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                      <h3 className="text-lg font-medium text-gray-900 mb-2">
+                      <h3 className="text-base sm:text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
                         No tienes un CV Principal
                       </h3>
-                      <p className="text-gray-500 mb-4">
+                      <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 mb-4">
                         Crea tu primer CV para que aparezca aquí como tu CV Principal
                       </p>
-                      <Button onClick={() => navigate("/app/cv/new")}>
+                      <Button onClick={() => navigate("/app/cv/new")} size={isMobile ? "default" : "lg"}>
                         <Plus className="h-4 w-4 mr-2" />
                         Crear CV Principal
                       </Button>
@@ -481,44 +540,44 @@ export default function CVsList() {
               </Card>
 
               {/* Job Matcher CVs Section */}
-              <Card>
+              <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
                 <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Target className="h-5 w-5 text-green-600" />
+                  <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                    <Target className="h-5 w-5 text-green-600 dark:text-green-400" />
                     Currículums del Match de Ofertas
                   </CardTitle>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-gray-600 dark:text-gray-300">
                     Currículums adaptados e informes de compatibilidad de ofertas de trabajo
                   </p>
                 </CardHeader>
                 <CardContent>
                   {/* Search for Job Matcher CVs */}
-                  <div className="mb-6">
-                    <div className="relative max-w-md">
+                  <div className="mb-4 sm:mb-6">
+                    <div className="relative max-w-full sm:max-w-md">
                       <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
                       <Input
                         placeholder="Buscar currículums del Match de Ofertas..."
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
-                        className="pl-10"
+                        className="pl-10 bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600"
                       />
                     </div>
                   </div>
 
                   {filteredJobMatcherCVs.length === 0 ? (
-                    <div className="text-center py-12">
+                    <div className="text-center py-8 sm:py-12">
                       <Target className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                      <h3 className="text-lg font-medium text-gray-900 mb-2">
+                      <h3 className="text-base sm:text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
                         {jobMatcherCVs.length === 0 ? "No tienes currículums del Match de Ofertas" : "No se encontraron currículums"}
                       </h3>
-                      <p className="text-gray-500 mb-4">
+                      <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 mb-4">
                         {jobMatcherCVs.length === 0 
                           ? "Los currículums adaptados e informes desde Match de Ofertas aparecerán aquí" 
                           : "Intenta con otro término de búsqueda"
                         }
                       </p>
                       {jobMatcherCVs.length === 0 && (
-                        <Button onClick={() => navigate("/app/match")}>
+                        <Button onClick={() => navigate("/app/match")} size={isMobile ? "default" : "lg"}>
                           <Target className="h-4 w-4 mr-2" />
                           Ir a Job Matcher
                         </Button>
@@ -526,14 +585,16 @@ export default function CVsList() {
                     </div>
                   ) : (
                     <div className="space-y-4">
-                      {/* Table Header */}
-                      <div className="grid grid-cols-12 gap-4 text-sm font-medium text-gray-500 border-b pb-3">
-                        <div className="col-span-5">CV / Informe</div>
-                        <div className="col-span-2">Puntuación</div>
-                        <div className="col-span-2">Estado</div>
-                        <div className="col-span-2">Actualizado</div>
-                        <div className="col-span-1"></div>
-                      </div>
+                      {/* Table Header - only on desktop */}
+                      {!isMobile && (
+                        <div className="grid grid-cols-12 gap-4 text-sm font-medium text-gray-500 dark:text-gray-400 border-b pb-3">
+                          <div className="col-span-5">CV / Informe</div>
+                          <div className="col-span-2">Puntuación</div>
+                          <div className="col-span-2">Estado</div>
+                          <div className="col-span-2">Actualizado</div>
+                          <div className="col-span-1"></div>
+                        </div>
+                      )}
 
                       {/* Table Rows */}
                       {filteredJobMatcherCVs.map(cv => renderCVCard(cv))}
@@ -542,8 +603,8 @@ export default function CVsList() {
 
                   {/* Pagination Info */}
                   {filteredJobMatcherCVs.length > 0 && (
-                    <div className="flex items-center justify-between mt-6 pt-4 border-t">
-                      <p className="text-sm text-gray-500">
+                    <div className="flex items-center justify-between mt-4 sm:mt-6 pt-4 border-t">
+                      <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
                         Mostrando 1 a {filteredJobMatcherCVs.length} de {filteredJobMatcherCVs.length} elementos de Match de Ofertas
                       </p>
                     </div>
@@ -554,7 +615,7 @@ export default function CVsList() {
           </div>
         </SidebarInset>
 
-        {/* Preview Modal for CVs */}
+        {/* Modals */}
         <CVPreviewModal
           isOpen={!!previewCV}
           onClose={() => setPreviewCV(null)}
@@ -572,7 +633,6 @@ export default function CVsList() {
           }}
         />
 
-        {/* Job Report Modal */}
         <JobReportModal
           isOpen={!!jobReportCV}
           onClose={() => setJobReportCV(null)}
@@ -580,11 +640,9 @@ export default function CVsList() {
           reportTitle={jobReportCV?.title || ""}
           onApply={() => {
             setJobReportCV(null);
-            // Aquí podríamos abrir el modal de adaptación si es necesario
           }}
         />
 
-        {/* CV Adaptation Modal */}
         <CVAdaptationModal
           isOpen={!!adaptationCV}
           onClose={() => setAdaptationCV(null)}
@@ -596,7 +654,6 @@ export default function CVsList() {
           }}
         />
 
-        {/* CV Adaptation Preview Modal for editing Job Matcher CVs */}
         {editingJobMatcherCV && generalCV && (
           <CVAdaptationPreviewModal
             isOpen={!!editingJobMatcherCV}
@@ -610,7 +667,6 @@ export default function CVsList() {
           />
         )}
 
-        {/* Delete Confirmation Dialog */}
         <DeleteConfirmDialog
           isOpen={!!deleteCV}
           onClose={() => setDeleteCV(null)}
