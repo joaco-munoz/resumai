@@ -166,10 +166,26 @@ export default function CVsList() {
     const date = new Date(dateString);
     const now = new Date();
     const diffTime = Math.abs(now.getTime() - date.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     
+    // Calcular diferencias en varias unidades de tiempo
+    const diffMinutes = Math.floor(diffTime / (1000 * 60));
+    const diffHours = Math.floor(diffTime / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+    
+    // Mostrar en tiempo real para actualizaciones recientes
+    if (diffMinutes < 1) return "ahora mismo";
+    if (diffMinutes === 1) return "hace 1 minuto";
+    if (diffMinutes < 60) return `hace ${diffMinutes} minutos`;
+    
+    // Mostrar en horas para el mismo día
+    if (diffHours === 1) return "hace 1 hora";
+    if (diffHours < 24) return `hace ${diffHours} horas`;
+    
+    // Mostrar en días
     if (diffDays === 1) return "hace 1 día";
     if (diffDays < 30) return `hace ${diffDays} días`;
+    
+    // Mostrar en meses/años para fechas más antiguas
     if (diffDays < 365) return `hace ${Math.ceil(diffDays / 30)} meses`;
     return `hace ${Math.ceil(diffDays / 365)} años`;
   };
@@ -420,15 +436,7 @@ export default function CVsList() {
                     Gestiona tu Currículum Principal y los currículums adaptados por Match de Ofertas
                   </p>
                 </div>
-                <div className="flex items-center gap-3">
-                  <Button 
-                    onClick={() => navigate("/app/cv/new")}
-                    className="bg-blue-600 hover:bg-blue-700 text-white"
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    Crear CV
-                  </Button>
-                </div>
+                {/* El botón de crear CV ha sido eliminado */}
               </div>
 
               {/* CV General Section */}

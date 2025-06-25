@@ -67,13 +67,22 @@ export const CVPreviewModal = ({ isOpen, onClose, cvData, cvTitle, onDownloadPDF
           </div>
         </DialogHeader>
         
-        <div className="bg-white p-8 space-y-6 font-serif">
+        <div className="bg-white p-8 space-y-6 font-stix">
           {/* Header - Harvard style centered */}
           <div className="text-center border-b border-gray-400 pb-4">
             <h1 className="text-3xl font-bold text-black mb-2">{cvData.personalInfo.fullName}</h1>
-            <div className="text-sm text-black">
-              {cvData.personalInfo.location} • {cvData.personalInfo.linkedin} • {cvData.personalInfo.phone} • {cvData.personalInfo.email}
-              {cvData.personalInfo.website && <span> • {cvData.personalInfo.website}</span>}
+            <div className="flex flex-wrap justify-center gap-2 text-black text-sm">
+              <span>{cvData.personalInfo.location}</span>
+              <span>•</span>
+              <span>{cvData.personalInfo.linkedin}</span>
+              <span>•</span>
+              <span>{cvData.personalInfo.phone}</span>
+              <span>•</span>
+              <span>{cvData.personalInfo.email}</span>
+              {cvData.personalInfo.website && <>
+                <span>•</span>
+                <span>{cvData.personalInfo.website}</span>
+              </>}
             </div>
           </div>
 
@@ -145,10 +154,10 @@ export const CVPreviewModal = ({ isOpen, onClose, cvData, cvTitle, onDownloadPDF
           {cvData.skills && cvData.skills.length > 0 && (
             <div>
               <h2 className="text-base font-bold text-black mb-3 uppercase tracking-wide border-b border-gray-400 pb-1">Skills Adicionales</h2>
-              <ul className="text-sm text-black">
+              <ul className="text-sm text-black flex flex-wrap gap-x-4 gap-y-2">
                 {cvData.skills.map((skill, index) => (
-                  <li key={index} className="flex items-start mb-1">
-                    <span className="mr-2">•</span>
+                  <li key={index} className="flex items-center">
+                    <span className="mr-1">•</span>
                     <span>{skill}</span>
                   </li>
                 ))}

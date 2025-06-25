@@ -9,6 +9,21 @@
 /* Definition of the design system. All colors, gradients, fonts, etc should be defined here. */
 
 @layer base {
+  /* Estilos para inputs de fecha en español */
+  input[type="month"].date-input-es::-webkit-calendar-picker-indicator {
+    background-color: white;
+  }
+  
+  input[type="month"].date-input-es {
+    font-family: inherit;
+  }
+  
+  /* Intentar forzar la localización a español */
+  input[type="month"].date-input-es:lang(es) {
+    -webkit-locale: "es";
+    locale: "es";
+  }
+  
   :root {
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;

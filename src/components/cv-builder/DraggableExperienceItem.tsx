@@ -1,9 +1,10 @@
-
 import React from 'react';
 import { Draggable } from 'react-beautiful-dnd';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { DatePickerEs } from "@/components/ui/date-picker-es";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Plus, Trash2, ChevronUp, ChevronDown, GripVertical } from "lucide-react";
@@ -109,18 +110,16 @@ export const DraggableExperienceItem = ({
               <div className="grid grid-cols-3 gap-4">
                 <div className="space-y-2">
                   <Label>Fecha inicio</Label>
-                  <Input
-                    type="month"
+                  <DatePickerEs
                     value={exp.startDate}
-                    onChange={(e) => updateExperience(exp.id, 'startDate', e.target.value)}
+                    onChange={(value) => updateExperience(exp.id, 'startDate', value)}
                   />
                 </div>
                 <div className="space-y-2">
                   <Label>Fecha fin</Label>
-                  <Input
-                    type="month"
+                  <DatePickerEs
                     value={exp.endDate}
-                    onChange={(e) => updateExperience(exp.id, 'endDate', e.target.value)}
+                    onChange={(value) => updateExperience(exp.id, 'endDate', value)}
                     disabled={exp.current}
                   />
                 </div>
