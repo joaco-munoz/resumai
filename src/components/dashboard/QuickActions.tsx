@@ -1,7 +1,7 @@
 
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileText, Plus, BarChart3, Search } from "lucide-react";
+import { FileText, Plus, BarChart3, Search, CheckCircle ,FolderOpen, Target} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export const QuickActions = () => {
@@ -30,7 +30,7 @@ export const QuickActions = () => {
           className="justify-start"
           variant="outline"
         >
-          <Search className="h-4 w-4 mr-2" />
+          <FolderOpen className="h-4 w-4 mr-2" />
           Ver Mis CVs
         </Button>
         
@@ -39,7 +39,7 @@ export const QuickActions = () => {
           className="justify-start"
           variant="outline"
         >
-          <BarChart3 className="h-4 w-4 mr-2" />
+          <CheckCircle className="h-4 w-4 mr-2" />
           Seguimiento
         </Button>
         
@@ -48,8 +48,8 @@ export const QuickActions = () => {
           className="justify-start"
           variant="outline"
         >
-          <Search className="h-4 w-4 mr-2" />
-          Buscar Trabajos
+          <Target className="h-4 w-4 mr-2" />
+          Match de ofertas
         </Button>
       </CardContent>
     </Card>
