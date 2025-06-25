@@ -76,12 +76,6 @@ export const MercadoPagoSubscription = ({ currentPlan, onPlanChange }: MercadoPa
               <CardTitle className="flex items-center gap-2">
                 Plan {currentPlan === 'pro' ? 'Pro' : 'Gratuito'}
               </CardTitle>
-              <CardDescription>
-                {currentPlan === 'pro' 
-                  ? 'Acceso completo a todas las funciones premium'
-                  : 'Actualiza a Pro para acceder a todas las funciones premium'
-                }
-              </CardDescription>
             </div>
           </div>
           
