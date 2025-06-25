@@ -10,7 +10,7 @@ interface CVPreviewProps {
 export const CVPreview = ({ cvData }: CVPreviewProps) => {
   return (
     <div className="bg-white rounded-lg shadow-lg p-8 max-w-3xl mx-auto font-stix">
-      <div className="space-y-4">
+      <div className="space-y-2">
         {/* Header - Harvard style centered */}
         <div className="text-center border-b border-gray-400 pb-4">
           <h1 className="text-3xl font-bold text-black mb-2">{cvData.personalInfo.fullName}</h1>
