@@ -1,10 +1,9 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Sparkles, Target, FileText, CheckCircle, Users, Zap, Star, Calendar, MoreHorizontal } from "lucide-react";
+import { Sparkles, Target, FileText, CheckCircle, Users, Zap, Star, Calendar, MoreHorizontal, ArrowRight } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -280,6 +279,89 @@ Ahorra horas adaptando tu currículum: nuestra plataforma usa IA para convertir 
                       <Button variant="outline" size="sm" disabled className="text-slate-400">Siguiente</Button>
                     </div>
                   </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Video Hero Section */}
+      <section className="py-20 bg-gradient-to-r from-slate-800/50 to-slate-900/50">
+        <div className="container mx-auto px-4">
+          <div className="grid lg:grid-cols-2 gap-12 items-center">
+            {/* Video Side */}
+            <div className="relative">
+              <div className="bg-white rounded-2xl shadow-2xl overflow-hidden transform hover:scale-105 transition-transform duration-300">
+                <div className="aspect-video bg-gradient-to-br from-blue-50 to-slate-100 flex items-center justify-center">
+                  <div className="text-center p-8">
+                    <div className="w-20 h-20 bg-blue-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 24 24">
+                        <path d="M8 5v14l11-7z"/>
+                      </svg>
+                    </div>
+                    <p className="text-slate-600 font-medium">Video Demo</p>
+                    <p className="text-sm text-slate-500 mt-1">Mira cómo funciona ResumAI</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Content Side */}
+            <div className="space-y-6">
+              <h2 className="text-4xl lg:text-5xl font-bold text-white leading-tight">
+                El camino más rápido
+                <br />
+                <span className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
+                  desde tu perfil hasta el trabajo
+                </span>
+              </h2>
+              
+              <p className="text-xl text-slate-300 leading-relaxed">
+                La mejor solución para crear y optimizar currículums, agilizar negociaciones, 
+                mejorar el cumplimiento normativo, optimizar flujos de trabajo y convertir más 
+                candidatos — todo dentro de una plataforma intuitiva.
+              </p>
+
+              <Button 
+                size="lg" 
+                className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 text-lg font-medium"
+                onClick={handleSignUpNavigation}
+              >
+                Explorar Más
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
+
+              {/* Feature highlights */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
+                <div className="text-center">
+                  <div className="flex items-center justify-center mb-3">
+                    <Zap className="h-6 w-6 text-blue-400" />
+                  </div>
+                  <h3 className="font-semibold text-white mb-2">Optimización Inteligente</h3>
+                  <p className="text-sm text-slate-400">
+                    Ve, edita y optimiza cualquier CV desde cualquier lugar. ¡Y la mejor parte es que es gratis!
+                  </p>
+                </div>
+                
+                <div className="text-center">
+                  <div className="flex items-center justify-center mb-3">
+                    <Target className="h-6 w-6 text-cyan-400" />
+                  </div>
+                  <h3 className="font-semibold text-white mb-2">Match Inteligente</h3>
+                  <p className="text-sm text-slate-400">
+                    Genera automáticamente análisis profesionales directamente desde cualquier oferta de trabajo.
+                  </p>
+                </div>
+                
+                <div className="text-center">
+                  <div className="flex items-center justify-center mb-3">
+                    <FileText className="h-6 w-6 text-blue-400" />
+                  </div>
+                  <h3 className="font-semibold text-white mb-2">Exportación Rápida</h3>
+                  <p className="text-sm text-slate-400">
+                    Aumenta la velocidad de aplicación e impulsa el impacto de ingresos con exportaciones totalmente integradas.
+                  </p>
                 </div>
               </div>
             </div>
