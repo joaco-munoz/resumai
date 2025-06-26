@@ -506,9 +506,8 @@ export default function CVsList() {
                       {!isMobile && (
                         <div className="grid grid-cols-12 gap-4 text-sm font-medium text-gray-500 dark:text-gray-400 border-b pb-3">
                           <div className="col-span-5">CV</div>
-                          <div className="col-span-2">Puntuación</div>
-                          <div className="col-span-2">Estado</div>
-                          <div className="col-span-2">Actualizado</div>
+                          <div className="col-span-3">Creado</div>
+                          <div className="col-span-3">Actualizado</div>
                           <div className="col-span-1"></div>
                         </div>
                       )}
