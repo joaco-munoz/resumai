@@ -14,7 +14,7 @@ export const features: Feature[] = [
   },
   {
     icon: <FileText className="h-8 w-8 text-blue-400" />,
-    title: "Exportación 1 clic",
+    title: "Exportación 1 click",
     description: "Descarga al instante en PDF y Word para postular en portales, compartir por correo o integrar con tu propio sistema."
   }
 ];
