@@ -14,6 +14,7 @@ import {
   Download,
   Trash2,
   User,
+  Star,
   Target
 } from "lucide-react";
 import {
@@ -60,6 +61,36 @@ export default function CVsList() {
   const [adaptationCV, setAdaptationCV] = useState<CV | null>(null);
   const [editingJobMatcherCV, setEditingJobMatcherCV] = useState<CV | null>(null);
   const [renamingCVId, setRenamingCVId] = useState<string | null>(null);
+
+  // State for company logo selection per CV
+  const [logoEditCvId, setLogoEditCvId] = useState<string | null>(null);
+  const [logoQuery, setLogoQuery] = useState<string>("");
+  const [logoSuggestions, setLogoSuggestions] = useState<{ name: string; logo: string; domain: string }[]>([]);
+  const [logoMap, setLogoMap] = useState<Record<string, string>>({});
+
+  // Fetch company suggestions similar to Kanban page
+  useEffect(() => {
+    const query = logoQuery.trim();
+    if (logoEditCvId === null || query.length < 2) {
+      setLogoSuggestions([]);
+      return;
+    }
+    const controller = new AbortController();
+    const timeout = setTimeout(async () => {
+      try {
+        const res = await fetch(`https://autocomplete.clearbit.com/v1/companies/suggest?query=${encodeURIComponent(query)}`, { signal: controller.signal });
+        if (!res.ok) return;
+        const data = await res.json();
+        setLogoSuggestions(data.slice(0, 8));
+      } catch (err) {
+        console.error('Error fetching company suggestions', err);
+      }
+    }, 300);
+    return () => {
+      clearTimeout(timeout);
+      controller.abort();
+    };
+  }, [logoQuery, logoEditCvId]);
   const [renamingTitle, setRenamingTitle] = useState<string>("");
   const [savingRename, setSavingRename] = useState(false);
   const isMobile = useIsMobile();
@@ -287,13 +318,42 @@ export default function CVsList() {
     const isReport = isJobReport(cv);
     
     return (
-      <div key={cv.id} className={`${isMobile ? 'space-y-3 p-4 border rounded-lg' : 'grid grid-cols-12 gap-4 items-center py-3'} border-b border-gray-100 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800 rounded-lg transition-colors`}>
+      <div key={cv.id} className={`${isMobile ? 'space-y-3 p-4 border rounded-lg' : 'grid grid-cols-12 gap-4 items-center py-3'} border-b border-gray-100 dark:border-gray-700 bg-white hover:bg-gray-50 dark:bg-gray-900 dark:hover:bg-gray-800 rounded-lg transition-colors`}>
         <div className={`${isMobile ? 'w-full' : 'col-span-5'} flex items-center gap-3`}>
-          <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${isReport ? 'bg-yellow-100 dark:bg-yellow-900' : 'bg-blue-100 dark:bg-blue-900'} shrink-0`}>
-            {isReport ? (
-              <Target className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
+          <div className={`w-10 h-10 rounded-lg flex items-center justify-center bg-gray-100 dark:bg-gray-800 shrink-0 relative`}>
+            {cv.cv_source === 'editor' ? (
+              <Star className="h-5 w-5 text-yellow-400" />
+            ) : logoEditCvId === cv.id ? (
+              <div className="absolute inset-0 z-50 bg-white p-2 rounded shadow-lg w-64" onClick={(e)=>e.stopPropagation()}>
+                <Input
+                  placeholder="Buscar empresa..."
+                  value={logoQuery}
+                  onChange={(e)=>setLogoQuery(e.target.value)}
+                  className="mb-2 h-8"
+                  autoFocus
+                />
+                <div className="max-h-40 overflow-y-auto space-y-1">
+                  {logoSuggestions.map(s=> (
+                    <button key={s.domain} className="flex items-center w-full px-2 py-1 bg-white dark:bg-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800 text-left"
+                      onClick={()=>{
+                        setLogoMap(prev=>({...prev,[cv.id]:s.logo}));
+                        setLogoEditCvId(null);
+                        setLogoQuery("");
+                      }}>
+                      <img src={s.logo} alt={s.name} className="w-5 h-5 mr-2 rounded" />
+                      <span className="text-sm truncate">{s.name}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : logoMap[cv.id] ? (
+              <Button variant="ghost" size="icon" onClick={(e)=>{e.stopPropagation(); setLogoEditCvId(cv.id); setLogoQuery('');}}>
+                <img src={logoMap[cv.id]} alt={cv.title} className="w-8 h-8 object-contain" />
+              </Button>
             ) : (
-              <FileText className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+              <Button variant="ghost" size="icon" onClick={(e)=>{e.stopPropagation(); setLogoEditCvId(cv.id);}}>
+                <Plus className="h-4 w-4" />
+              </Button>
             )}
           </div>
           <div className="min-w-0 flex-1">
@@ -315,9 +375,11 @@ export default function CVsList() {
             ) : (
               <h3 className="font-medium text-gray-900 dark:text-gray-100 truncate">{cv.title}</h3>
             )}
-            <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
-              {isReport ? "Informe de compatibilidad" : "CV adaptado"}
-            </p>
+            {isReport ? (
+              <p className="text-sm text-gray-500 dark:text-gray-400 truncate">Informe de compatibilidad</p>
+            ) : cv.cv_source === 'job_matcher' && (
+              <p className="text-sm text-gray-500 dark:text-gray-400 truncate">CV adaptado</p>
+            )}
           </div>
         </div>
         
