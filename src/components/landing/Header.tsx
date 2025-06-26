@@ -9,7 +9,7 @@ interface HeaderProps {
 
 export const Header = ({ onScrollToSection, onAuthNavigation, onSignUpNavigation }: HeaderProps) => {
   return (
-    <header className="border-b border-slate-700/30 mx-4 bg-slate-900/95 backdrop-blur-md sticky top-2 z-50 rounded-3xl">
+    <header className="border-b shadow-lg border-slate-700/30 mx-4 bg-slate-900/95 backdrop-blur-md sticky top-2 z-50 rounded-3xl">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         {/* Logo */}
         <div className="flex items-center gap-2">
