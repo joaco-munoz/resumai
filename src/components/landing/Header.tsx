@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { FileText } from "lucide-react";
 
@@ -10,7 +11,7 @@ interface HeaderProps {
 export const Header = ({ onScrollToSection, onAuthNavigation, onSignUpNavigation }: HeaderProps) => {
   return (
     <header className="border-b shadow-lg border-slate-700/30 mx-4 bg-slate-900/95 backdrop-blur-md sticky top-2 z-50 rounded-3xl">
-      <div className="w-full px-4 h-16 flex items-center justify-between">
+      <div className="w-full px-4 h-16 flex items-center">
         {/* Logo */}
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center">
@@ -19,8 +20,8 @@ export const Header = ({ onScrollToSection, onAuthNavigation, onSignUpNavigation
           <span className="font-bold text-2xl text-white">ResumAI</span>
         </div>
         
-        {/* Navigation */}
-        <nav className="hidden md:flex items-center gap-8">
+        {/* Navigation - moved to center with flex-1 and centered */}
+        <nav className="hidden md:flex items-center gap-8 flex-1 justify-center">
           <Button 
             variant="ghost" 
             size="sm" 
@@ -47,8 +48,8 @@ export const Header = ({ onScrollToSection, onAuthNavigation, onSignUpNavigation
           </Button>
         </nav>
 
-        {/* Auth Buttons */}
-        <div className="flex items-center gap-3">
+        {/* Auth Buttons - reduced gap */}
+        <div className="flex items-center gap-2">
           <Button 
             onClick={onAuthNavigation} 
             variant="ghost"
