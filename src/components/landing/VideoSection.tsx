@@ -33,7 +33,7 @@ export const VideoSection = forwardRef<HTMLDivElement, VideoSectionProps>(({ onS
             <div className="mb-4">
               <div className="flex justify-between items-center">
                 <h3 className="font-bold text-2xl text-slate-800">Resumen Profesional</h3>
-                <Button size="sm" className={`font-semibold shrink-0 transition-all ${isOptimized ? 'bg-slate-600 hover:bg-slate-700 text-white' : 'bg-gradient-to-r from-purple-500 to-indigo-500 text-white'}`} onClick={handleOptimizeToggle}>
+                <Button size="sm" className={`font-semibold shrink-0 transition-all ${isOptimized ? 'bg-slate-600 hover:bg-slate-700 text-white' : 'bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white'}`} onClick={handleOptimizeToggle}>
                   {isOptimized ? <RotateCcw className="mr-2 h-4 w-4" /> : <Sparkles className="mr-2 h-4 w-4" />}
                   {isOptimized ? 'Ver Original' : 'Optimizar Resumen'}
                 </Button>
@@ -60,7 +60,7 @@ export const VideoSection = forwardRef<HTMLDivElement, VideoSectionProps>(({ onS
             </p>
             <Button 
               size="lg" 
-              className="bg-gradient-to-r from-blue-500 to-cyan-400 text-white font-bold text-lg hover:from-blue-600 hover:to-cyan-500 transition-all duration-300 transform hover:scale-105 shadow-lg"
+              className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-bold text-lg hover:from-blue-700 hover:to-cyan-700 transition-all duration-300 transform hover:scale-105 shadow-lg"
               onClick={onSignUpNavigation}
             >
               Crear CV con IA
