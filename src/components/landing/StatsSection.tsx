@@ -1,3 +1,4 @@
+
 import { Badge } from "@/components/ui/badge";
 import { forwardRef } from "react";
 import { CheckCircle, AlertCircle, CheckCircle2 } from "lucide-react";
@@ -31,20 +32,20 @@ export const StatsSection = forwardRef<HTMLDivElement>((props, ref) => {
           
           {/* Right Side: Visual Display */}
           <div className="lg:w-1/2">
-            <div className="bg-white/95 backdrop-blur-lg rounded-xl shadow-2xl p-6 border border-blue-200/20 max-w-lg mx-auto">
+            <div className="bg-white/95 backdrop-blur-lg rounded-xl shadow-2xl p-6 border border-blue-200/20 max-w-lg mx-auto hover:shadow-3xl hover:scale-105 transition-all duration-300">
               {/* Header */}
               <div className="flex justify-between items-center mb-4">
-                <h4 className="font-bold text-xl text-blue-950">Análisis de Compatibilidad</h4>
-                <Badge variant="secondary" className="bg-blue-100 text-blue-800 font-semibold">Data Analyst</Badge>
+                <h4 className="font-bold text-xl text-blue-950 hover:text-blue-800 transition-colors duration-200">Análisis de Compatibilidad</h4>
+                <Badge variant="secondary" className="bg-blue-100 text-blue-800 font-semibold hover:bg-blue-200 hover:scale-110 transition-all duration-200 cursor-default">Data Analyst</Badge>
               </div>
 
               {/* Compatibility Score & Progress Bar */}
               <div className="text-center my-6">
-                <p className="text-slate-500 mb-2 text-sm">Compatibilidad General</p>
-                <div className="relative w-40 h-40 mx-auto">
+                <p className="text-slate-500 mb-2 text-sm hover:text-slate-700 transition-colors duration-200">Compatibilidad General</p>
+                <div className="relative w-40 h-40 mx-auto hover:scale-110 transition-transform duration-300 cursor-default">
                   <svg className="w-full h-full" viewBox="0 0 36 36">
                     <path
-                      className="text-blue-100"
+                      className="text-blue-100 hover:text-blue-200 transition-colors duration-300"
                       d="M18 2.0845
                         a 15.9155 15.9155 0 0 1 0 31.831
                         a 15.9155 15.9155 0 0 1 0 -31.831"
@@ -53,7 +54,7 @@ export const StatsSection = forwardRef<HTMLDivElement>((props, ref) => {
                       strokeWidth="3"
                     />
                     <path
-                      className="text-blue-600"
+                      className="text-blue-600 hover:text-blue-700 transition-colors duration-300"
                       strokeDasharray="87, 100"
                       d="M18 2.0845
                         a 15.9155 15.9155 0 0 1 0 31.831
@@ -65,29 +66,44 @@ export const StatsSection = forwardRef<HTMLDivElement>((props, ref) => {
                     />
                   </svg>
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <span className="text-5xl font-bold text-blue-900">87%</span>
+                    <span className="text-5xl font-bold text-blue-900 hover:text-blue-800 transition-colors duration-200">87%</span>
                   </div>
                 </div>
               </div>
               
               {/* Strengths */}
               <div className="mb-6">
-                <h5 className="font-semibold text-blue-950 mb-3 flex items-center"><CheckCircle2 className="text-green-500 mr-2" size={20} /> Fortalezas Detectadas</h5>
+                <h5 className="font-semibold text-blue-950 mb-3 flex items-center hover:text-blue-800 transition-colors duration-200">
+                  <CheckCircle2 className="text-green-500 mr-2 hover:text-green-600 hover:scale-110 transition-all duration-200" size={20} /> 
+                  Fortalezas Detectadas
+                </h5>
                 <ul className="space-y-2 text-slate-700">
-                  <li className="flex items-center text-sm"><CheckCircle className="text-green-500 mr-2 flex-shrink-0" size={16} /> Experiencia en SQL y bases de datos relacionales.</li>
-                  <li className="flex items-center text-sm"><CheckCircle className="text-green-500 mr-2 flex-shrink-0" size={16} /> Conocimientos avanzados en Python para análisis.</li>
-                  <li className="flex items-center text-sm"><CheckCircle className="text-green-500 mr-2 flex-shrink-0" size={16} /> Colaboración con equipos multidisciplinarios.</li>
+                  <li className="flex items-center text-sm hover:text-slate-900 hover:bg-green-50 p-2 rounded-lg transition-all duration-200 cursor-default">
+                    <CheckCircle className="text-green-500 mr-2 flex-shrink-0 hover:text-green-600 hover:scale-110 transition-all duration-200" size={16} /> 
+                    Experiencia en SQL y bases de datos relacionales.
+                  </li>
+                  <li className="flex items-center text-sm hover:text-slate-900 hover:bg-green-50 p-2 rounded-lg transition-all duration-200 cursor-default">
+                    <CheckCircle className="text-green-500 mr-2 flex-shrink-0 hover:text-green-600 hover:scale-110 transition-all duration-200" size={16} /> 
+                    Conocimientos avanzados en Python para análisis.
+                  </li>
+                  <li className="flex items-center text-sm hover:text-slate-900 hover:bg-green-50 p-2 rounded-lg transition-all duration-200 cursor-default">
+                    <CheckCircle className="text-green-500 mr-2 flex-shrink-0 hover:text-green-600 hover:scale-110 transition-all duration-200" size={16} /> 
+                    Colaboración con equipos multidisciplinarios.
+                  </li>
                 </ul>
               </div>
 
               {/* Missing Keywords */}
               <div>
-                <h5 className="font-semibold text-blue-950 mb-3 flex items-center"><AlertCircle className="text-amber-500 mr-2" size={20} /> Keywords Faltantes</h5>
+                <h5 className="font-semibold text-blue-950 mb-3 flex items-center hover:text-blue-800 transition-colors duration-200">
+                  <AlertCircle className="text-amber-500 mr-2 hover:text-amber-600 hover:scale-110 transition-all duration-200" size={20} /> 
+                  Keywords Faltantes
+                </h5>
                 <div className="flex flex-wrap gap-2">
-                  <Badge variant="outline" className="text-amber-800 border-amber-300 bg-amber-50/80">Power BI</Badge>
-                  <Badge variant="outline" className="text-amber-800 border-amber-300 bg-amber-50/80">Tableau</Badge>
-                  <Badge variant="outline" className="text-amber-800 border-amber-300 bg-amber-50/80">KPIs</Badge>
-                  <Badge variant="outline" className="text-amber-800 border-amber-300 bg-amber-50/80">Dashboards</Badge>
+                  <Badge variant="outline" className="text-amber-800 border-amber-300 bg-amber-50/80 hover:bg-amber-100 hover:border-amber-400 hover:scale-105 transition-all duration-200 cursor-default">Power BI</Badge>
+                  <Badge variant="outline" className="text-amber-800 border-amber-300 bg-amber-50/80 hover:bg-amber-100 hover:border-amber-400 hover:scale-105 transition-all duration-200 cursor-default">Tableau</Badge>
+                  <Badge variant="outline" className="text-amber-800 border-amber-300 bg-amber-50/80 hover:bg-amber-100 hover:border-amber-400 hover:scale-105 transition-all duration-200 cursor-default">KPIs</Badge>
+                  <Badge variant="outline" className="text-amber-800 border-amber-300 bg-amber-50/80 hover:bg-amber-100 hover:border-amber-400 hover:scale-105 transition-all duration-200 cursor-default">Dashboards</Badge>
                 </div>
               </div>
             </div>
