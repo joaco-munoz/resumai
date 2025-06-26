@@ -19,9 +19,20 @@ const optimizedText = `Desarrollador Front-end con 4 años de experiencia constr
 
 export const VideoSection = forwardRef<HTMLDivElement, VideoSectionProps>(({ onSignUpNavigation }: VideoSectionProps, ref) => {
   const [isOptimized, setIsOptimized] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleOptimizeToggle = () => {
-    setIsOptimized(!isOptimized);
+    if (isLoading) return;
+
+    if (!isOptimized) {
+      setIsLoading(true);
+      setTimeout(() => {
+        setIsOptimized(true);
+        setIsLoading(false);
+      }, 1500); // Simulate AI processing time
+    } else {
+      setIsOptimized(false);
+    }
   };
 
   return (
@@ -33,14 +44,20 @@ export const VideoSection = forwardRef<HTMLDivElement, VideoSectionProps>(({ onS
             <div className="mb-4">
               <div className="flex justify-between items-center">
                 <h3 className="font-bold text-2xl text-slate-800">Resumen Profesional</h3>
-                <Button size="sm" className={`font-semibold shrink-0 transition-all ${isOptimized ? 'bg-slate-600 hover:bg-slate-700 text-white' : 'bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white'}`} onClick={handleOptimizeToggle}>
-                  {isOptimized ? <RotateCcw className="mr-2 h-4 w-4" /> : <Sparkles className="mr-2 h-4 w-4" />}
-                  {isOptimized ? 'Ver Original' : 'Optimizar Resumen'}
+                <Button size="sm" className={`font-semibold shrink-0 transition-all w-40 ${isOptimized ? 'bg-slate-600 hover:bg-slate-700 text-white' : 'bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white'}`} onClick={handleOptimizeToggle} disabled={isLoading}>
+                  {isLoading ? (
+                    <><svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Optimizando...</>
+                  ) : (
+                    <>
+                      {isOptimized ? <RotateCcw className="mr-1 h-4 w-5" /> : <Sparkles className="mr-1 h-4 w-5" />}
+                      {isOptimized ? 'Ver Original' : 'Optimizar Resumen'}
+                    </>
+                  )}
                 </Button>
               </div>
               <p className="text-slate-500">Un resumen conciso que destaque tus fortalezas principales.</p>
             </div>
-            <div className="relative bg-slate-50 rounded-lg p-4 border border-slate-200 text-slate-700 transition-all duration-300 min-h-[18rem]">
+            <div className={`relative bg-slate-50 rounded-lg p-8 border border-slate-200 text-slate-700 transition-all duration-300 min-h-[18rem] ${isLoading ? 'animate-pulse' : ''}`}>
               <p className="whitespace-pre-wrap pb-6">
                 {isOptimized ? optimizedText.trim() : originalText.trim()}
               </p>
