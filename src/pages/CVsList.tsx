@@ -316,7 +316,7 @@ export default function CVsList() {
               <h3 className="font-medium text-gray-900 dark:text-gray-100 truncate">{cv.title}</h3>
             )}
             <p className="text-sm text-gray-500 dark:text-gray-400 truncate">
-              {isReport ? "Informe de compatibilidad" : "CV adaptado"} - Creado {formatDate(cv.created_at)}
+              {isReport ? "Informe de compatibilidad" : "CV adaptado"}
             </p>
           </div>
         </div>
@@ -384,19 +384,12 @@ export default function CVsList() {
           </div>
         ) : (
           <>
-            <div className="col-span-2">
-              <Badge className={`${getScoreColor(cv.ai_score)} border-0`}>
-                {cv.ai_score ? `${cv.ai_score}%` : "Sin evaluar"}
-              </Badge>
+            <div className="col-span-3 flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400">
+              <Calendar className="h-4 w-4" />
+              {formatDate(cv.created_at)}
             </div>
             
-            <div className="col-span-2">
-              <Badge className={`${getStatusColor(cv.status)} border-0`}>
-                {getStatusLabel(cv.status)}
-              </Badge>
-            </div>
-            
-            <div className="col-span-2 flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400">
+            <div className="col-span-3 flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400">
               <Calendar className="h-4 w-4" />
               {formatDate(cv.last_updated || cv.created_at)}
             </div>
@@ -589,9 +582,8 @@ export default function CVsList() {
                       {!isMobile && (
                         <div className="grid grid-cols-12 gap-4 text-sm font-medium text-gray-500 dark:text-gray-400 border-b pb-3">
                           <div className="col-span-5">CV / Informe</div>
-                          <div className="col-span-2">Puntuación</div>
-                          <div className="col-span-2">Estado</div>
-                          <div className="col-span-2">Actualizado</div>
+                          <div className="col-span-3">Creado</div>
+                          <div className="col-span-3">Actualizado</div>
                           <div className="col-span-1"></div>
                         </div>
                       )}
