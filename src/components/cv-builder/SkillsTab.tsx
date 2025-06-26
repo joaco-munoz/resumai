@@ -28,7 +28,7 @@ export const SkillsTab = ({
       <CardHeader>
         <CardTitle>Habilidades</CardTitle>
         <CardDescription>
-          Lista tus habilidades técnicas y profesionales más relevantes
+        Añade habilidades medibles—herramientas, métodos y soft skills—para demostrar tu expertise y potenciar el match.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">

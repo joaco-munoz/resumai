@@ -69,7 +69,7 @@ export const EducationTab = ({
           </Button>
         </CardTitle>
         <CardDescription>
-          Incluye tu formación académica más relevante. Arrastra para reordenar.
+        Destaca la formación académica más reciente y relevante para tu perfil.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">

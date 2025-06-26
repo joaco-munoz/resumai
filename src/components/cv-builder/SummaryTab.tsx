@@ -48,7 +48,7 @@ export const SummaryTab = ({
           </AIButton>
         </CardTitle>
         <CardDescription>
-          Un resumen conciso que destaque tus fortalezas principales
+        Tu Resumen Profesional es tu carta de presentación en 2-3 líneas: escribe tu experiencia y logros con tus propias palabras, y ResumAI los perfeccionará al instante.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -57,7 +57,7 @@ export const SummaryTab = ({
             value={cvData.summary}
             onChange={(e) => handleTextChange(e.target.value)}
             rows={4}
-            placeholder="Describe tu perfil profesional, experiencia clave y objetivos..."
+            placeholder="Ej.: Ingeniera de datos con 6 años de experiencia en BI y Python; lideré proyectos que elevaron la eficiencia un 20 % y busco impulsar decisiones estratégicas."
             maxLength={MAX_CHARACTERS}
           />
           <div className="flex justify-between items-center text-xs">

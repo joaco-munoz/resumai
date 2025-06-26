@@ -7,7 +7,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { DatePickerEs } from "@/components/ui/date-picker-es";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Trash2, ChevronUp, ChevronDown, GripVertical } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Plus, Trash2, ChevronUp, ChevronDown, GripVertical, HelpCircle } from "lucide-react";
 import AIButton from "@/components/AIButton";
 import { CVData } from "@/types/cv";
 
@@ -134,7 +135,19 @@ export const DraggableExperienceItem = ({
               </div>
               
               <div className="space-y-2">
-                <Label>Descripción</Label>
+                <div className="flex items-center gap-1">
+                  <Label>Descripción</Label>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <HelpCircle className="h-4 w-4 text-gray-400 cursor-help" />
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-xs">
+                        <p>Agrega logros medibles. Ej: Aumenté las ventas en 15 %.</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
                 {exp.description.split('\n').map((line, idx) => (
                   <div key={idx} className="space-y-1">
                     <div className="flex gap-2 items-start">

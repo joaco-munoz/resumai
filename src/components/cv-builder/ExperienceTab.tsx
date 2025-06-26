@@ -73,7 +73,7 @@ export const ExperienceTab = ({
           </Button>
         </CardTitle>
         <CardDescription>
-          Detalla tu experiencia profesional más relevante. Arrastra para reordenar.
+        Registra tus cargos más recientes, funciones clave y logros cuantificables que demuestren tu impacto profesional.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
