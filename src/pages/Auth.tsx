@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Sparkles, Mail, Github, ArrowLeft } from "lucide-react";
+import { Sparkles, Mail, Github, ArrowLeft, Rocket, Search, BadgeCheck, FileText } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
@@ -26,11 +26,25 @@ const Auth = () => {
   const [fadeClass, setFadeClass] = useState("opacity-100");
 
   const tips = [
-    "Optimiza tu CV en 2 min",
-    "Compara con la oferta en un clic", 
-    "ResumAI habla ATS por ti",
-    "Genera CVs personalizados al instante"
-  ];
+    {
+      text: "Despega tu carrera con un CV turbo-cargado por IA",
+      icon: Rocket,
+    },
+    {
+      text: "Explora ofertas y encuentra tu match perfecto en segundos",
+      icon: Search,
+    },
+    {
+      text: "Traspasa los filtros ATS con tu pase VIP ResumAI",
+      icon: BadgeCheck,
+    },
+    {
+      text: "Aterriza entrevistas con versiones ilimitadas de tu CV",
+      icon: FileText,
+    },
+  ] as const;
+
+  const CurrentIcon = tips[currentTipIndex].icon;
 
   useEffect(() => {
     setIsSignUp(isSignUpFromUrl);
@@ -241,13 +255,13 @@ const Auth = () => {
                   className="border-slate-600 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
                 />
                 <Label htmlFor="terms" className="text-sm text-slate-400">
-                  Agree to our{" "}
+                  Acepto los{" "}
                   <a href="#" className="text-blue-400 hover:text-blue-300 underline">
-                    Terms of Service
+                    Términos de Servicio
                   </a>{" "}
-                  and{" "}
+                  y la{" "}
                   <a href="#" className="text-blue-400 hover:text-blue-300 underline">
-                    Privacy Policy
+                    Política de Privacidad
                   </a>
                 </Label>
               </div>
@@ -287,13 +301,13 @@ const Auth = () => {
         {/* Rotating Tips */}
         <div className="relative z-10 text-center px-8 max-w-md">
           <div className="mb-6">
-            <Sparkles className="h-16 w-16 text-white/80 mx-auto mb-4" />
+            <CurrentIcon className="h-16 w-16 text-white/80 mx-auto mb-4" />
           </div>
           
           <h2 
             className={`text-3xl font-bold text-white mb-4 transition-opacity duration-300 ${fadeClass}`}
           >
-            {tips[currentTipIndex]}
+            {tips[currentTipIndex].text}
           </h2>
           
           <div className="flex justify-center space-x-2 mt-6">
