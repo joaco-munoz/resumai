@@ -1,3 +1,4 @@
+
 import { forwardRef } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Feature } from "../../types/landing";
@@ -20,7 +21,7 @@ export const FeaturesSection = forwardRef<HTMLDivElement, FeaturesSectionProps>(
                 <div className="mx-auto mb-4 p-3 bg-slate-700/50 rounded-2xl w-fit">
                   {feature.icon}
                 </div>
-                <CardTitle className="text-xl text-white">{feature.title}</CardTitle>
+                <CardTitle className="text-lg text-white">{feature.title}</CardTitle>
               </CardHeader>
               <CardContent>
                 <CardDescription className="text-center text-base text-slate-300">

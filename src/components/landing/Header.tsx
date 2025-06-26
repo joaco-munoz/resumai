@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { FileText } from "lucide-react";
 
@@ -16,7 +17,7 @@ export const Header = ({ onScrollToSection, onAuthNavigation, onSignUpNavigation
           <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center">
             <FileText className="h-5 w-5 text-white" />
           </div>
-          <span className="font-bold text-2xl text-white">ResumAI</span>
+          <span className="font-bold text-xl text-white">ResumAI</span>
         </div>
         
         {/* Navigation */}
@@ -24,7 +25,7 @@ export const Header = ({ onScrollToSection, onAuthNavigation, onSignUpNavigation
           <Button 
             variant="ghost" 
             size="sm" 
-            className="text-slate-300 hover:text-white hover:bg-slate-800/50 font-medium text-lg" 
+            className="text-slate-300 hover:text-white hover:bg-slate-800/50 font-medium text-base" 
             onClick={() => onScrollToSection("creador-cv")}
           >
             Creador CV
@@ -32,7 +33,7 @@ export const Header = ({ onScrollToSection, onAuthNavigation, onSignUpNavigation
           <Button 
             variant="ghost" 
             size="sm" 
-            className="text-slate-300 hover:text-white hover:bg-slate-800/50 font-medium text-lg" 
+            className="text-slate-300 hover:text-white hover:bg-slate-800/50 font-medium text-base" 
             onClick={() => onScrollToSection("match-de-ofertas")}
           >
             Match de Ofertas
@@ -40,7 +41,7 @@ export const Header = ({ onScrollToSection, onAuthNavigation, onSignUpNavigation
           <Button 
             variant="ghost" 
             size="sm" 
-            className="text-slate-300 hover:text-white hover:bg-slate-800/50 font-medium text-lg" 
+            className="text-slate-300 hover:text-white hover:bg-slate-800/50 font-medium text-base" 
             onClick={() => onScrollToSection("planes-simples")}
           >
             Precios
@@ -53,14 +54,14 @@ export const Header = ({ onScrollToSection, onAuthNavigation, onSignUpNavigation
             onClick={onAuthNavigation} 
             variant="ghost"
             size="sm" 
-            className="text-slate-300 hover:text-white hover:bg-slate-800/50 font-medium text-lg"
+            className="text-slate-300 hover:text-white hover:bg-slate-800/50 font-medium text-base"
           >
             Iniciar Sesión
           </Button>
           <Button 
             onClick={onSignUpNavigation} 
             size="sm" 
-            className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-medium px-6 py-2 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 text-lg"
+            className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-medium px-6 py-2 rounded-full shadow-lg hover:shadow-xl transition-all duration-200 text-base"
           >
             Regístrate
           </Button>

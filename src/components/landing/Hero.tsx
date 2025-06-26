@@ -1,3 +1,4 @@
+
 import { forwardRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,25 +13,25 @@ export const Hero = forwardRef<HTMLDivElement, HeroProps>(({ onSignUpNavigation 
     <section id="empieza-gratis" ref={ref} className="relative py-20 overflow-hidden">
       <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-cyan-600/10 animate-pulse"></div>
       <div className="container mx-auto px-4 text-center relative z-10">
-        <Badge variant="secondary" className="mb-6 animate-fade-in bg-slate-800 text-blue-400 border-slate-700 text-lg">
+        <Badge variant="secondary" className="mb-6 animate-fade-in bg-slate-800 text-blue-400 border-slate-700">
           <Sparkles className="h-4 w-4 mr-2" />
           Potenciado por IA Avanzada
         </Badge>
         
-        <h1 className="text-5xl md:text-7xl font-bold mb-6 animate-fade-in text-white">
+        <h1 className="text-4xl md:text-6xl font-bold mb-6 animate-fade-in text-white">
           Crea CVs que se adaptan como tú
           <br />
           <span className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">🧬</span>
         </h1>
         
-        <p className="text-xl text-slate-300 mb-8 max-w-3xl mx-auto animate-fade-in">
+        <p className="text-lg md:text-xl text-slate-300 mb-8 max-w-3xl mx-auto animate-fade-in">
           Ahorra horas adaptando tu currículum: nuestra plataforma usa IA para convertir tus datos reales en CVs listos para superar filtros y destacar en cada oferta.
         </p>
         
         <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12 animate-fade-in">
           <Button 
             size="lg" 
-            className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-lg px-8 py-4 text-white" 
+            className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-base px-8 py-4 text-white" 
             onClick={onSignUpNavigation}
           >
             Empieza gratis
@@ -53,7 +54,7 @@ export const Hero = forwardRef<HTMLDivElement, HeroProps>(({ onSignUpNavigation 
                 {/* Header with title and icon */}
                 <div className="flex items-center gap-3 mb-8">
                   <FileText className="h-8 w-8 text-slate-600" />
-                  <h2 className="text-2xl font-bold text-slate-800">Currículums</h2>
+                  <h2 className="text-xl font-bold text-slate-800">Currículums</h2>
                 </div>
 
                 {/* Table header */}
@@ -74,19 +75,19 @@ export const Hero = forwardRef<HTMLDivElement, HeroProps>(({ onSignUpNavigation 
                         <FileText className="h-6 w-6 text-blue-600" />
                       </div>
                       <div>
-                        <div className="font-semibold text-slate-800">CV - Desarrollador Frontend</div>
-                        <div className="text-sm text-slate-500">Creado hace 5 días</div>
+                        <div className="font-semibold text-slate-800 text-sm">CV - Desarrollador Frontend</div>
+                        <div className="text-xs text-slate-500">Creado hace 5 días</div>
                       </div>
                     </div>
                     <div className="text-center">
-                      <Badge className="bg-green-100 text-green-700 hover:bg-green-100">85%</Badge>
+                      <Badge className="bg-green-100 text-green-700 hover:bg-green-100 text-xs">85%</Badge>
                     </div>
                     <div className="text-center">
-                      <Badge className="bg-green-100 text-green-700 hover:bg-green-100">Activo</Badge>
+                      <Badge className="bg-green-100 text-green-700 hover:bg-green-100 text-xs">Activo</Badge>
                     </div>
                     <div className="text-center flex items-center justify-center gap-2">
                       <Calendar className="h-4 w-4 text-slate-400" />
-                      <span className="text-sm text-slate-600">hace 2 días</span>
+                      <span className="text-xs text-slate-600">hace 2 días</span>
                     </div>
                     <div className="text-center">
                       <Button variant="ghost" size="sm">
@@ -102,19 +103,19 @@ export const Hero = forwardRef<HTMLDivElement, HeroProps>(({ onSignUpNavigation 
                         <FileText className="h-6 w-6 text-blue-600" />
                       </div>
                       <div>
-                        <div className="font-semibold text-slate-800">CV - Data Analyst</div>
-                        <div className="text-sm text-slate-500">Creado hace 12 días</div>
+                        <div className="font-semibold text-slate-800 text-sm">CV - Data Analyst</div>
+                        <div className="text-xs text-slate-500">Creado hace 12 días</div>
                       </div>
                     </div>
                     <div className="text-center">
-                      <Badge className="bg-green-100 text-green-700 hover:bg-green-100">92%</Badge>
+                      <Badge className="bg-green-100 text-green-700 hover:bg-green-100 text-xs">92%</Badge>
                     </div>
                     <div className="text-center">
-                      <Badge className="bg-green-100 text-green-700 hover:bg-green-100">Activo</Badge>
+                      <Badge className="bg-green-100 text-green-700 hover:bg-green-100 text-xs">Activo</Badge>
                     </div>
                     <div className="text-center flex items-center justify-center gap-2">
                       <Calendar className="h-4 w-4 text-slate-400" />
-                      <span className="text-sm text-slate-600">hace 8 días</span>
+                      <span className="text-xs text-slate-600">hace 8 días</span>
                     </div>
                     <div className="text-center">
                       <Button variant="ghost" size="sm">
@@ -130,19 +131,19 @@ export const Hero = forwardRef<HTMLDivElement, HeroProps>(({ onSignUpNavigation 
                         <FileText className="h-6 w-6 text-blue-600" />
                       </div>
                       <div>
-                        <div className="font-semibold text-slate-800">CV - Product Manager</div>
-                        <div className="text-sm text-slate-500">Creado hace 20 días</div>
+                        <div className="font-semibold text-slate-800 text-sm">CV - Product Manager</div>
+                        <div className="text-xs text-slate-500">Creado hace 20 días</div>
                       </div>
                     </div>
                     <div className="text-center">
-                      <Badge className="bg-yellow-100 text-yellow-700 hover:bg-yellow-100">78%</Badge>
+                      <Badge className="bg-yellow-100 text-yellow-700 hover:bg-yellow-100 text-xs">78%</Badge>
                     </div>
                     <div className="text-center">
-                      <Badge className="bg-slate-100 text-slate-600 hover:bg-slate-100">Borrador</Badge>
+                      <Badge className="bg-slate-100 text-slate-600 hover:bg-slate-100 text-xs">Borrador</Badge>
                     </div>
                     <div className="text-center flex items-center justify-center gap-2">
                       <Calendar className="h-4 w-4 text-slate-400" />
-                      <span className="text-sm text-slate-600">hace 15 días</span>
+                      <span className="text-xs text-slate-600">hace 15 días</span>
                     </div>
                     <div className="text-center">
                       <Button variant="ghost" size="sm">

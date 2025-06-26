@@ -1,3 +1,4 @@
+
 import { forwardRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -12,37 +13,37 @@ export const PricingSection = forwardRef<HTMLDivElement, PricingSectionProps>(({
     <section id="planes-simples" ref={ref} className="py-20 bg-blue-950/80 backdrop-blur-sm">
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
-          <h2 className="text-4xl font-bold mb-4 text-white">Planes Simples</h2>
-          <p className="text-xl text-slate-300">Prueba gratis hoy, amplía tu plan a tu ritmo.</p>
+          <h2 className="text-3xl md:text-4xl font-bold mb-4 text-white">Planes Simples</h2>
+          <p className="text-lg md:text-xl text-slate-300">Prueba gratis hoy, amplía tu plan a tu ritmo.</p>
         </div>
         
         <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
           {/* Free Plan */}
           <Card className="border-slate-700 bg-slate-800/50">
             <CardHeader className="text-center">
-              <CardTitle className="text-2xl text-white">Gratis</CardTitle>
-              <div className="text-4xl font-bold text-blue-400 mt-4">$0</div>
-              <CardDescription className="text-slate-300">Perfecto para empezar</CardDescription>
+              <CardTitle className="text-xl text-white">Gratis</CardTitle>
+              <div className="text-3xl font-bold text-blue-400 mt-4">$0</div>
+              <CardDescription className="text-slate-300 text-base">Perfecto para empezar</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center gap-3">
                 <CheckCircle className="h-5 w-5 text-cyan-400" />
-                <span className="text-slate-300">1 CV optimizado con IA</span>
+                <span className="text-slate-300 text-base">1 CV optimizado con IA</span>
               </div>
               <div className="flex items-center gap-3">
                 <CheckCircle className="h-5 w-5 text-cyan-400" />
-                <span className="text-slate-300">1 exportación PDF sin marca de agua</span>
+                <span className="text-slate-300 text-base">1 exportación PDF sin marca de agua</span>
               </div>
               <div className="flex items-center gap-3">
                 <CheckCircle className="h-5 w-5 text-cyan-400" />
-                <span className="text-slate-300">5 mejoras inteligentes al mes</span>
+                <span className="text-slate-300 text-base">5 mejoras inteligentes al mes</span>
               </div>
               <div className="flex items-center gap-3">
                 <CheckCircle className="h-5 w-5 text-cyan-400" />
-                <span className="text-slate-300">Análisis ATS básico para pasar filtros</span>
+                <span className="text-slate-300 text-base">Análisis ATS básico para pasar filtros</span>
               </div>
               <Button 
-                className="w-full mt-6 bg-slate-700 hover:bg-slate-600 text-white border border-slate-600" 
+                className="w-full mt-6 bg-slate-700 hover:bg-slate-600 text-white border border-slate-600 text-base" 
                 onClick={onSignUpNavigation}
               >
                 Empezar Gratis
@@ -56,33 +57,33 @@ export const PricingSection = forwardRef<HTMLDivElement, PricingSectionProps>(({
               Popular
             </div>
             <CardHeader className="text-center">
-              <CardTitle className="text-2xl text-white">Pro</CardTitle>
-              <div className="text-4xl font-bold text-blue-400 mt-4">$6.990<span className="text-lg font-normal text-blue-300"> CLP/mes</span></div>
-              <CardDescription className="text-slate-300">CVs sin límites, inscríbete hoy</CardDescription>
+              <CardTitle className="text-xl text-white">Pro</CardTitle>
+              <div className="text-3xl font-bold text-blue-400 mt-4">$6.990<span className="text-lg font-normal text-blue-300"> CLP/mes</span></div>
+              <CardDescription className="text-slate-300 text-base">CVs sin límites, inscríbete hoy</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center gap-3">
                 <CheckCircle className="h-5 w-5 text-cyan-400" />
-                <span className="text-slate-300">CVs ilimitados con IA</span>
+                <span className="text-slate-300 text-base">CVs ilimitados con IA</span>
               </div>
               <div className="flex items-center gap-3">
                 <CheckCircle className="h-5 w-5 text-cyan-400" />
-                <span className="text-slate-300">Exportaciones ilimitadas en PDF y Word</span>
+                <span className="text-slate-300 text-base">Exportaciones ilimitadas en PDF y Word</span>
               </div>
               <div className="flex items-center gap-3">
                 <CheckCircle className="h-5 w-5 text-cyan-400" />
-                <span className="text-slate-300">Job Matcher avanzado con recomendaciones precisas</span>
+                <span className="text-slate-300 text-base">Job Matcher avanzado con recomendaciones precisas</span>
               </div>
               <div className="flex items-center gap-3">
                 <CheckCircle className="h-5 w-5 text-cyan-400" />
-                <span className="text-slate-300">Mejoras IA ilimitadas</span>
+                <span className="text-slate-300 text-base">Mejoras IA ilimitadas</span>
               </div>
               <div className="flex items-center gap-3">
                 <CheckCircle className="h-5 w-5 text-cyan-400" />
-                <span className="text-slate-300">Acceso a novedades antes que nadie</span>
+                <span className="text-slate-300 text-base">Acceso a novedades antes que nadie</span>
               </div>
               <Button 
-                className="w-full mt-6 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white" 
+                className="w-full mt-6 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white text-base" 
                 onClick={onSignUpNavigation}
               >
                 <Zap className="h-4 w-4 mr-2" />
