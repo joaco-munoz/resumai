@@ -85,7 +85,10 @@ export const useCVsManager = () => {
     try {
       const { error } = await supabase
         .from('cvs')
-        .update({ title: newTitle.trim() })
+        .update({ 
+          title: newTitle.trim(),
+          last_updated: new Date().toISOString()
+        })
         .eq('id', cvId);
       
       if (error) {

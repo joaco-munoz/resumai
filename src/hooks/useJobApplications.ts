@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -89,19 +88,38 @@ export const useJobApplications = () => {
 
       const formattedData: Interview[] = data.map(item => {
         let companyLogo = undefined;
+        let updatedCompany = item.company;
+        let updatedPosition = item.position;
         
-        // Extract company logo from CV content if available
+        // Extract company logo and update info from CV content if available
         if (item.cvs && typeof item.cvs === 'object' && !Array.isArray(item.cvs)) {
-          const cvData = item.cvs as { content?: any };
+          const cvData = item.cvs as { content?: any, title?: string };
           if (cvData.content?.companyLogo) {
             companyLogo = cvData.content.companyLogo;
+          }
+          
+          // Update company and position from CV if they exist
+          if (cvData.content?.companyName) {
+            updatedCompany = cvData.content.companyName;
+          }
+          if (cvData.content?.jobTitle) {
+            updatedPosition = cvData.content.jobTitle;
+          }
+          
+          // Also try to extract from CV title if not in content
+          if (cvData.title && (!cvData.content?.companyName || !cvData.content?.jobTitle)) {
+            const titleParts = cvData.title.split(' en ');
+            if (titleParts.length === 2) {
+              if (!cvData.content?.jobTitle) updatedPosition = titleParts[0];
+              if (!cvData.content?.companyName) updatedCompany = titleParts[1];
+            }
           }
         }
 
         return {
           id: item.id,
-          position: item.position,
-          company: item.company,
+          position: updatedPosition,
+          company: updatedCompany,
           status: item.status as Interview['status'],
           notes: item.notes || '',
           interview_date: item.interview_date || '',
@@ -125,6 +143,32 @@ export const useJobApplications = () => {
       setLoading(false);
     }
   };
+
+  // Set up real-time subscription to CV changes
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel('cv-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'cvs',
+          filter: `user_id=eq.${user.id}`
+        },
+        () => {
+          console.log('CV updated, refreshing job applications');
+          fetchInterviews();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
 
   useEffect(() => {
     fetchInterviews();
