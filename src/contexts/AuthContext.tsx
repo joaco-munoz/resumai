@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -46,7 +45,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           if (window.location.pathname === '/') {
             navigate('/app');
           }
-
         }
 
         if (event === 'SIGNED_OUT') {
