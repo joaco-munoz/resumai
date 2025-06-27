@@ -42,6 +42,26 @@ export const CVAdaptationModal = ({
   const [showPreviewModal, setShowPreviewModal] = useState(false);
   const [originalCvData, setOriginalCvData] = useState<CVData | null>(null);
   const [adaptedCvData, setAdaptedCvData] = useState<CVData | null>(null);
+
+  // Estado para el aviso legal
+  const [showLegalModal, setShowLegalModal] = useState(false);
+  const [legalButtonsVisible, setLegalButtonsVisible] = useState(false);
+
+  // Abre el aviso legal y muestra los botones tras 5 s
+  const handleOpenLegal = () => {
+    setShowLegalModal(true);
+    setLegalButtonsVisible(false);
+    setTimeout(() => setLegalButtonsVisible(true), 5000);
+  };
+
+  const handleLegalAccept = () => {
+    setShowLegalModal(false);
+    handleAdaptCV();
+  };
+
+  const handleLegalDecline = () => {
+    setShowLegalModal(false);
+  };
   const { user } = useAuth();
 
   const extractJobDetailsFromDescription = (description: string): { company: string; position: string } => {
@@ -299,7 +319,7 @@ export const CVAdaptationModal = ({
                 Cancelar
               </Button>
               <Button 
-                onClick={handleAdaptCV}
+                onClick={handleOpenLegal}
                 disabled={isAdapting}
                 className="flex-1 bg-blue-600 hover:bg-blue-700"
               >
@@ -319,6 +339,45 @@ export const CVAdaptationModal = ({
           </div>
         </DialogContent>
       </Dialog>
+
+      {/* Modal de Confirmación Legal */}
+      {showLegalModal && (
+        <Dialog open={showLegalModal} onOpenChange={setShowLegalModal}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="text-red-600">Aviso Legal</DialogTitle>
+              <DialogDescription>
+                <div className="p-4 bg-red-50 border border-red-300 rounded-md space-y-3 text-sm">
+                  <p className="font-semibold">
+                    ResumAI te ayuda a optimizar tu CV, pero tú eres responsable de lo que postulas.
+                  </p>
+                  <p>
+                    Al continuar, aceptas que cualquier información generada debe ser revisada y aprobada por ti. No nos hacemos responsables por usos indebidos o declaraciones falsas.
+                  </p>
+                  <p className="italic">
+                    Nuestro consejo: verifica siempre lo que se incluye. Un buen CV abre puertas, pero la honestidad las mantiene abiertas.
+                  </p>
+                </div>
+              </DialogDescription>
+            </DialogHeader>
+
+            {legalButtonsVisible ? (
+              <div className="flex justify-end gap-4 pt-4">
+                <Button variant="outline" onClick={handleLegalDecline}>
+                  No acepto
+                </Button>
+                <Button className="bg-green-600 hover:bg-green-700" onClick={handleLegalAccept}>
+                  Acepto
+                </Button>
+              </div>
+            ) : (
+              <p className="text-center text-xs text-gray-500 pt-4">
+                Los botones aparecerán en 5&nbsp;segundos...
+              </p>
+            )}
+          </DialogContent>
+        </Dialog>
+      )}
 
       {/* Modal de Vista Previa */}
       {showPreviewModal && originalCvData && adaptedCvData && (
