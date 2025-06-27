@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -71,7 +72,7 @@ export const useJobApplications = () => {
         .from('job_applications_tracking')
         .select(`
           *,
-          cvs!job_applications_tracking_cv_id_fkey (
+          cvs (
             id,
             title,
             content
@@ -86,23 +87,35 @@ export const useJobApplications = () => {
         return;
       }
 
-      const formattedData: Interview[] = data.map(item => ({
-        id: item.id,
-        position: item.position,
-        company: item.company,
-        status: item.status as Interview['status'],
-        notes: item.notes || '',
-        interview_date: item.interview_date || '',
-        interview_link: item.interview_link || '',
-        applied_date: item.applied_date,
-        job_type: item.job_type || '',
-        location: item.location || '',
-        created_at: item.created_at,
-        updated_at: item.updated_at,
-        user_id: item.user_id,
-        cv_id: item.cv_id || undefined,
-        company_logo: item.cvs?.content?.companyLogo || undefined
-      }));
+      const formattedData: Interview[] = data.map(item => {
+        let companyLogo = undefined;
+        
+        // Extract company logo from CV content if available
+        if (item.cvs && typeof item.cvs === 'object' && !Array.isArray(item.cvs)) {
+          const cvData = item.cvs as { content?: any };
+          if (cvData.content?.companyLogo) {
+            companyLogo = cvData.content.companyLogo;
+          }
+        }
+
+        return {
+          id: item.id,
+          position: item.position,
+          company: item.company,
+          status: item.status as Interview['status'],
+          notes: item.notes || '',
+          interview_date: item.interview_date || '',
+          interview_link: item.interview_link || '',
+          applied_date: item.applied_date,
+          job_type: item.job_type || '',
+          location: item.location || '',
+          created_at: item.created_at,
+          updated_at: item.updated_at,
+          user_id: item.user_id,
+          cv_id: item.cv_id || undefined,
+          company_logo: companyLogo
+        };
+      });
 
       setInterviews(formattedData);
     } catch (error) {

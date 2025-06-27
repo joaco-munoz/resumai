@@ -280,6 +280,7 @@ export type Database = {
           applied_date: string
           company: string
           created_at: string
+          cv_id: string | null
           id: string
           interview_date: string | null
           interview_link: string | null
@@ -295,6 +296,7 @@ export type Database = {
           applied_date?: string
           company: string
           created_at?: string
+          cv_id?: string | null
           id?: string
           interview_date?: string | null
           interview_link?: string | null
@@ -310,6 +312,7 @@ export type Database = {
           applied_date?: string
           company?: string
           created_at?: string
+          cv_id?: string | null
           id?: string
           interview_date?: string | null
           interview_link?: string | null
@@ -321,7 +324,15 @@ export type Database = {
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "job_applications_tracking_cv_id_fkey"
+            columns: ["cv_id"]
+            isOneToOne: false
+            referencedRelation: "cvs"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       job_descriptions: {
         Row: {
