@@ -331,11 +331,20 @@ export const CVAdaptationPreviewModal = ({
     setIsSaving(true);
 
     try {
+      // Ensure we preserve any company logo or other content when saving
+      const contentToSave = {
+        ...cvData,
+        // Preserve any additional metadata that might exist
+        ...(adaptedCvData?.companyLogo && { companyLogo: adaptedCvData.companyLogo }),
+        ...(adaptedCvData?.jobTitle && { jobTitle: adaptedCvData.jobTitle }),
+        ...(adaptedCvData?.companyName && { companyName: adaptedCvData.companyName })
+      };
+
       if (existingCVId) {
         const { error: updateError } = await supabase
           .from('cvs')
           .update({
-            content: cvData as any,
+            content: contentToSave as any,
             last_updated: new Date().toISOString()
           })
           .eq('id', existingCVId);
@@ -373,7 +382,7 @@ export const CVAdaptationPreviewModal = ({
           .insert({
             user_id: user.id,
             title: cvTitle,
-            content: cvData as any,
+            content: contentToSave as any,
             status: 'draft',
             template_name: 'modern',
             cv_source: 'job_matcher'
@@ -436,7 +445,7 @@ export const CVAdaptationPreviewModal = ({
                 activeTab={activeTab}
                 setActiveTab={setActiveTab}
                 completedSections={completedSections}
-                progress={getProgress()}
+                progress={completedSections.length * 20}
               />
 
               <Tabs value={activeTab} onValueChange={setActiveTab}>
@@ -444,7 +453,12 @@ export const CVAdaptationPreviewModal = ({
                   <PersonalInfoTab
                     cvData={cvData}
                     handlePersonalInfoChange={handlePersonalInfoChange}
-                    goToNextTab={goToNextTab}
+                    goToNextTab={() => {
+                      if (!completedSections.includes('personal')) {
+                        setCompletedSections(prev => [...prev, 'personal']);
+                      }
+                      setActiveTab('summary');
+                    }}
                   />
                 </TabsContent>
 
@@ -454,21 +468,58 @@ export const CVAdaptationPreviewModal = ({
                     handleSummaryChange={handleSummaryChange}
                     improveWithAI={improveWithAI}
                     isImproving={isImproving}
-                    goToPreviousTab={goToPreviousTab}
-                    goToNextTab={goToNextTab}
+                    goToPreviousTab={() => setActiveTab('personal')}
+                    goToNextTab={() => {
+                      if (!completedSections.includes('summary')) {
+                        setCompletedSections(prev => [...prev, 'summary']);
+                      }
+                      setActiveTab('experience');
+                    }}
                   />
                 </TabsContent>
 
                 <TabsContent value="experience">
                   <ExperienceTab
                     cvData={cvData}
-                    updateExperience={updateExperience}
-                    addExperience={addExperience}
-                    removeExperience={removeExperience}
+                    updateExperience={(id: string, field: string, value: any) => {
+                      setCvData(prev => prev ? ({
+                        ...prev,
+                        experience: prev.experience.map(exp =>
+                          exp.id === id ? { ...exp, [field]: value } : exp
+                        )
+                      }) : null);
+                    }}
+                    addExperience={() => {
+                      const newExp = {
+                        id: Date.now().toString(),
+                        position: '',
+                        company: '',
+                        location: '',
+                        startDate: '',
+                        endDate: '',
+                        current: false,
+                        description: ''
+                      };
+                      setCvData(prev => prev ? ({
+                        ...prev,
+                        experience: [...prev.experience, newExp]
+                      }) : null);
+                    }}
+                    removeExperience={(id: string) => {
+                      setCvData(prev => prev ? ({
+                        ...prev,
+                        experience: prev.experience.filter(exp => exp.id !== id)
+                      }) : null);
+                    }}
                     improveWithAI={improveWithAI}
                     isImproving={isImproving}
-                    goToPreviousTab={goToPreviousTab}
-                    goToNextTab={goToNextTab}
+                    goToPreviousTab={() => setActiveTab('summary')}
+                    goToNextTab={() => {
+                      if (!completedSections.includes('experience')) {
+                        setCompletedSections(prev => [...prev, 'experience']);
+                      }
+                      setActiveTab('education');
+                    }}
                     setCvData={setCvData}
                   />
                 </TabsContent>
@@ -476,11 +527,41 @@ export const CVAdaptationPreviewModal = ({
                 <TabsContent value="education">
                   <EducationTab
                     cvData={cvData}
-                    updateEducation={updateEducation}
-                    addEducation={addEducation}
-                    removeEducation={removeEducation}
-                    goToPreviousTab={goToPreviousTab}
-                    goToNextTab={goToNextTab}
+                    updateEducation={(id: string, field: string, value: string) => {
+                      setCvData(prev => prev ? ({
+                        ...prev,
+                        education: prev.education.map(edu =>
+                          edu.id === id ? { ...edu, [field]: value } : edu
+                        )
+                      }) : null);
+                    }}
+                    addEducation={() => {
+                      const newEdu = {
+                        id: Date.now().toString(),
+                        degree: '',
+                        institution: '',
+                        location: '',
+                        year: '',
+                        description: ''
+                      };
+                      setCvData(prev => prev ? ({
+                        ...prev,
+                        education: [...prev.education, newEdu]
+                      }) : null);
+                    }}
+                    removeEducation={(id: string) => {
+                      setCvData(prev => prev ? ({
+                        ...prev,
+                        education: prev.education.filter(edu => edu.id !== id)
+                      }) : null);
+                    }}
+                    goToPreviousTab={() => setActiveTab('experience')}
+                    goToNextTab={() => {
+                      if (!completedSections.includes('education')) {
+                        setCompletedSections(prev => [...prev, 'education']);
+                      }
+                      setActiveTab('skills');
+                    }}
                     setCvData={setCvData}
                   />
                 </TabsContent>
@@ -488,9 +569,32 @@ export const CVAdaptationPreviewModal = ({
                 <TabsContent value="skills">
                   <SkillsTab
                     cvData={cvData}
-                    addSkill={addSkill}
-                    removeSkill={removeSkill}
-                    goToPreviousTab={goToPreviousTab}
+                    addSkill={(skillName?: string) => {
+                      if (!cvData) return;
+                      
+                      if (skillName && skillName.trim() !== "") {
+                        setCvData(prev => prev ? ({
+                          ...prev,
+                          skills: [...prev.skills, skillName.trim()]
+                        }) : null);
+                        return;
+                      }
+
+                      const newSkill = prompt("Enter new skill:");
+                      if (newSkill && newSkill.trim() !== "") {
+                        setCvData(prev => prev ? ({
+                          ...prev,
+                          skills: [...prev.skills, newSkill.trim()]
+                        }) : null);
+                      }
+                    }}
+                    removeSkill={(skill: string) => {
+                      setCvData(prev => prev ? ({
+                        ...prev,
+                        skills: prev.skills.filter(s => s !== skill)
+                      }) : null);
+                    }}
+                    goToPreviousTab={() => setActiveTab('education')}
                     saveCV={handleSave}
                     saveAndAdapt={() => {}} // No aplica en este contexto
                   />
