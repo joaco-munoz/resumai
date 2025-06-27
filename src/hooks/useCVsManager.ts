@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -104,11 +105,23 @@ export const useCVsManager = () => {
   };
 
   const updateCVLogo = async (cv: CV, logoUrl: string) => {
-    const newContent = { ...(cv.content || {}), company_logo: logoUrl };
+    console.log('Updating CV logo for CV:', cv.id, 'with logo:', logoUrl);
+    
     try {
+      // Create the updated content object
+      const updatedContent = { 
+        ...(cv.content || {}), 
+        companyLogo: logoUrl 
+      };
+      
+      console.log('Updated content for CV logo:', updatedContent);
+      
       const { error } = await supabase
         .from('cvs')
-        .update({ content: newContent })
+        .update({ 
+          content: updatedContent,
+          last_updated: new Date().toISOString()
+        })
         .eq('id', cv.id);
       
       if (error) {
@@ -116,6 +129,12 @@ export const useCVsManager = () => {
         toast.error(`Error al guardar el logo: ${error.message}`);
         return false;
       }
+      
+      console.log('Company logo saved successfully');
+      toast.success("Logo de empresa guardado exitosamente");
+      
+      // Reload CVs to reflect the changes
+      await loadCVs();
       return true;
     } catch (err) {
       console.error('Error saving company logo:', err);
