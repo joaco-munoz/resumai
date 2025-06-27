@@ -17,6 +17,8 @@ export interface Interview {
   created_at: string;
   updated_at: string;
   user_id: string;
+  cv_id?: string;
+  company_logo?: string;
 }
 
 export interface JobApplicationFormData {
@@ -60,14 +62,21 @@ export const useJobApplications = () => {
     setSelectedInterview(null);
   };
 
-  // Fetch job applications from Supabase
+  // Fetch job applications from Supabase with CV information
   const fetchInterviews = async () => {
     if (!user) return;
     
     try {
       const { data, error } = await supabase
         .from('job_applications_tracking')
-        .select('*')
+        .select(`
+          *,
+          cvs!job_applications_tracking_cv_id_fkey (
+            id,
+            title,
+            content
+          )
+        `)
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
@@ -90,7 +99,9 @@ export const useJobApplications = () => {
         location: item.location || '',
         created_at: item.created_at,
         updated_at: item.updated_at,
-        user_id: item.user_id
+        user_id: item.user_id,
+        cv_id: item.cv_id || undefined,
+        company_logo: item.cvs?.content?.companyLogo || undefined
       }));
 
       setInterviews(formattedData);
@@ -192,6 +203,11 @@ export const useJobApplications = () => {
         return;
       }
 
+      // If there's a linked CV, update it as well
+      if (selectedInterview.cv_id && (selectedInterview.position !== formData.position || selectedInterview.company !== formData.company)) {
+        await updateLinkedCV(selectedInterview.cv_id, formData.position, formData.company);
+      }
+
       await fetchInterviews();
       resetForm();
       toast.success("Postulación actualizada");
@@ -200,6 +216,45 @@ export const useJobApplications = () => {
       toast.error('Error al actualizar la postulación');
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const updateLinkedCV = async (cvId: string, newPosition: string, newCompany: string) => {
+    try {
+      // Get current CV data
+      const { data: cvData, error: fetchError } = await supabase
+        .from('cvs')
+        .select('content, title')
+        .eq('id', cvId)
+        .single();
+
+      if (fetchError) {
+        console.error('Error fetching CV:', fetchError);
+        return;
+      }
+
+      // Update CV title and content
+      const newTitle = `${newPosition} en ${newCompany}`;
+      const updatedContent = {
+        ...cvData.content,
+        jobTitle: newPosition,
+        companyName: newCompany
+      };
+
+      const { error: updateError } = await supabase
+        .from('cvs')
+        .update({
+          title: newTitle,
+          content: updatedContent,
+          last_updated: new Date().toISOString()
+        })
+        .eq('id', cvId);
+
+      if (updateError) {
+        console.error('Error updating linked CV:', updateError);
+      }
+    } catch (error) {
+      console.error('Error updating linked CV:', error);
     }
   };
 

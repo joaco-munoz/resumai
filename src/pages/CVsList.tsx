@@ -73,15 +73,15 @@ export default function CVsList() {
   );
 
   // Event handlers
-  const handleViewCV = (cv: CV) => {
+  function handleViewCV(cv: CV) {
     if (isJobReport(cv)) {
       setJobReportCV(cv);
     } else {
       setPreviewCV(cv);
     }
-  };
+  }
 
-  const handleEditCV = (cv: CV) => {
+  function handleEditCV(cv: CV) {
     console.log('Editing CV:', cv);
     console.log('CV content:', cv.content);
     console.log('General CV:', generalCV);
@@ -105,9 +105,9 @@ export default function CVsList() {
     } else {
       navigate(`/app/cv/${cv.id}`);
     }
-  };
+  }
 
-  const handleDownloadCV = (cv: CV, format: 'pdf' | 'word' = 'pdf') => {
+  function handleDownloadCV(cv: CV, format: 'pdf' | 'word' = 'pdf') {
     if (isJobReport(cv)) {
       toast.error("Los informes no se pueden descargar");
       return;
@@ -124,13 +124,13 @@ export default function CVsList() {
     } else {
       toast.error("No se pudo descargar el CV");
     }
-  };
+  }
 
-  const handleDeleteCV = (cv: CV) => {
+  function handleDeleteCV(cv: CV) {
     setDeleteCV(cv);
-  };
+  }
 
-  const confirmDeleteCV = async () => {
+  async function confirmDeleteCV() {
     if (!deleteCV) return;
     
     setIsDeleting(true);
@@ -139,14 +139,14 @@ export default function CVsList() {
       setDeleteCV(null);
     }
     setIsDeleting(false);
-  };
+  }
 
-  const startRenameCV = (cv: CV) => {
+  function startRenameCV(cv: CV) {
     setRenamingCVId(cv.id);
     setRenamingTitle(cv.title);
-  };
+  }
 
-  const handleRenameSave = async () => {
+  async function handleRenameSave() {
     if (!renamingCVId || renamingTitle.trim() === "") {
       setRenamingCVId(null);
       return;
@@ -155,24 +155,50 @@ export default function CVsList() {
     const success = await renameCV(renamingCVId, renamingTitle);
     if (success) {
       setRenamingCVId(null);
+      // If this CV is linked to a job application, update it there too
+      await updateLinkedJobApplications(renamingCVId, renamingTitle);
     }
     setSavingRename(false);
-  };
+  }
 
-  const handleRenameCancel = () => {
+  function handleRenameCancel() {
     setRenamingCVId(null);
-  };
+  }
 
-  const handleSelectLogo = async (cv: CV, logoUrl: string) => {
+  async function handleSelectLogo(cv: CV, logoUrl: string) {
     updateLogoMap(cv.id, logoUrl);
     cancelLogoEdit();
     await updateCVLogo(cv, logoUrl);
-  };
+  }
 
-  const handleSaveEditedCV = () => {
+  function handleSaveEditedCV() {
     setEditingJobMatcherCV(null);
     loadCVs();
-  };
+  }
+
+  async function updateLinkedJobApplications(cvId: string, newTitle: string) {
+    try {
+      const jobTitle = extractJobTitle(newTitle);
+      const companyName = extractCompanyName(newTitle);
+
+      if (jobTitle && companyName) {
+        const { error } = await supabase
+          .from('job_applications_tracking')
+          .update({
+            position: jobTitle,
+            company: companyName
+          })
+          .eq('cv_id', cvId)
+          .eq('user_id', user?.id);
+
+        if (error) {
+          console.error('Error updating linked job applications:', error);
+        }
+      }
+    } catch (error) {
+      console.error('Error updating linked job applications:', error);
+    }
+  }
 
   const handleAddToTracking = async (cv: CV) => {
     if (!user) {
@@ -220,6 +246,7 @@ export default function CVsList() {
             company: companyName,
             status: 'saved',
             notes: `CV adaptado: ${cv.title}`,
+            cv_id: cv.id,
             updated_at: new Date().toISOString()
           })
           .eq('id', existing.id);
@@ -242,7 +269,8 @@ export default function CVsList() {
           company: companyName,
           status: 'saved',
           applied_date: new Date().toISOString().split('T')[0],
-          notes: `CV adaptado: ${cv.title}`
+          notes: `CV adaptado: ${cv.title}`,
+          cv_id: cv.id
         });
 
       if (error) {
