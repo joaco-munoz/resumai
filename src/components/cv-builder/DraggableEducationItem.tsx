@@ -99,7 +99,7 @@ export const DraggableEducationItem = ({
               
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label>Año</Label>
+                  <Label>Año Egreso</Label>
                   <Input
                     value={edu.year}
                     onChange={(e) => updateEducation(edu.id, 'year', e.target.value)}
