@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -331,14 +330,16 @@ export const CVAdaptationPreviewModal = ({
     setIsSaving(true);
 
     try {
-      // Ensure we preserve any company logo or other content when saving
-      const contentToSave = {
+      // Ensure we preserve the company logo and metadata properly
+      const contentToSave: CVData = {
         ...cvData,
-        // Preserve any additional metadata that might exist
-        ...(adaptedCvData?.companyLogo && { companyLogo: adaptedCvData.companyLogo }),
-        ...(adaptedCvData?.jobTitle && { jobTitle: adaptedCvData.jobTitle }),
-        ...(adaptedCvData?.companyName && { companyName: adaptedCvData.companyName })
+        // Always preserve these fields from the adapted CV data if they exist
+        companyLogo: adaptedCvData?.companyLogo || cvData.companyLogo,
+        jobTitle: adaptedCvData?.jobTitle || cvData.jobTitle || jobTitle,
+        companyName: adaptedCvData?.companyName || cvData.companyName || companyName
       };
+
+      console.log('Saving CV with content:', contentToSave);
 
       if (existingCVId) {
         const { error: updateError } = await supabase
@@ -481,36 +482,9 @@ export const CVAdaptationPreviewModal = ({
                 <TabsContent value="experience">
                   <ExperienceTab
                     cvData={cvData}
-                    updateExperience={(id: string, field: string, value: any) => {
-                      setCvData(prev => prev ? ({
-                        ...prev,
-                        experience: prev.experience.map(exp =>
-                          exp.id === id ? { ...exp, [field]: value } : exp
-                        )
-                      }) : null);
-                    }}
-                    addExperience={() => {
-                      const newExp = {
-                        id: Date.now().toString(),
-                        position: '',
-                        company: '',
-                        location: '',
-                        startDate: '',
-                        endDate: '',
-                        current: false,
-                        description: ''
-                      };
-                      setCvData(prev => prev ? ({
-                        ...prev,
-                        experience: [...prev.experience, newExp]
-                      }) : null);
-                    }}
-                    removeExperience={(id: string) => {
-                      setCvData(prev => prev ? ({
-                        ...prev,
-                        experience: prev.experience.filter(exp => exp.id !== id)
-                      }) : null);
-                    }}
+                    updateExperience={updateExperience}
+                    addExperience={addExperience}
+                    removeExperience={removeExperience}
                     improveWithAI={improveWithAI}
                     isImproving={isImproving}
                     goToPreviousTab={() => setActiveTab('summary')}
@@ -527,34 +501,9 @@ export const CVAdaptationPreviewModal = ({
                 <TabsContent value="education">
                   <EducationTab
                     cvData={cvData}
-                    updateEducation={(id: string, field: string, value: string) => {
-                      setCvData(prev => prev ? ({
-                        ...prev,
-                        education: prev.education.map(edu =>
-                          edu.id === id ? { ...edu, [field]: value } : edu
-                        )
-                      }) : null);
-                    }}
-                    addEducation={() => {
-                      const newEdu = {
-                        id: Date.now().toString(),
-                        degree: '',
-                        institution: '',
-                        location: '',
-                        year: '',
-                        description: ''
-                      };
-                      setCvData(prev => prev ? ({
-                        ...prev,
-                        education: [...prev.education, newEdu]
-                      }) : null);
-                    }}
-                    removeEducation={(id: string) => {
-                      setCvData(prev => prev ? ({
-                        ...prev,
-                        education: prev.education.filter(edu => edu.id !== id)
-                      }) : null);
-                    }}
+                    updateEducation={updateEducation}
+                    addEducation={addEducation}
+                    removeEducation={removeEducation}
                     goToPreviousTab={() => setActiveTab('experience')}
                     goToNextTab={() => {
                       if (!completedSections.includes('education')) {
@@ -569,31 +518,8 @@ export const CVAdaptationPreviewModal = ({
                 <TabsContent value="skills">
                   <SkillsTab
                     cvData={cvData}
-                    addSkill={(skillName?: string) => {
-                      if (!cvData) return;
-                      
-                      if (skillName && skillName.trim() !== "") {
-                        setCvData(prev => prev ? ({
-                          ...prev,
-                          skills: [...prev.skills, skillName.trim()]
-                        }) : null);
-                        return;
-                      }
-
-                      const newSkill = prompt("Enter new skill:");
-                      if (newSkill && newSkill.trim() !== "") {
-                        setCvData(prev => prev ? ({
-                          ...prev,
-                          skills: [...prev.skills, newSkill.trim()]
-                        }) : null);
-                      }
-                    }}
-                    removeSkill={(skill: string) => {
-                      setCvData(prev => prev ? ({
-                        ...prev,
-                        skills: prev.skills.filter(s => s !== skill)
-                      }) : null);
-                    }}
+                    addSkill={addSkill}
+                    removeSkill={removeSkill}
                     goToPreviousTab={() => setActiveTab('education')}
                     saveCV={handleSave}
                     saveAndAdapt={() => {}} // No aplica en este contexto
