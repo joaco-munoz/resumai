@@ -132,6 +132,29 @@ export default function CVsList() {
   };
 
   const navigate = useNavigate();
+
+  // Persist selected company logo for a CV
+  const handleSelectLogo = async (cv: CV, logoUrl: string) => {
+    // Optimistic UI update
+    setLogoMap(prev => ({ ...prev, [cv.id]: logoUrl }));
+    setLogoEditCvId(null);
+    setLogoQuery("");
+
+    const newContent = { ...(cv.content || {}), company_logo: logoUrl };
+    try {
+      const { error } = await supabase
+        .from('cvs')
+        .update({ content: newContent })
+        .eq('id', cv.id);
+      if (error) {
+        console.error('Error saving company logo:', error);
+        toast.error(`Error al guardar el logo: ${error.message}`);
+      }
+    } catch (err) {
+      console.error('Error saving company logo:', err);
+      toast.error('Error al guardar el logo');
+    }
+  };
   const { user } = useAuth();
 
   useEffect(() => {
@@ -165,6 +188,13 @@ export default function CVsList() {
       // Set the most recent editor CV as general CV
       setGeneralCV(editorCVs.length > 0 ? editorCVs[0] : null);
       setJobMatcherCVs(matcherCVs);
+      // Reconstruct logo map from stored company_logo values
+      const newLogoMap: Record<string, string> = {};
+      (data || []).forEach(cvItem => {
+        const logoUrl = (cvItem.content as any)?.company_logo;
+        if (logoUrl) newLogoMap[cvItem.id] = logoUrl;
+      });
+      setLogoMap(newLogoMap);
       
     } catch (error) {
       console.error('Error loading CVs:', error);
@@ -333,13 +363,12 @@ export default function CVsList() {
                   autoFocus
                 />
                 <div className="max-h-40 overflow-y-auto space-y-1">
-                  {logoSuggestions.map(s=> (
-                    <button key={s.domain} className="flex items-center w-full px-2 py-1 bg-white dark:bg-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800 text-left"
-                      onClick={()=>{
-                        setLogoMap(prev=>({...prev,[cv.id]:s.logo}));
-                        setLogoEditCvId(null);
-                        setLogoQuery("");
-                      }}>
+                  {logoSuggestions.map(s => (
+                    <button
+                      key={s.domain}
+                      className="flex items-center w-full px-2 py-1 bg-white dark:bg-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800 text-left"
+                      onClick={() => handleSelectLogo(cv, s.logo)}
+                    >
                       <img src={s.logo} alt={s.name} className="w-5 h-5 mr-2 rounded" />
                       <span className="text-sm truncate">{s.name}</span>
                     </button>
