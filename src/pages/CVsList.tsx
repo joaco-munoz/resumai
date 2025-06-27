@@ -221,51 +221,47 @@ export default function CVsList() {
 
       console.log('Adding to tracking:', { jobTitle, companyName, cvTitle: cv.title });
 
-      // Avoid duplicates — check if an entry with same company & position already exists in a non-rejected state
-      const { data: existing, error: fetchError } = await supabase
+      // Check if entries with same company & position already exist
+      const { data: existingEntries, error: fetchError } = await supabase
         .from('job_applications_tracking')
-        .select('id')
+        .select('id, position')
         .eq('user_id', user.id)
         .eq('company', companyName)
-        .eq('position', jobTitle)
-        .in('status', ['saved', 'applied', 'interviewing', 'offer'])
-        .maybeSingle();
+        .ilike('position', `${jobTitle}%`); // Use ilike to find positions that start with the job title
 
       if (fetchError) {
-        console.error('Error checking duplicates:', fetchError);
-        toast.error('No se pudo verificar duplicados');
+        console.error('Error checking existing entries:', fetchError);
+        toast.error('No se pudo verificar entradas existentes');
         return;
       }
 
-      if (existing) {
-        // Si ya existe, actualizamos la fila con los últimos datos y la movemos a "saved"
-        const { error: updateError } = await supabase
-          .from('job_applications_tracking')
-          .update({
-            position: jobTitle,
-            company: companyName,
-            status: 'saved',
-            notes: `CV adaptado: ${cv.title}`,
-            cv_id: cv.id,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', existing.id);
-
-        if (updateError) {
-          console.error('Error updating tracking:', updateError);
-          toast.error(`No se pudo actualizar la postulación: ${updateError.message}`);
-          return;
-        }
-
-        toast.success('Postulación actualizada en tu tablero');
-        return;
+      // If there are existing entries, add a numeric suffix to make this one unique
+      let finalJobTitle = jobTitle;
+      if (existingEntries && existingEntries.length > 0) {
+        // Find the highest number suffix
+        let maxSuffix = 0;
+        existingEntries.forEach(entry => {
+          const match = entry.position.match(new RegExp(`^${jobTitle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*\\((\\d+)\\)$`));
+          if (match) {
+            const suffix = parseInt(match[1]);
+            if (suffix > maxSuffix) {
+              maxSuffix = suffix;
+            }
+          } else if (entry.position === jobTitle) {
+            // Original entry without suffix counts as (1)
+            if (maxSuffix === 0) maxSuffix = 1;
+          }
+        });
+        
+        // Add new suffix
+        finalJobTitle = `${jobTitle} (${maxSuffix + 1})`;
       }
 
       const { error } = await supabase
         .from('job_applications_tracking')
         .insert({
           user_id: user.id,
-          position: jobTitle,
+          position: finalJobTitle,
           company: companyName,
           status: 'saved',
           applied_date: new Date().toISOString().split('T')[0],
