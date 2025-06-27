@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
@@ -249,7 +248,7 @@ export const useJobApplications = () => {
       // Update CV title and content
       const newTitle = `${newPosition} en ${newCompany}`;
       const updatedContent = {
-        ...cvData.content,
+        ...(cvData.content || {}), // Provide fallback empty object
         jobTitle: newPosition,
         companyName: newCompany
       };
