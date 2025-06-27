@@ -2,12 +2,14 @@
 import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
 import { CVPreview } from "@/components/cv-builder/CVPreview";
+import { CVBuilderTabs } from "@/components/cv-builder/CVBuilderTabs";
+import { PersonalInfoTab } from "@/components/cv-builder/PersonalInfoTab";
+import { SummaryTab } from "@/components/cv-builder/SummaryTab";
+import { ExperienceTab } from "@/components/cv-builder/ExperienceTab";
+import { EducationTab } from "@/components/cv-builder/EducationTab";
+import { SkillsTab } from "@/components/cv-builder/SkillsTab";
+import { Tabs, TabsContent } from "@/components/ui/tabs";
 import { Edit3, Save, Eye } from "lucide-react";
 import { CVData } from "@/types/cv";
 import { supabase } from "@/integrations/supabase/client";
@@ -21,7 +23,7 @@ interface CVAdaptationPreviewModalProps {
   adaptedCvData: CVData;
   jobTitle: string;
   companyName: string;
-  existingCVId?: string; // ID del CV existente para sobrescribir
+  existingCVId?: string;
   onSave: () => void;
 }
 
@@ -38,22 +40,16 @@ export const CVAdaptationPreviewModal = ({
   const [cvData, setCvData] = useState<CVData | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [activeTab, setActiveTab] = useState('personal');
+  const [completedSections, setCompletedSections] = useState<string[]>([]);
+  const [isImproving, setIsImproving] = useState<string | null>(null);
   const { user } = useAuth();
 
   // Initialize CV data when props change
   useEffect(() => {
-    console.log('CVAdaptationPreviewModal props:', {
-      originalCvData,
-      adaptedCvData,
-      jobTitle,
-      companyName,
-      existingCVId
-    });
-
     if (adaptedCvData) {
       setCvData(adaptedCvData);
     } else if (originalCvData) {
-      // If no adapted data, use original as fallback
       setCvData(originalCvData);
     } else {
       console.error('No CV data provided to CVAdaptationPreviewModal');
@@ -66,6 +62,260 @@ export const CVAdaptationPreviewModal = ({
   if (!cvData) {
     return null;
   }
+
+  // Validation functions (same as CVBuilder)
+  const validatePersonalInfo = () => {
+    const { fullName, email, phone, location } = cvData.personalInfo;
+    return fullName.trim() && email.trim() && phone.trim() && location.trim();
+  };
+
+  const validateSummary = () => {
+    return cvData.summary.trim().length > 0;
+  };
+
+  const validateExperience = () => {
+    return cvData.experience.length > 0 && cvData.experience.every(exp => 
+      exp.position.trim() && exp.company.trim() && exp.startDate && exp.description.trim()
+    );
+  };
+
+  const validateEducation = () => {
+    return cvData.education.length > 0 && cvData.education.every(edu => 
+      edu.degree.trim() && edu.institution.trim() && edu.year.trim()
+    );
+  };
+
+  const validateSkills = () => {
+    return cvData.skills.length > 0;
+  };
+
+  const getSectionValidation = () => {
+    return {
+      personal: validatePersonalInfo(),
+      summary: validateSummary(),
+      experience: validateExperience(),
+      education: validateEducation(),
+      skills: validateSkills()
+    };
+  };
+
+  const getProgress = () => {
+    return completedSections.length * 20;
+  };
+
+  // Handler functions (same as CVBuilder)
+  const handlePersonalInfoChange = (field: string, value: string) => {
+    setCvData(prev => prev ? ({
+      ...prev,
+      personalInfo: {
+        ...prev.personalInfo,
+        [field]: value
+      }
+    }) : null);
+  };
+
+  const handleSummaryChange = (value: string) => {
+    setCvData(prev => prev ? ({
+      ...prev,
+      summary: value
+    }) : null);
+  };
+
+  const addExperience = () => {
+    const newExp = {
+      id: Date.now().toString(),
+      position: '',
+      company: '',
+      location: '',
+      startDate: '',
+      endDate: '',
+      current: false,
+      description: ''
+    };
+    setCvData(prev => prev ? ({
+      ...prev,
+      experience: [...prev.experience, newExp]
+    }) : null);
+  };
+
+  const updateExperience = (id: string, field: string, value: any) => {
+    setCvData(prev => prev ? ({
+      ...prev,
+      experience: prev.experience.map(exp =>
+        exp.id === id ? { ...exp, [field]: value } : exp
+      )
+    }) : null);
+  };
+
+  const removeExperience = (id: string) => {
+    setCvData(prev => prev ? ({
+      ...prev,
+      experience: prev.experience.filter(exp => exp.id !== id)
+    }) : null);
+  };
+
+  const addEducation = () => {
+    const newEdu = {
+      id: Date.now().toString(),
+      degree: '',
+      institution: '',
+      location: '',
+      year: '',
+      description: ''
+    };
+    setCvData(prev => prev ? ({
+      ...prev,
+      education: [...prev.education, newEdu]
+    }) : null);
+  };
+
+  const updateEducation = (id: string, field: string, value: string) => {
+    setCvData(prev => prev ? ({
+      ...prev,
+      education: prev.education.map(edu =>
+        edu.id === id ? { ...edu, [field]: value } : edu
+      )
+    }) : null);
+  };
+
+  const removeEducation = (id: string) => {
+    setCvData(prev => prev ? ({
+      ...prev,
+      education: prev.education.filter(edu => edu.id !== id)
+    }) : null);
+  };
+
+  const addSkill = (skillName?: string) => {
+    if (!cvData) return;
+    
+    if (skillName && skillName.trim() !== "") {
+      setCvData(prev => prev ? ({
+        ...prev,
+        skills: [...prev.skills, skillName.trim()]
+      }) : null);
+      return;
+    }
+
+    const newSkill = prompt("Enter new skill:");
+    if (newSkill && newSkill.trim() !== "") {
+      setCvData(prev => prev ? ({
+        ...prev,
+        skills: [...prev.skills, newSkill.trim()]
+      }) : null);
+    }
+  };
+
+  const removeSkill = (skill: string) => {
+    setCvData(prev => prev ? ({
+      ...prev,
+      skills: prev.skills.filter(s => s !== skill)
+    }) : null);
+  };
+
+  const improveWithAI = async (section: string) => {
+    if (!cvData) return;
+    
+    setIsImproving(section);
+    
+    try {
+      if (section === 'summary') {
+        const content = cvData.summary;
+        const context = `Profesional: ${cvData.personalInfo.fullName}, Experiencia: ${cvData.experience.map(exp => `${exp.position} en ${exp.company}`).join(', ')}`;
+        
+        const { data, error } = await supabase.functions.invoke('improve-cv-content', {
+          body: {
+            content,
+            context
+          }
+        });
+
+        if (error) {
+          throw error;
+        }
+
+        if (data?.improvedContent) {
+          setCvData(prev => prev ? ({
+            ...prev,
+            summary: data.improvedContent
+          }) : null);
+          toast.success('Resumen mejorado con IA');
+        }
+      } else if (section.startsWith('experience-')) {
+        const parts = section.split('-');
+        const expId = parts[1];
+        const bulletIndex = parseInt(parts[2]);
+        
+        const experience = cvData.experience.find(exp => exp.id === expId);
+        if (!experience) return;
+        
+        const bulletPoints = experience.description.split('\n');
+        const bulletPoint = bulletPoints[bulletIndex];
+        
+        if (!bulletPoint || !bulletPoint.trim()) return;
+        
+        const context = `Posición: ${experience.position} en ${experience.company}`;
+        
+        const { data, error } = await supabase.functions.invoke('improve-bullet-point', {
+          body: {
+            bulletPoint,
+            context
+          }
+        });
+
+        if (error) {
+          throw error;
+        }
+
+        if (data?.improvedBulletPoint) {
+          const newBulletPoints = [...bulletPoints];
+          newBulletPoints[bulletIndex] = data.improvedBulletPoint;
+          
+          setCvData(prev => prev ? ({
+            ...prev,
+            experience: prev.experience.map(exp => 
+              exp.id === expId 
+                ? { ...exp, description: newBulletPoints.join('\n') }
+                : exp
+            )
+          }) : null);
+          
+          toast.success('Bullet point mejorado con IA');
+        }
+      }
+    } catch (error) {
+      console.error('Error improving with AI:', error);
+      toast.error("Error al mejorar con IA. Verifica tu conexión.");
+    } finally {
+      setIsImproving(null);
+    }
+  };
+
+  const goToNextTab = () => {
+    const tabOrder = ['personal', 'summary', 'experience', 'education', 'skills'];
+    const currentIndex = tabOrder.indexOf(activeTab);
+    const validations = getSectionValidation();
+    
+    if (!validations[activeTab as keyof typeof validations]) {
+      toast.error("Por favor completa todos los campos requeridos antes de continuar");
+      return;
+    }
+
+    if (!completedSections.includes(activeTab)) {
+      setCompletedSections(prev => [...prev, activeTab]);
+    }
+
+    if (currentIndex < tabOrder.length - 1) {
+      setActiveTab(tabOrder[currentIndex + 1]);
+    }
+  };
+
+  const goToPreviousTab = () => {
+    const tabOrder = ['personal', 'summary', 'experience', 'education', 'skills'];
+    const currentIndex = tabOrder.indexOf(activeTab);
+    if (currentIndex > 0) {
+      setActiveTab(tabOrder[currentIndex - 1]);
+    }
+  };
 
   const handleSave = async () => {
     if (!user) {
@@ -82,7 +332,6 @@ export const CVAdaptationPreviewModal = ({
 
     try {
       if (existingCVId) {
-        // Sobrescribir CV existente
         const { error: updateError } = await supabase
           .from('cvs')
           .update({
@@ -99,7 +348,6 @@ export const CVAdaptationPreviewModal = ({
 
         toast.success("CV actualizado exitosamente");
       } else {
-        // Crear nuevo CV (flujo original)
         const now = new Date();
         const dateTime = now.toLocaleString('es-ES', {
           year: 'numeric',
@@ -120,7 +368,6 @@ export const CVAdaptationPreviewModal = ({
           cvTitle = `CV - ${cvData.personalInfo?.fullName || 'Sin nombre'} - ${dateTime}`;
         }
 
-        // Crear el CV adaptado
         const { data: adaptedCV, error: adaptError } = await supabase
           .from('cvs')
           .insert({
@@ -140,7 +387,6 @@ export const CVAdaptationPreviewModal = ({
           return;
         }
 
-        // Guardar en seguimiento de postulaciones
         const { error: trackingError } = await supabase
           .from('job_applications_tracking')
           .insert({
@@ -169,29 +415,6 @@ export const CVAdaptationPreviewModal = ({
     }
   };
 
-  const handleEditSkills = (newSkills: string[]) => {
-    if (!cvData) return;
-    
-    setCvData(prev => prev ? ({
-      ...prev,
-      skills: newSkills
-    }) : null);
-  };
-
-  const addSkill = (skill: string) => {
-    if (!cvData) return;
-    
-    if (skill.trim() && !cvData.skills.includes(skill.trim())) {
-      handleEditSkills([...cvData.skills, skill.trim()]);
-    }
-  };
-
-  const removeSkill = (skillToRemove: string) => {
-    if (!cvData) return;
-    
-    handleEditSkills(cvData.skills.filter(skill => skill !== skillToRemove));
-  };
-
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className={`${isEditing ? 'max-w-7xl' : 'max-w-4xl'} max-h-[95vh] overflow-y-auto`}>
@@ -207,151 +430,76 @@ export const CVAdaptationPreviewModal = ({
 
         {isEditing ? (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Panel de Edición */}
-            <div className="space-y-6">
-              {/* Información Personal */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Información Personal</h3>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="fullName">Nombre Completo</Label>
-                    <Input
-                      id="fullName"
-                      value={cvData.personalInfo?.fullName || ''}
-                      onChange={(e) => setCvData(prev => prev ? ({
-                        ...prev,
-                        personalInfo: { ...prev.personalInfo, fullName: e.target.value }
-                      }) : null)}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="email">Email</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={cvData.personalInfo?.email || ''}
-                      onChange={(e) => setCvData(prev => prev ? ({
-                        ...prev,
-                        personalInfo: { ...prev.personalInfo, email: e.target.value }
-                      }) : null)}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="phone">Teléfono</Label>
-                    <Input
-                      id="phone"
-                      value={cvData.personalInfo?.phone || ''}
-                      onChange={(e) => setCvData(prev => prev ? ({
-                        ...prev,
-                        personalInfo: { ...prev.personalInfo, phone: e.target.value }
-                      }) : null)}
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="location">Ubicación</Label>
-                    <Input
-                      id="location"
-                      value={cvData.personalInfo?.location || ''}
-                      onChange={(e) => setCvData(prev => prev ? ({
-                        ...prev,
-                        personalInfo: { ...prev.personalInfo, location: e.target.value }
-                      }) : null)}
-                    />
-                  </div>
-                </div>
-              </div>
+            {/* Panel de Edición - Usando los mismos componentes que CVBuilder */}
+            <div className="space-y-6 overflow-y-auto max-h-[70vh]">
+              <CVBuilderTabs 
+                activeTab={activeTab}
+                setActiveTab={setActiveTab}
+                completedSections={completedSections}
+                progress={getProgress()}
+              />
 
-              <Separator />
-
-              {/* Resumen */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Resumen Profesional</h3>
-                <Textarea
-                  value={cvData.summary || ''}
-                  onChange={(e) => setCvData(prev => prev ? ({ ...prev, summary: e.target.value }) : null)}
-                  rows={4}
-                  placeholder="Describe tu perfil profesional..."
-                />
-              </div>
-
-              <Separator />
-
-              {/* Habilidades */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Habilidades</h3>
-                <div className="flex flex-wrap gap-2 mb-3">
-                  {cvData.skills?.map((skill) => (
-                    <Badge key={skill} variant="secondary" className="cursor-pointer" onClick={() => removeSkill(skill)}>
-                      {skill} ×
-                    </Badge>
-                  ))}
-                </div>
-                <div className="flex gap-2">
-                  <Input
-                    placeholder="Agregar nueva habilidad"
-                    onKeyPress={(e) => {
-                      if (e.key === 'Enter') {
-                        addSkill(e.currentTarget.value);
-                        e.currentTarget.value = '';
-                      }
-                    }}
+              <Tabs value={activeTab} onValueChange={setActiveTab}>
+                <TabsContent value="personal">
+                  <PersonalInfoTab
+                    cvData={cvData}
+                    handlePersonalInfoChange={handlePersonalInfoChange}
+                    goToNextTab={goToNextTab}
                   />
-                </div>
-              </div>
+                </TabsContent>
 
-              <Separator />
+                <TabsContent value="summary">
+                  <SummaryTab
+                    cvData={cvData}
+                    handleSummaryChange={handleSummaryChange}
+                    improveWithAI={improveWithAI}
+                    isImproving={isImproving}
+                    goToPreviousTab={goToPreviousTab}
+                    goToNextTab={goToNextTab}
+                  />
+                </TabsContent>
 
-              {/* Experiencia */}
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Experiencia Profesional</h3>
-                {cvData.experience?.map((exp, index) => (
-                  <div key={exp.id || index} className="space-y-3 p-4 border rounded-lg">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <Label>Cargo</Label>
-                        <Input
-                          value={exp.position || ''}
-                          onChange={(e) => {
-                            if (!cvData) return;
-                            const newExp = [...(cvData.experience || [])];
-                            newExp[index] = { ...newExp[index], position: e.target.value };
-                            setCvData(prev => prev ? ({ ...prev, experience: newExp }) : null);
-                          }}
-                        />
-                      </div>
-                      <div>
-                        <Label>Empresa</Label>
-                        <Input
-                          value={exp.company || ''}
-                          onChange={(e) => {
-                            if (!cvData) return;
-                            const newExp = [...(cvData.experience || [])];
-                            newExp[index] = { ...newExp[index], company: e.target.value };
-                            setCvData(prev => prev ? ({ ...prev, experience: newExp }) : null);
-                          }}
-                        />
-                      </div>
-                    </div>
-                    <div>
-                      <Label>Descripción</Label>
-                      <Textarea
-                        value={exp.description || ''}
-                        onChange={(e) => {
-                          if (!cvData) return;
-                          const newExp = [...(cvData.experience || [])];
-                          newExp[index] = { ...newExp[index], description: e.target.value };
-                          setCvData(prev => prev ? ({ ...prev, experience: newExp }) : null);
-                        }}
-                        rows={4}
-                      />
-                    </div>
-                  </div>
-                ))}
-              </div>
+                <TabsContent value="experience">
+                  <ExperienceTab
+                    cvData={cvData}
+                    updateExperience={updateExperience}
+                    addExperience={addExperience}
+                    removeExperience={removeExperience}
+                    improveWithAI={improveWithAI}
+                    isImproving={isImproving}
+                    goToPreviousTab={goToPreviousTab}
+                    goToNextTab={goToNextTab}
+                    setCvData={setCvData}
+                  />
+                </TabsContent>
+
+                <TabsContent value="education">
+                  <EducationTab
+                    cvData={cvData}
+                    updateEducation={updateEducation}
+                    addEducation={addEducation}
+                    removeEducation={removeEducation}
+                    goToPreviousTab={goToPreviousTab}
+                    goToNextTab={goToNextTab}
+                    setCvData={setCvData}
+                  />
+                </TabsContent>
+
+                <TabsContent value="skills">
+                  <SkillsTab
+                    cvData={cvData}
+                    addSkill={addSkill}
+                    removeSkill={removeSkill}
+                    goToPreviousTab={goToPreviousTab}
+                    saveCV={handleSave}
+                    saveAndAdapt={() => {}} // No aplica en este contexto
+                  />
+                </TabsContent>
+              </Tabs>
             </div>
 
             {/* Vista Previa */}
-            <div className="border rounded-lg p-4 bg-gray-50">
+            <div className="border rounded-lg p-4 bg-gray-50 overflow-y-auto max-h-[70vh]">
               <h3 className="text-lg font-semibold mb-4">Vista Previa</h3>
               <div className="bg-white rounded-lg shadow-sm overflow-hidden" style={{ transform: 'scale(0.8)', transformOrigin: 'top left', width: '125%', height: '125%' }}>
                 <CVPreview cvData={cvData} />
