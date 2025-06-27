@@ -317,11 +317,12 @@ export const useJobApplications = () => {
       }
 
       // Update local state immediately for better UX
-      setInterviews(prev => prev.map(interview =>
-        interview.id === interviewId
-          ? { ...interview, status: newStatus }
-          : interview
-      ));
+      setInterviews(prev => prev.map(interview => {
+        if (interview.id === interviewId) {
+          return { ...interview, status: newStatus };
+        }
+        return interview;
+      }));
 
       return true;
     } catch (error) {
