@@ -28,6 +28,9 @@ export interface CVData {
     description: string;
   }>;
   skills: string[];
+  companyLogo?: string;
+  jobTitle?: string;
+  companyName?: string;
 }
 
 export interface CVBuilderProps {
