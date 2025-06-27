@@ -397,21 +397,6 @@ export const CVAdaptationPreviewModal = ({
           return;
         }
 
-        const { error: trackingError } = await supabase
-          .from('job_applications_tracking')
-          .insert({
-            user_id: user.id,
-            position: jobTitle || 'Posición sin especificar',
-            company: companyName || 'Empresa sin especificar',
-            status: 'saved',
-            applied_date: new Date().toISOString().split('T')[0],
-            notes: `CV adaptado con Job Matcher`
-          });
-
-        if (trackingError) {
-          console.error('Error saving to job tracking:', trackingError);
-        }
-
         toast.success("CV adaptado guardado exitosamente");
       }
 

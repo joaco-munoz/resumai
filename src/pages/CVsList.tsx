@@ -16,6 +16,8 @@ import { useCompanyLogos } from "@/hooks/useCompanyLogos";
 import { GeneralCVSection } from "@/components/GeneralCVSection";
 import { JobMatcherCVsSection } from "@/components/JobMatcherCVsSection";
 import { isJobReport, extractJobTitle, extractCompanyName } from "@/utils/cvUtils";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface CV {
   id: string;
@@ -42,6 +44,7 @@ export default function CVsList() {
 
   const navigate = useNavigate();
   const isMobile = useIsMobile();
+  const { user } = useAuth();
   
   // Custom hooks
   const { generalCV, jobMatcherCVs, loading, loadCVs, deleteCV: deleteCVFromDB, renameCV, updateCVLogo } = useCVsManager();
@@ -171,6 +174,89 @@ export default function CVsList() {
     loadCVs();
   };
 
+  const handleAddToTracking = async (cv: CV) => {
+    if (!user) {
+      toast.error("Debes estar autenticado para agregar al seguimiento");
+      return;
+    }
+
+    try {
+      // Extract job title and company from CV content
+      let jobTitle = 'Posición sin especificar';
+      let companyName = 'Empresa sin especificar';
+
+      if (cv.title) {
+        const extractedJobTitle = extractJobTitle(cv.title);
+        const extractedCompanyName = extractCompanyName(cv.title);
+        
+        if (extractedJobTitle) jobTitle = extractedJobTitle;
+        if (extractedCompanyName) companyName = extractedCompanyName;
+      }
+
+      console.log('Adding to tracking:', { jobTitle, companyName, cvTitle: cv.title });
+
+      // Avoid duplicates — check if an entry with same company & position already exists in a non-rejected state
+      const { data: existing, error: fetchError } = await supabase
+        .from('job_applications_tracking')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('company', companyName)
+        .eq('position', jobTitle)
+        .in('status', ['saved', 'applied', 'interviewing', 'offer'])
+        .maybeSingle();
+
+      if (fetchError) {
+        console.error('Error checking duplicates:', fetchError);
+        toast.error('No se pudo verificar duplicados');
+        return;
+      }
+
+      if (existing) {
+        // Si ya existe, actualizamos la fila con los últimos datos y la movemos a "saved"
+        const { error: updateError } = await supabase
+          .from('job_applications_tracking')
+          .update({
+            position: jobTitle,
+            company: companyName,
+            status: 'saved',
+            notes: `CV adaptado: ${cv.title}`,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', existing.id);
+
+        if (updateError) {
+          console.error('Error updating tracking:', updateError);
+          toast.error(`No se pudo actualizar la postulación: ${updateError.message}`);
+          return;
+        }
+
+        toast.success('Postulación actualizada en tu tablero');
+        return;
+      }
+
+      const { error } = await supabase
+        .from('job_applications_tracking')
+        .insert({
+          user_id: user.id,
+          position: jobTitle,
+          company: companyName,
+          status: 'saved',
+          applied_date: new Date().toISOString().split('T')[0],
+          notes: `CV adaptado: ${cv.title}`
+        });
+
+      if (error) {
+        console.error('Error adding to tracking:', error);
+        toast.error(`Error al agregar al seguimiento: ${error.message}`);
+      } else {
+        toast.success("CV agregado al seguimiento de Kanban");
+      }
+    } catch (error) {
+      console.error('Error adding to tracking:', error);
+      toast.error("Error al agregar al seguimiento");
+    }
+  };
+
   if (loading) {
     return (
       <SidebarProvider>
@@ -231,6 +317,7 @@ export default function CVsList() {
                 onStartLogoEdit={startLogoEdit}
                 onSelectLogo={handleSelectLogo}
                 onLogoQueryChange={setLogoQuery}
+                onAddToTracking={handleAddToTracking}
               />
 
               {/* Job Matcher CVs Section */}
@@ -259,6 +346,7 @@ export default function CVsList() {
                 onStartLogoEdit={startLogoEdit}
                 onSelectLogo={handleSelectLogo}
                 onLogoQueryChange={setLogoQuery}
+                onAddToTracking={handleAddToTracking}
               />
             </div>
           </div>
