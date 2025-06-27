@@ -1,21 +1,28 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import { 
-  Calendar, 
-  MoreHorizontal,
-  Eye,
-  Edit,
-  Download,
-  Trash2,
-  Star,
-  Plus
+  Eye, 
+  Edit3, 
+  Download, 
+  Trash2, 
+  MoreHorizontal, 
+  Edit, 
+  Check, 
+  X, 
+  Building2,
+  ChevronDown,
+  FileText,
+  BarChart3
 } from "lucide-react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { getScoreColor, getStatusColor, getStatusLabel, formatDate, isJobReport } from "@/utils/cvUtils";
@@ -82,175 +89,372 @@ export const CVCard = ({
   onSelectLogo,
   onLogoQueryChange
 }: CVCardProps) => {
-  const isReport = isJobReport(cv);
-  
-  const renderLogoSection = () => {
-    if (cv.cv_source === 'editor') {
-      return <Star className="h-5 w-5 text-yellow-400" />;
+  const [downloadDropdownOpen, setDownloadDropdownOpen] = useState(false);
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      onSaveRename();
+    } else if (e.key === 'Escape') {
+      onCancelRename();
     }
-    
-    if (logoEditCvId === cv.id) {
-      return (
-        <div className="absolute inset-0 z-50 bg-white p-2 rounded shadow-lg w-64" onClick={(e) => e.stopPropagation()}>
-          <Input
-            placeholder="Buscar empresa..."
-            value={logoQuery}
-            onChange={(e) => onLogoQueryChange(e.target.value)}
-            className="mb-2 h-8"
-            autoFocus
-          />
-          <div className="max-h-40 overflow-y-auto space-y-1">
-            {logoSuggestions.map(s => (
-              <button
-                key={s.domain}
-                className="flex items-center w-full px-2 py-1 bg-white dark:bg-gray-900 hover:bg-gray-100 dark:hover:bg-gray-800 text-left"
-                onClick={() => onSelectLogo(cv, s.logo)}
-              >
-                <img src={s.logo} alt={s.name} className="w-5 h-5 mr-2 rounded" />
-                <span className="text-sm truncate">{s.name}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-      );
-    }
-    
-    if (logoMap[cv.id]) {
-      return (
-        <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); onStartLogoEdit(cv.id); }}>
-          <img src={logoMap[cv.id]} alt={cv.title} className="w-8 h-8 object-contain" />
-        </Button>
-      );
-    }
-    
+  };
+
+  const isJobReportCV = isJobReport(cv);
+  const currentLogo = logoMap[cv.id] || cv.content?.companyLogo;
+
+  if (isMobile) {
     return (
-      <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); onStartLogoEdit(cv.id); }}>
-        <Plus className="h-4 w-4" />
-      </Button>
+      <Card className="p-4 space-y-3 hover:shadow-md transition-shadow border border-gray-200 dark:border-gray-700">
+        <div className="flex items-start justify-between">
+          <div className="flex items-start gap-3 flex-1 min-w-0">
+            {/* Logo */}
+            <div className="flex-shrink-0">
+              {currentLogo ? (
+                <div className="relative group">
+                  <img 
+                    src={currentLogo} 
+                    alt="Company logo" 
+                    className="w-10 h-10 rounded object-contain bg-gray-50 dark:bg-gray-700 p-1 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                    onClick={() => onStartLogoEdit(cv.id)}
+                  />
+                  <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 rounded transition-all duration-200 flex items-center justify-center">
+                    <Edit className="h-3 w-3 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </div>
+                </div>
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-10 h-10 p-0"
+                  onClick={() => onStartLogoEdit(cv.id)}
+                >
+                  <Building2 className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
+
+            <div className="flex-1 min-w-0">
+              {isRenaming ? (
+                <div className="flex gap-2 mb-2">
+                  <Input
+                    value={renamingTitle}
+                    onChange={(e) => onRenamingTitleChange(e.target.value)}
+                    onKeyDown={handleKeyPress}
+                    className="text-sm h-8"
+                    autoFocus
+                  />
+                  <Button
+                    size="sm"
+                    onClick={onSaveRename}
+                    disabled={savingRename}
+                    className="h-8 px-2"
+                  >
+                    <Check className="h-3 w-3" />
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={onCancelRename}
+                    disabled={savingRename}
+                    className="h-8 px-2"
+                  >
+                    <X className="h-3 w-3" />
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-2 mb-2">
+                  {isJobReportCV ? (
+                    <BarChart3 className="h-4 w-4 text-blue-500 flex-shrink-0" />
+                  ) : (
+                    <FileText className="h-4 w-4 text-gray-500 flex-shrink-0" />
+                  )}
+                  <h3 className="font-medium text-gray-900 dark:text-gray-100 truncate text-sm">
+                    {cv.title}
+                  </h3>
+                </div>
+              )}
+
+              <div className="flex flex-wrap items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+                <Badge className={getStatusColor(cv.status)}>
+                  {getStatusLabel(cv.status)}
+                </Badge>
+                {cv.ai_score && (
+                  <Badge className={getScoreColor(cv.ai_score)}>
+                    {cv.ai_score}%
+                  </Badge>
+                )}
+              </div>
+
+              <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                <div>Creado: {formatDate(cv.created_at)}</div>
+                <div>Actualizado: {formatDate(cv.last_updated)}</div>
+              </div>
+            </div>
+          </div>
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem onClick={() => onView(cv)}>
+                <Eye className="h-4 w-4 mr-2" />
+                Ver
+              </DropdownMenuItem>
+              {!isJobReportCV && (
+                <DropdownMenuItem onClick={() => onEdit(cv)}>
+                  <Edit3 className="h-4 w-4 mr-2" />
+                  Editar
+                </DropdownMenuItem>
+              )}
+              {!isJobReportCV && (
+                <>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => onDownload(cv, 'pdf')}>
+                    <Download className="h-4 w-4 mr-2" />
+                    Descargar PDF
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => onDownload(cv, 'word')}>
+                    <Download className="h-4 w-4 mr-2" />
+                    Descargar Word
+                  </DropdownMenuItem>
+                </>
+              )}
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => onStartRename(cv)}>
+                <Edit className="h-4 w-4 mr-2" />
+                Renombrar
+              </DropdownMenuItem>
+              <DropdownMenuItem 
+                onClick={() => onDelete(cv)}
+                className="text-red-600"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Eliminar
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
+        {/* Logo Edit Interface */}
+        {logoEditCvId === cv.id && (
+          <div className="border-t pt-3 space-y-3">
+            <Input
+              placeholder="Buscar empresa..."
+              value={logoQuery}
+              onChange={(e) => onLogoQueryChange(e.target.value)}
+              className="text-sm"
+            />
+            
+            {logoSuggestions.length > 0 && (
+              <div className="grid grid-cols-2 gap-2 max-h-48 overflow-y-auto">
+                {logoSuggestions.map((suggestion) => (
+                  <button
+                    key={suggestion.domain}
+                    onClick={() => onSelectLogo(cv, suggestion.logo)}
+                    className="flex items-center gap-2 p-2 rounded-md border hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors text-left"
+                  >
+                    <img 
+                      src={suggestion.logo} 
+                      alt={suggestion.name}
+                      className="w-6 h-6 object-contain flex-shrink-0"
+                    />
+                    <span className="text-sm truncate">{suggestion.name}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </Card>
     );
-  };
+  }
 
-  const renderTitle = () => {
-    if (isRenaming) {
-      return (
-        <div className="flex items-center gap-2">
-          <Input
-            value={renamingTitle}
-            onChange={e => onRenamingTitleChange(e.target.value)}
-            className="h-8 py-1"
-            autoFocus
-          />
-          <Button size="sm" disabled={savingRename} onClick={onSaveRename}>
-            Guardar
-          </Button>
-          <Button size="sm" variant="outline" onClick={onCancelRename}>
-            Cancelar
-          </Button>
-        </div>
-      );
-    }
-    
-    return <h3 className="font-medium text-gray-900 dark:text-gray-100 truncate">{cv.title}</h3>;
-  };
-
-  const renderDropdownMenu = () => (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm">
-          <MoreHorizontal className="h-4 w-4" />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
-        <DropdownMenuItem onClick={() => onView(cv)}>
-          <Eye className="h-4 w-4 mr-2" />
-          Ver
-        </DropdownMenuItem>
-        {!isReport && (
-          <DropdownMenuItem onClick={() => onEdit(cv)}>
-            <Edit className="h-4 w-4 mr-2" />
-            Editar
-          </DropdownMenuItem>
-        )}
-        {cv.cv_source === 'job_matcher' && (
-          <DropdownMenuItem onClick={() => onStartRename(cv)}>
-            <Edit className="h-4 w-4 mr-2" />
-            Renombrar
-          </DropdownMenuItem>
-        )}
-        {!isReport && (
-          <>
-            <DropdownMenuItem onClick={() => onDownload(cv, 'pdf')}>
-              <Download className="h-4 w-4 mr-2" />
-              Descargar PDF
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => onDownload(cv, 'word')}>
-              <Download className="h-4 w-4 mr-2" />
-              Descargar Word
-            </DropdownMenuItem>
-          </>
-        )}
-        <DropdownMenuItem 
-          className="text-red-600 dark:text-red-400"
-          onClick={() => onDelete(cv)}
-        >
-          <Trash2 className="h-4 w-4 mr-2" />
-          Eliminar
-        </DropdownMenuItem>
-      </DropdownMenuContent>
-    </DropdownMenu>
-  );
-
+  // Desktop version
   return (
-    <div className={`${isMobile ? 'space-y-3 p-4 border rounded-lg' : 'grid grid-cols-12 gap-4 items-center py-3'} border-b border-gray-100 dark:border-gray-700 bg-white hover:bg-gray-50 dark:bg-gray-900 dark:hover:bg-gray-800 rounded-lg transition-colors`}>
-      <div className={`${isMobile ? 'w-full' : 'col-span-5'} flex items-center gap-3`}>
-        <div className="w-10 h-10 rounded-lg flex items-center justify-center bg-gray-100 dark:bg-gray-800 shrink-0 relative">
-          {renderLogoSection()}
-        </div>
-        <div className="min-w-0 flex-1">
-          {renderTitle()}
-          {isReport ? (
-            <p className="text-sm text-gray-500 dark:text-gray-400 truncate">Informe de compatibilidad</p>
-          ) : cv.cv_source === 'job_matcher' && (
-            <p className="text-sm text-gray-500 dark:text-gray-400 truncate">CV adaptado</p>
+    <div className="grid grid-cols-12 gap-4 py-4 items-center border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+      {/* CV Info Column */}
+      <div className="col-span-5 flex items-center gap-3">
+        {/* Logo */}
+        <div className="flex-shrink-0">
+          {currentLogo ? (
+            <div className="relative group">
+              <img 
+                src={currentLogo} 
+                alt="Company logo" 
+                className="w-10 h-10 rounded object-contain bg-gray-50 dark:bg-gray-700 p-1 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                onClick={() => onStartLogoEdit(cv.id)}
+              />
+              <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 rounded transition-all duration-200 flex items-center justify-center">
+                <Edit className="h-3 w-3 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+              </div>
+            </div>
+          ) : (
+            <Button
+              variant="outline"
+              size="sm"
+              className="w-10 h-10 p-0"
+              onClick={() => onStartLogoEdit(cv.id)}
+            >
+              <Building2 className="h-4 w-4" />
+            </Button>
           )}
         </div>
-      </div>
-      
-      {isMobile ? (
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Badge className={`${getScoreColor(cv.ai_score)} border-0 text-xs`}>
-              {cv.ai_score ? `${cv.ai_score}%` : "Sin evaluar"}
-            </Badge>
-            <Badge className={`${getStatusColor(cv.status)} border-0 text-xs`}>
-              {getStatusLabel(cv.status)}
-            </Badge>
-          </div>
-          
-          <div className="flex items-center gap-2">
-            <span className="text-xs text-gray-500 dark:text-gray-400">
-              {formatDate(cv.last_updated || cv.created_at)}
-            </span>
-            {renderDropdownMenu()}
-          </div>
+
+        <div className="flex-1 min-w-0">
+          {isRenaming ? (
+            <div className="flex gap-2 items-center">
+              <Input
+                value={renamingTitle}
+                onChange={(e) => onRenamingTitleChange(e.target.value)}
+                onKeyDown={handleKeyPress}
+                className="text-sm h-8"
+                autoFocus
+              />
+              <Button
+                size="sm"
+                onClick={onSaveRename}
+                disabled={savingRename}
+                className="h-8 px-2"
+              >
+                <Check className="h-3 w-3" />
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={onCancelRename}
+                disabled={savingRename}
+                className="h-8 px-2"
+              >
+                <X className="h-3 w-3" />
+              </Button>
+            </div>
+          ) : (
+            <div className="space-y-1">
+              <div className="flex items-center gap-2">
+                {isJobReportCV ? (
+                  <BarChart3 className="h-4 w-4 text-blue-500 flex-shrink-0" />
+                ) : (
+                  <FileText className="h-4 w-4 text-gray-500 flex-shrink-0" />
+                )}
+                <h3 className="font-medium text-gray-900 dark:text-gray-100 truncate">
+                  {cv.title}
+                </h3>
+              </div>
+              <div className="flex items-center gap-2">
+                <Badge className={getStatusColor(cv.status)}>
+                  {getStatusLabel(cv.status)}
+                </Badge>
+                {cv.ai_score && (
+                  <Badge className={getScoreColor(cv.ai_score)}>
+                    {cv.ai_score}%
+                  </Badge>
+                )}
+              </div>
+            </div>
+          )}
         </div>
-      ) : (
-        <>
-          <div className="col-span-3 flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400">
-            <Calendar className="h-4 w-4" />
-            {formatDate(cv.created_at)}
+
+        {/* Logo Edit Interface */}
+        {logoEditCvId === cv.id && (
+          <div className="absolute z-50 mt-2 w-80 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-4 space-y-3">
+            <Input
+              placeholder="Buscar empresa..."
+              value={logoQuery}
+              onChange={(e) => onLogoQueryChange(e.target.value)}
+              className="text-sm"
+            />
+            
+            {logoSuggestions.length > 0 && (
+              <div className="space-y-2 max-h-48 overflow-y-auto">
+                {logoSuggestions.map((suggestion) => (
+                  <button
+                    key={suggestion.domain}
+                    onClick={() => onSelectLogo(cv, suggestion.logo)}
+                    className="flex items-center gap-3 p-2 rounded-md border hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors w-full text-left"
+                  >
+                    <img 
+                      src={suggestion.logo} 
+                      alt={suggestion.name}
+                      className="w-8 h-8 object-contain flex-shrink-0"
+                    />
+                    <span className="text-sm truncate">{suggestion.name}</span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
-          
-          <div className="col-span-3 flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400">
-            <Calendar className="h-4 w-4" />
-            {formatDate(cv.last_updated || cv.created_at)}
-          </div>
-          
-          <div className="col-span-1 flex justify-end">
-            {renderDropdownMenu()}
-          </div>
-        </>
-      )}
+        )}
+      </div>
+
+      {/* Created Date Column */}
+      <div className="col-span-3 text-sm text-gray-500 dark:text-gray-400">
+        {formatDate(cv.created_at)}
+      </div>
+
+      {/* Updated Date Column */}
+      <div className="col-span-3 text-sm text-gray-500 dark:text-gray-400">
+        {formatDate(cv.last_updated)}
+      </div>
+
+      {/* Actions Column */}
+      <div className="col-span-1 flex items-center justify-end">
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+              <MoreHorizontal className="h-4 w-4" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => onView(cv)}>
+              <Eye className="h-4 w-4 mr-2" />
+              Ver
+            </DropdownMenuItem>
+            {!isJobReportCV && (
+              <DropdownMenuItem onClick={() => onEdit(cv)}>
+                <Edit3 className="h-4 w-4 mr-2" />
+                Editar
+              </DropdownMenuItem>
+            )}
+            {!isJobReportCV && (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                      <Download className="h-4 w-4 mr-2" />
+                      Descargar
+                      <ChevronDown className="h-3 w-3 ml-auto" />
+                    </DropdownMenuItem>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent side="left">
+                    <DropdownMenuItem onClick={() => onDownload(cv, 'pdf')}>
+                      PDF
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => onDownload(cv, 'word')}>
+                      Word
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </>
+            )}
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => onStartRename(cv)}>
+              <Edit className="h-4 w-4 mr-2" />
+              Renombrar
+            </DropdownMenuItem>
+            <DropdownMenuItem 
+              onClick={() => onDelete(cv)}
+              className="text-red-600"
+            >
+              <Trash2 className="h-4 w-4 mr-2" />
+              Eliminar
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      </div>
     </div>
   );
 };
