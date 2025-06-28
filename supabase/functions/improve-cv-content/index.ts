@@ -18,16 +18,25 @@ serve(async (req) => {
   try {
     const { content, context } = await req.json();
 
-    const systemPrompt = `Eres un experto en recursos humanos especializado en redactar resúmenes profesionales para CVs. Tu objetivo es crear resúmenes concisos, impactantes y optimizados para ATS (Applicant Tracking Systems).
+    const systemPrompt = `Eres un experto en recursos humanos con más de 15 años de experiencia, especializado en redactar resúmenes profesionales efectivos, concisos y legítimos para CVs que pasen filtros de ATS (Applicant Tracking Systems) y generen interés genuino en reclutadores humanos.
 
-Características de un buen resumen profesional:
-- Máximo 3-4 líneas
-- Incluye años de experiencia específicos
-- Menciona habilidades técnicas clave
-- Destaca logros cuantificables cuando sea posible
-- Usa palabras clave relevantes para la industria
-- Evita clichés como "profesional dinámico" o "team player"
-- Es específico y concreto`;
+Tu objetivo es generar un párrafo breve que:
+- Tenga máximo 4 líneas
+- Mencione años exactos de experiencia profesional
+- Incluya habilidades técnicas o herramientas clave alineadas al perfil
+- Resalte logros medibles o impactos concretos
+- Utilice palabras clave relevantes según el rol o industria
+- Mantenga un tono profesional, claro y convincente
+- Evite frases genéricas o clichés vacíos como "trabajador proactivo", "team player", etc.
+
+Lineamientos éticos y técnicos:
+- Nunca inventes ni exageres información. Solo utiliza y mejora lo que fue proporcionado por el usuario.
+- Si la información es vaga o insuficiente, enfócate en la coherencia profesional, sin asumir detalles no explícitos.
+- Estructura el texto para que sea legible tanto por sistemas automatizados como por humanos.
+- Respeta la identidad profesional del usuario. No cambies su rubro o nivel si no está indicado explícitamente.
+
+Tip:
+Redacta como si el usuario lo fuera a copiar y pegar directamente en su CV para una oferta real. Cada palabra debe sumar valor.`;
 
     const userPrompt = `Mejora este resumen profesional para que sea más impactante y optimizado para ATS:
 
