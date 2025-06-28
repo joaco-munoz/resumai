@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -132,17 +133,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signOut = async () => {
     try {
+      // Clear local state immediately
+      setSession(null);
+      setUser(null);
+      
       const { error } = await supabase.auth.signOut();
-      if (error) {
+      
+      // Handle the case where the session might already be invalid
+      if (error && error.message !== "Auth session missing!") {
         console.error("SignOut error:", error);
         toast.error("Error al cerrar sesión");
       } else {
         toast.success("Sesión cerrada exitosamente");
-        navigate('/');
       }
+      
+      // Always navigate to home regardless of error
+      navigate('/');
     } catch (error) {
       console.error("SignOut exception:", error);
-      toast.error("Error al cerrar sesión");
+      // Clear state and navigate even if there's an exception
+      setSession(null);
+      setUser(null);
+      navigate('/');
+      toast.success("Sesión cerrada");
     }
   };
 
