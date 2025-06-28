@@ -18,6 +18,13 @@ serve(async (req) => {
   try {
     const { content, context } = await req.json();
 
+    if (!content) {
+      return new Response(
+        JSON.stringify({ error: 'content es requerido' }),
+        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const systemPrompt = `Eres un experto en recursos humanos con más de 15 años de experiencia, especializado en redactar resúmenes profesionales efectivos, concisos y legítimos para CVs que pasen filtros de ATS (Applicant Tracking Systems) y generen interés genuino en reclutadores humanos.
 
 Tu objetivo es generar un párrafo breve que:
@@ -35,8 +42,7 @@ Lineamientos éticos y técnicos:
 - Estructura el texto para que sea legible tanto por sistemas automatizados como por humanos.
 - Respeta la identidad profesional del usuario. No cambies su rubro o nivel si no está indicado explícitamente.
 
-Tip:
-Redacta como si el usuario lo fuera a copiar y pegar directamente en su CV para una oferta real. Cada palabra debe sumar valor.`;
+Devuelve solo el resumen mejorado, sin explicaciones adicionales.`;
 
     const userPrompt = `Mejora este resumen profesional para que sea más impactante y optimizado para ATS:
 
@@ -46,7 +52,7 @@ ${context ? `Contexto adicional: ${context}` : ''}
 
 Devuelve solo el resumen mejorado, sin explicaciones adicionales.`;
 
-    console.log('Calling OpenAI API for summary improvement...');
+    console.log('Calling OpenAI API for content improvement...');
 
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -66,13 +72,27 @@ Devuelve solo el resumen mejorado, sin explicaciones adicionales.`;
     });
 
     if (!response.ok) {
-      throw new Error(`OpenAI API error: ${response.status}`);
+      const errorText = await response.text();
+      console.error('OpenAI API error:', response.status, errorText);
+      return new Response(
+        JSON.stringify({ error: `Error de OpenAI API: ${response.status}` }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
     }
 
     const data = await response.json();
+    
+    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+      console.error('Invalid OpenAI response structure:', data);
+      return new Response(
+        JSON.stringify({ error: 'Respuesta inválida de OpenAI' }),
+        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const improvedContent = data.choices[0].message.content;
 
-    console.log('Summary improved successfully');
+    console.log('Content improved successfully');
 
     return new Response(JSON.stringify({ improvedContent }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -81,7 +101,7 @@ Devuelve solo el resumen mejorado, sin explicaciones adicionales.`;
     console.error('Error in improve-cv-content function:', error);
     return new Response(JSON.stringify({ 
       error: error.message,
-      details: 'Error al mejorar el resumen profesional'
+      details: 'Error al mejorar el contenido'
     }), {
       status: 500,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

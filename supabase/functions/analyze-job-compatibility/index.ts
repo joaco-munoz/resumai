@@ -27,38 +27,6 @@ interface MatchResult {
   improvements: string[];
 }
 
-// Function to clean and extract JSON from AI response
-const extractJsonFromResponse = (aiResponse: string): string => {
-  // Remove markdown code blocks if present
-  let cleanedResponse = aiResponse.trim();
-  
-  // Check if response is wrapped in markdown code blocks
-  if (cleanedResponse.startsWith('```json') || cleanedResponse.startsWith('```')) {
-    // Extract content between code blocks
-    const lines = cleanedResponse.split('\n');
-    let jsonStart = -1;
-    let jsonEnd = -1;
-    
-    for (let i = 0; i < lines.length; i++) {
-      if (lines[i].trim().startsWith('```json') || lines[i].trim() === '```') {
-        if (jsonStart === -1) {
-          jsonStart = i + 1;
-        } else {
-          jsonEnd = i;
-          break;
-        }
-      }
-    }
-    
-    if (jsonStart !== -1) {
-      const jsonLines = jsonEnd !== -1 ? lines.slice(jsonStart, jsonEnd) : lines.slice(jsonStart);
-      cleanedResponse = jsonLines.join('\n').trim();
-    }
-  }
-  
-  return cleanedResponse;
-};
-
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
@@ -129,6 +97,8 @@ HABILIDADES:
 ${cvData.skills?.join(', ') || 'No especificadas'}
     `.trim();
 
+    console.log('Calling OpenAI API for job compatibility analysis...');
+
     // Call OpenAI API
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
@@ -155,7 +125,7 @@ Debes proporcionar un análisis detallado y profesional que incluya:
 
 5. ÁREAS DE MEJORA: Sugerencias específicas sobre qué aspectos del CV podrían fortalecerse para esta posición.
 
-Responde ÚNICAMENTE en formato JSON válido con esta estructura exacta (sin bloques de código markdown):
+Responde en formato JSON válido con esta estructura exacta:
 {
   "score": número_entre_0_y_100,
   "strengths": ["fortaleza1", "fortaleza2", "fortaleza3"],
@@ -199,9 +169,8 @@ Proporciona el análisis en formato JSON.`
     console.log('AI Response:', aiResponse);
 
     try {
-      // Clean the response and extract JSON
-      const cleanedResponse = extractJsonFromResponse(aiResponse);
-      const matchResult: MatchResult = JSON.parse(cleanedResponse);
+      // Parse the JSON response
+      const matchResult: MatchResult = JSON.parse(aiResponse);
       
       // Validate the response structure
       if (typeof matchResult.score !== 'number' ||
