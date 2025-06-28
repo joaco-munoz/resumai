@@ -87,8 +87,8 @@ Devuelve únicamente el bullet point mejorado comenzando con "• " y sin explic
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
         ],
-        temperature: 0.3,
-        max_tokens: 200,
+        temperature: 0.7,
+        max_tokens: 250,
       }),
     });
 
