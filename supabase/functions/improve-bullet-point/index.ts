@@ -62,11 +62,7 @@ FORMATO DE RESPUESTA:
 - Inicia con "• " (viñeta + espacio)
 - Sin explicaciones adicionales ni comentarios
 - Máximo 250 caracteres por bullet point
-- Lenguaje en español profesional y directo
-
-EJEMPLO DE TRANSFORMACIÓN:
-Antes: "Ayudé en proyectos de marketing digital"
-Después: "• Ejecuté 3 campañas de marketing digital que incrementaron la conversión web en 25% y generaron 150+ leads calificados mensualmente"`;
+- Lenguaje en español profesional y directo`;
 
     const userPrompt = `Transforma este bullet point aplicando los más altos estándares ATS y principios éticos profesionales:
 
