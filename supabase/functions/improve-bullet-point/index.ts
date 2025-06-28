@@ -59,7 +59,7 @@ ESTÁNDARES ATS DE ALTO NIVEL:
 
 FORMATO DE RESPUESTA:
 - Devuelve ÚNICAMENTE el bullet point mejorado
-- Inicia con "• " (viñeta + espacio)
+- No inicies con"• " (viñeta + espacio)
 - Sin explicaciones adicionales ni comentarios
 - Máximo 250 caracteres por bullet point
 - Lenguaje en español profesional y directo`;
