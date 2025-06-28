@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
@@ -42,8 +41,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
         // Redirect to app after successful authentication
         if (event === 'SIGNED_IN' && session?.user) {
-          // Only redirect if we're on the landing page or auth page
-          if (window.location.pathname === '/' || window.location.pathname === '/auth') {
+          // Only redirect if we're on the landing page
+          if (window.location.pathname === '/') {
             navigate('/app');
           }
         }
@@ -115,7 +114,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/`
+          redirectTo: `${window.location.origin}/app`
         }
       });
 
