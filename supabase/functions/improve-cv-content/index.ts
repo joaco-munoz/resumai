@@ -25,32 +25,69 @@ serve(async (req) => {
       );
     }
 
-    const systemPrompt = `Eres un experto en recursos humanos con más de 15 años de experiencia, especializado en redactar resúmenes profesionales efectivos, concisos y legítimos para CVs que pasen filtros de ATS (Applicant Tracking Systems) y generen interés genuino en reclutadores humanos.
+    const systemPrompt = `Eres un consultor líder en recursos humanos con certificación ATS avanzada y más de 15 años de experiencia especializada en optimización de resúmenes profesionales para CVs de alto impacto.
 
-Tu objetivo es generar un párrafo breve que:
-- Tenga máximo 4 líneas
-- Mencione años exactos de experiencia profesional
-- Incluya habilidades técnicas o herramientas clave alineadas al perfil
-- Resalte logros medibles o impactos concretos
-- Utilice palabras clave relevantes según el rol o industria
-- Mantenga un tono profesional, claro y convincente
-- Evite frases genéricas o clichés vacíos como "trabajador proactivo", "team player", etc.
+MISIÓN: Crear resúmenes profesionales que superen filtros ATS automatizados y generen interés genuino en reclutadores humanos, manteniendo los más altos estándares éticos y profesionales.
 
-Lineamientos éticos y técnicos:
-- Nunca inventes ni exageres información. Solo utiliza y mejora lo que fue proporcionado por el usuario.
-- Si la información es vaga o insuficiente, enfócate en la coherencia profesional, sin asumir detalles no explícitos.
-- Estructura el texto para que sea legible tanto por sistemas automatizados como por humanos.
-- Respeta la identidad profesional del usuario. No cambies su rubro o nivel si no está indicado explícitamente.
+PRINCIPIOS ÉTICOS FUNDAMENTALES:
+- Veracidad absoluta: Solo utiliza y mejora información proporcionada explícitamente
+- Integridad profesional: No inventes experiencia, logros o habilidades no mencionadas
+- Respeto a la identidad profesional: Mantén el nivel de senioridad y sector del candidato
+- Inclusividad: Usa lenguaje neutral y libre de sesgos discriminatorios
+- Transparencia: Enfócate en competencias verificables y experiencia demostrable
 
-Devuelve solo el resumen mejorado, sin explicaciones adicionales.`;
+ESTÁNDARES ATS DE EXCELENCIA:
 
-    const userPrompt = `Mejora este resumen profesional para que sea más impactante y optimizado para ATS:
+1. ESTRUCTURA ÓPTIMA:
+   - Extensión: 3-4 líneas máximo (80-120 palabras)
+   - Formato: Párrafo cohesivo sin viñetas
+   - Densidad de keywords: 8-12% de terminología técnica relevante
 
+2. ELEMENTOS ESENCIALES:
+   - Años exactos de experiencia profesional documentada
+   - Especialización técnica específica y habilidades core
+   - Logros cuantificables o impactos medibles mencionados
+   - Industrias o sectores de experiencia comprobada
+   - Nivel de responsabilidad y liderazgo evidenciado
+
+3. OPTIMIZACIÓN PARA ATS:
+   - Keywords estratégicas del sector y rol específico
+   - Terminología técnica precisa (herramientas, metodologías, certificaciones)
+   - Verbos de acción profesionales en primera persona
+   - Estructura gramática compatible con parsing automatizado
+
+4. CRITERIOS DE CALIDAD:
+   - Profesionalismo: Tono ejecutivo y convincente
+   - Especificidad: Evita generalidades y clichés vacíos
+   - Relevancia: Alineado con objetivos profesionales del candidato
+   - Diferenciación: Destaca propuesta de valor única
+
+5. PALABRAS PROHIBIDAS (clichés ATS):
+   - "Trabajador proactivo", "team player", "orientado a resultados"
+   - "Dinámico", "multifacético", "versátil"
+   - Frases genéricas sin sustento medible
+
+METODOLOGÍA DE MEJORA:
+1. Analizar información factual disponible
+2. Identificar experiencia core y competencias técnicas
+3. Cuantificar logros cuando sea posible
+4. Integrar keywords relevantes naturalmente
+5. Estructurar para máxima legibilidad ATS y humana
+
+FORMATO DE RESPUESTA:
+- Devuelve ÚNICAMENTE el resumen mejorado
+- Sin explicaciones, comentarios o markdown
+- Párrafo continuo en español profesional
+- Máximo 4 líneas de texto`;
+
+    const userPrompt = `Optimiza este resumen profesional aplicando los más altos estándares ATS y principios éticos de reclutamiento:
+
+RESUMEN ACTUAL:
 "${content}"
 
-${context ? `Contexto adicional: ${context}` : ''}
+${context ? `CONTEXTO PROFESIONAL ADICIONAL: ${context}` : ''}
 
-Devuelve solo el resumen mejorado, sin explicaciones adicionales.`;
+Devuelve únicamente el resumen profesional mejorado, sin explicaciones adicionales.`;
 
     console.log('Calling OpenAI API for content improvement...');
 
@@ -61,13 +98,13 @@ Devuelve solo el resumen mejorado, sin explicaciones adicionales.`;
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4o',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
         ],
-        temperature: 0.7,
-        max_tokens: 500,
+        temperature: 0.4,
+        max_tokens: 300,
       }),
     });
 
@@ -90,7 +127,7 @@ Devuelve solo el resumen mejorado, sin explicaciones adicionales.`;
       );
     }
 
-    const improvedContent = data.choices[0].message.content;
+    const improvedContent = data.choices[0].message.content.trim();
 
     console.log('Content improved successfully');
 

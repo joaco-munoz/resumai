@@ -99,7 +99,7 @@ ${cvData.skills?.join(', ') || 'No especificadas'}
 
     console.log('Calling OpenAI API for job compatibility analysis...');
 
-    // Call OpenAI API
+    // Call OpenAI API with improved prompt
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
@@ -111,52 +111,64 @@ ${cvData.skills?.join(', ') || 'No especificadas'}
         messages: [
           {
             role: 'system',
-            content: `Eres un experimentado reclutador de RRHH y experto en sistemas ATS (Applicant Tracking System). Tu trabajo es analizar la compatibilidad entre un CV y una descripción de trabajo específica.
+            content: `Eres un experimentado consultor en recursos humanos con certificación ATS (Applicant Tracking System) y más de 15 años de experiencia en reclutamiento estratégico. Tu función es realizar análisis de compatibilidad CV-trabajo de manera ética, precisa y profesional.
 
-Debes proporcionar un análisis detallado y profesional que incluya:
+PRINCIPIOS ÉTICOS Y ESTÁNDARES ATS:
+- Analiza únicamente información factual presente en el CV
+- No hagas suposiciones sobre información no proporcionada
+- Mantén objetividad sin sesgos de género, edad, origen o características personales
+- Enfócate en competencias técnicas y experiencia relevante verificable
+- Respeta la privacidad y dignidad profesional del candidato
+- Proporciona feedback constructivo y accionable
+- Utiliza criterios de evaluación transparentes y justos
 
-1. SCORE DE COMPATIBILIDAD (0-100): Un puntaje numérico basado en qué tan bien coincide el CV con los requisitos del trabajo.
+METODOLOGÍA DE ANÁLISIS:
+1. COMPATIBILIDAD TÉCNICA: Evalúa habilidades técnicas, herramientas y tecnologías
+2. EXPERIENCIA RELEVANTE: Analiza roles similares, responsabilidades y logros cuantificables
+3. NIVEL DE SENIORIDAD: Compara años de experiencia y nivel de responsabilidad
+4. INDUSTRIA/SECTOR: Evalúa experiencia en sectores relacionados
+5. EDUCACIÓN Y CERTIFICACIONES: Revisa formación académica y certificaciones relevantes
 
-2. FORTALEZAS: Aspectos del CV que coinciden perfectamente con la oferta laboral.
-
-3. KEYWORDS FALTANTES: Términos clave mencionados en la descripción del trabajo que no aparecen en el CV.
-
-4. BULLETS SUGERIDOS: 3-4 bullet points optimizados que el candidato podría agregar a su CV para mejorar la compatibilidad con esta posición específica.
-
-5. ÁREAS DE MEJORA: Sugerencias específicas sobre qué aspectos del CV podrían fortalecerse para esta posición.
-
-Responde en formato JSON válido con esta estructura exacta:
+ESTRUCTURA DE RESPUESTA (JSON válido):
 {
-  "score": número_entre_0_y_100,
-  "strengths": ["fortaleza1", "fortaleza2", "fortaleza3"],
-  "missingKeywords": ["keyword1", "keyword2", "keyword3"],
-  "suggestedBullets": ["• Bullet point 1", "• Bullet point 2", "• Bullet point 3"],
-  "improvements": ["mejora1", "mejora2", "mejora3"]
+  "score": [número_0_a_100],
+  "strengths": ["máximo_5_fortalezas_específicas_y_medibles"],
+  "missingKeywords": ["máximo_8_términos_técnicos_específicos"],
+  "suggestedBullets": ["máximo_4_bullets_específicos_y_relevantes"],
+  "improvements": ["máximo_5_mejoras_concretas_y_accionables"]
 }
 
-Sé específico, profesional y enfócate en hacer que el análisis sea accionable para el candidato.`
+CRITERIOS DE PUNTUACIÓN:
+- 90-100: Candidato altamente calificado con experiencia excepcional
+- 80-89: Candidato muy calificado con experiencia sólida
+- 70-79: Candidato calificado con experiencia adecuada
+- 60-69: Candidato parcialmente calificado, requiere desarrollo
+- 50-59: Candidato con potencial pero necesita capacitación significativa
+- 0-49: Candidato no calificado para la posición actual
+
+IMPORTANTE: Responde ÚNICAMENTE con el objeto JSON válido, sin markdown ni explicaciones adicionales.`
           },
           {
             role: 'user',
-            content: `Analiza la compatibilidad entre este CV y la descripción del trabajo:
+            content: `Analiza la compatibilidad entre este CV y la oferta laboral aplicando los más altos estándares ATS y principios éticos:
 
-DESCRIPCIÓN DEL TRABAJO:
+OFERTA LABORAL:
 ${jobDescription}
 
 CV DEL CANDIDATO:
 ${cvText}
 
-Proporciona el análisis en formato JSON.`
+Proporciona el análisis en formato JSON válido siguiendo la estructura especificada.`
           }
         ],
-        temperature: 0.3,
+        temperature: 0.2,
         max_tokens: 2000
       }),
     });
 
     if (!response.ok) {
       const errorData = await response.text();
-      console.error('OpenAI API error:', errorData);
+      console.error('OpenAI API error:', response.status, errorData);
       return new Response(
         JSON.stringify({ error: 'Error al procesar el análisis con IA' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
@@ -166,11 +178,21 @@ Proporciona el análisis en formato JSON.`
     const data = await response.json();
     const aiResponse = data.choices[0].message.content;
 
-    console.log('AI Response:', aiResponse);
+    console.log('Raw AI Response:', aiResponse);
 
     try {
+      // Clean and parse JSON response
+      let cleanedResponse = aiResponse.trim();
+      
+      // Remove markdown code blocks if present
+      if (cleanedResponse.startsWith('```json')) {
+        cleanedResponse = cleanedResponse.replace(/```json\n?/, '').replace(/\n?```$/, '');
+      } else if (cleanedResponse.startsWith('```')) {
+        cleanedResponse = cleanedResponse.replace(/```\n?/, '').replace(/\n?```$/, '');
+      }
+      
       // Parse the JSON response
-      const matchResult: MatchResult = JSON.parse(aiResponse);
+      const matchResult: MatchResult = JSON.parse(cleanedResponse);
       
       // Validate the response structure
       if (typeof matchResult.score !== 'number' ||
@@ -181,7 +203,12 @@ Proporciona el análisis en formato JSON.`
         throw new Error('Invalid response structure from AI');
       }
 
-      console.log('Job compatibility analysis completed successfully');
+      // Ensure score is within valid range
+      if (matchResult.score < 0 || matchResult.score > 100) {
+        matchResult.score = Math.max(0, Math.min(100, matchResult.score));
+      }
+
+      console.log('Job compatibility analysis completed successfully with score:', matchResult.score);
 
       return new Response(JSON.stringify(matchResult), {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
@@ -193,10 +220,10 @@ Proporciona el análisis en formato JSON.`
       // Fallback response if JSON parsing fails
       const fallbackResult: MatchResult = {
         score: 50,
-        strengths: ['Experiencia relevante identificada'],
-        missingKeywords: ['Análisis detallado no disponible'],
-        suggestedBullets: ['• Revisar y actualizar experiencia laboral', '• Añadir habilidades técnicas relevantes'],
-        improvements: ['Intentar nuevamente el análisis']
+        strengths: ['Experiencia profesional identificada en el CV'],
+        missingKeywords: ['Análisis detallado temporalmente no disponible'],
+        suggestedBullets: ['• Revisar y actualizar experiencia laboral según los requisitos de la oferta', '• Añadir habilidades técnicas mencionadas en la descripción del puesto'],
+        improvements: ['Intentar nuevamente el análisis para obtener resultados más precisos']
       };
 
       return new Response(JSON.stringify(fallbackResult), {

@@ -25,32 +25,57 @@ serve(async (req) => {
       );
     }
 
-    const systemPrompt = `Eres un experto en recursos humanos con más de 15 años de experiencia, especializado en redactar bullet points profesionales y efectivos para descripciones de experiencia laboral en CVs. Tu objetivo es crear bullets que destaquen logros e impacto real, optimizados para filtros ATS (Applicant Tracking Systems) y que impresionen a reclutadores humanos.
+    const systemPrompt = `Eres un consultor experto en recursos humanos con certificación ATS y más de 15 años de experiencia ayudando a profesionales a optimizar sus CVs para superar filtros automatizados y impresionar a reclutadores humanos.
 
-Características de un buen bullet point:
-- Comienza con un verbo de acción en pasado (Desarrollé, Implementé, Lideré, Optimicé, Automaticé, etc.)
-- Incluye métricas claras o resultados cuantificables (porcentaje, monto, volumen, tiempos, etc.)
-- Destaca logros específicos por sobre tareas genéricas
-- Es conciso pero descriptivo (idealmente no más de 250 caracteres)
-- Utiliza palabras clave relevantes para el puesto y sector
-- Enfocado en impacto y valor agregado, no en funciones básicas
-- Evita verbos vagos como "ayudé", "apoyé", "participé", "colaboré" si no se puede contextualizar con impacto medible
+OBJETIVO: Transformar bullet points de experiencia laboral en declaraciones de impacto profesional que cumplan con los más altos estándares ATS y principios éticos de reclutamiento.
 
-Lineamientos éticos:
-- No inventes logros ni datos. Usa únicamente la información proporcionada por el usuario.
-- Si no hay métricas explícitas, infiere un impacto razonable sin exagerar ni falsificar información.
-- No infles cargos ni responsabilidades más allá de lo entregado.
-- Asegúrate de que el resultado sea profesional, legítimo y útil para postular a empleos reales.
+PRINCIPIOS ÉTICOS Y PROFESIONALES:
+- Mantén la veracidad absoluta de la información proporcionada
+- No inventes métricas, logros o responsabilidades no mencionadas
+- Respeta la experiencia real del candidato sin exagerar
+- Enfócate en el valor agregado genuino y verificable
+- Utiliza un lenguaje profesional, inclusivo y libre de sesgos
+- Asegura que el contenido sea éticamente defendible en cualquier proceso de verificación
 
-Devuelve únicamente el bullet point mejorado en español, comenzando con "• " y sin explicaciones adicionales.`;
+ESTÁNDARES ATS DE ALTO NIVEL:
+1. VERBOS DE ACCIÓN POTENTES: Inicia con verbos específicos que demuestren liderazgo y competencia técnica
+   - Ejemplos: Implementé, Desarrollé, Optimicé, Lideré, Automaticé, Diseñé, Ejecuté, Supervise, Coordiné
 
-    const userPrompt = `Mejora este bullet point de experiencia laboral para que sea más impactante y cuantificable:
+2. CUANTIFICACIÓN PRECISA: Incluye métricas específicas cuando sea posible
+   - Porcentajes de mejora, volúmenes manejados, equipos dirigidos, presupuestos administrados
+   - Si no hay métricas explícitas, usa indicadores cualitativos medibles
 
+3. PALABRAS CLAVE ESTRATÉGICAS: Incorpora terminología técnica y sectorial relevante
+   - Herramientas, tecnologías, metodologías, certificaciones
+   - Competencias blandas valoradas por ATS modernos
+
+4. ESTRUCTURA OPTIMIZADA: Longitud ideal entre 150-250 caracteres
+   - Clara, concisa y fácil de escanear
+   - Formato compatible con sistemas de parsing automatizado
+
+5. ORIENTACIÓN A RESULTADOS: Enfoque en impacto empresarial
+   - Eficiencia, productividad, calidad, satisfacción del cliente
+   - Contribución al crecimiento y objetivos organizacionales
+
+FORMATO DE RESPUESTA:
+- Devuelve ÚNICAMENTE el bullet point mejorado
+- Inicia con "• " (viñeta + espacio)
+- Sin explicaciones adicionales ni comentarios
+- Máximo 250 caracteres por bullet point
+- Lenguaje en español profesional y directo
+
+EJEMPLO DE TRANSFORMACIÓN:
+Antes: "Ayudé en proyectos de marketing digital"
+Después: "• Ejecuté 3 campañas de marketing digital que incrementaron la conversión web en 25% y generaron 150+ leads calificados mensualmente"`;
+
+    const userPrompt = `Transforma este bullet point aplicando los más altos estándares ATS y principios éticos profesionales:
+
+BULLET POINT ORIGINAL:
 "${bulletPoint}"
 
-${context ? `Contexto: ${context}` : ''}
+${context ? `CONTEXTO ADICIONAL: ${context}` : ''}
 
-Devuelve solo el bullet point mejorado, sin explicaciones adicionales.`;
+Devuelve únicamente el bullet point mejorado comenzando con "• " y sin explicaciones adicionales.`;
 
     console.log('Calling OpenAI API for bullet point improvement...');
 
@@ -61,13 +86,13 @@ Devuelve solo el bullet point mejorado, sin explicaciones adicionales.`;
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini',
+        model: 'gpt-4o',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
         ],
-        temperature: 0.7,
-        max_tokens: 300,
+        temperature: 0.3,
+        max_tokens: 200,
       }),
     });
 
@@ -90,7 +115,7 @@ Devuelve solo el bullet point mejorado, sin explicaciones adicionales.`;
       );
     }
 
-    const improvedBulletPoint = data.choices[0].message.content;
+    const improvedBulletPoint = data.choices[0].message.content.trim();
 
     console.log('Bullet point improved successfully');
 
