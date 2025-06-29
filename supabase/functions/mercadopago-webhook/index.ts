@@ -63,21 +63,38 @@ serve(async (req) => {
                      subscriptionData.status === "cancelled" ? "cancelled" : 
                      subscriptionData.status === "paused" ? "paused" : "pending";
 
-    const subscriptionEnd = subscriptionData.status === "authorized" 
-      ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 días
-      : null;
+    // Usar la fecha real de renovación de MercadoPago
+    const subscriptionEnd = subscriptionData.auto_recurring?.next_payment_date || 
+                           (subscriptionData.status === "authorized" 
+                             ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 días como fallback
+                             : null);
 
-    // Buscar el usuario por email del pagador
+    logStep("Processing subscription status", {
+      preapprovalId,
+      newStatus,
+      subscriptionEnd,
+      externalReference: subscriptionData.external_reference
+    });
+
+    // Buscar el usuario por external_reference (más confiable)
+    const userId = subscriptionData.external_reference;
+    if (!userId) {
+      logStep("No external_reference found, cannot identify user");
+      throw new Error("No external_reference found in subscription data");
+    }
+
     const { data: profile, error: profileError } = await supabaseClient
       .from("profiles")
       .select("id, email")
-      .eq("email", subscriptionData.payer_email)
+      .eq("id", userId)
       .single();
 
     if (profileError || !profile) {
-      logStep("User not found", { email: subscriptionData.payer_email, error: profileError });
-      throw new Error(`User not found: ${subscriptionData.payer_email}`);
+      logStep("User not found by external_reference", { userId, error: profileError });
+      throw new Error(`User not found: ${userId}`);
     }
+
+    logStep("User found", { userId: profile.id, email: profile.email });
 
     // Actualizar o crear suscripción
     const { error: upsertError } = await supabaseClient
@@ -121,19 +138,20 @@ serve(async (req) => {
     if (profileUpdateError) {
       logStep("Warning: Could not update profile", profileUpdateError);
     } else {
-      logStep("Profile updated", { 
+      logStep("Profile updated successfully", { 
         userId: profile.id, 
         email: profile.email, 
         tier: profileUpdates.subscription_tier,
-        isPremium: profileUpdates.is_premium 
+        isPremium: profileUpdates.is_premium,
+        expiresAt: profileUpdates.premium_expires_at
       });
     }
 
     logStep("Webhook processed successfully", {
       preapprovalId,
       status: newStatus,
-      email: subscriptionData.payer_email,
-      userId: profile.id
+      userId: profile.id,
+      subscriptionEnd
     });
 
     return new Response("OK", { status: 200 });

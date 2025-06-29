@@ -70,12 +70,20 @@ serve(async (req) => {
       const now = new Date();
       const expiryDate = subscription.current_period_end ? new Date(subscription.current_period_end) : null;
       
+      logStep("Checking subscription status", {
+        subscriptionId: subscription.stripe_subscription_id,
+        status: subscription.status,
+        expiryDate: expiryDate?.toISOString(),
+        now: now.toISOString()
+      });
+
       if (subscription.status === "active" && (!expiryDate || expiryDate > now)) {
         subscriptionStatus = "pro";
         isPremium = true;
         premiumExpiresAt = subscription.current_period_end;
-      } else if (expiryDate && expiryDate <= now) {
-        // La suscripción ha expirado, actualizar estado
+      } else if (["cancelled", "paused", "expired"].includes(subscription.status) || 
+                 (expiryDate && expiryDate <= now)) {
+        // La suscripción ha expirado o fue cancelada, actualizar estado
         await supabaseClient
           .from("subscriptions")
           .update({ status: "expired" })
@@ -84,6 +92,8 @@ serve(async (req) => {
         subscriptionStatus = "free";
         isPremium = false;
         premiumExpiresAt = null;
+        
+        logStep("Subscription expired/cancelled, updated status");
       }
     }
 

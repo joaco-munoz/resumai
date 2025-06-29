@@ -30,11 +30,53 @@ export const MercadoPagoSubscription = ({ currentPlan, onPlanChange }: MercadoPa
   const [isCreatingSubscription, setIsCreatingSubscription] = useState(false);
   const [isCheckingStatus, setIsCheckingStatus] = useState(true);
   const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus | null>(null);
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
 
   // Verificar estado de suscripción al cargar
   useEffect(() => {
     checkSubscriptionStatus();
   }, []);
+
+  // Procesar parámetros de retorno de MercadoPago
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const status = urlParams.get('status');
+    const preapprovalId = urlParams.get('preapproval_id');
+
+    if (status && preapprovalId) {
+      console.log('Processing MP return parameters:', { status, preapprovalId });
+      handlePaymentResult(status, preapprovalId);
+      
+      // Limpiar URL
+      window.history.replaceState({}, '', window.location.pathname);
+    }
+  }, []);
+
+  const handlePaymentResult = async (status: string, preapprovalId: string) => {
+    setIsProcessingPayment(true);
+    
+    if (status === 'authorized') {
+      toast.success("¡Pago autorizado! Verificando activación de tu Plan Pro...");
+      
+      // Esperar un poco para que el webhook procese
+      setTimeout(async () => {
+        await checkSubscriptionStatus();
+        toast.success("¡Plan Pro activado exitosamente!");
+        // Recargar la página para asegurar que todo se actualice
+        setTimeout(() => window.location.reload(), 2000);
+      }, 3000);
+      
+    } else if (status === 'cancelled') {
+      toast.error("Pago cancelado");
+      setIsProcessingPayment(false);
+    } else if (status === 'pending') {
+      toast.info("Pago pendiente de confirmación");
+      setIsProcessingPayment(false);
+    } else {
+      toast.error("Error en el procesamiento del pago");
+      setIsProcessingPayment(false);
+    }
+  };
 
   const checkSubscriptionStatus = async () => {
     setIsCheckingStatus(true);
@@ -89,6 +131,10 @@ export const MercadoPagoSubscription = ({ currentPlan, onPlanChange }: MercadoPa
         headers: {
           Authorization: `Bearer ${session.access_token}`,
         },
+        body: {
+          user_id: session.user.id,
+          email: session.user.email
+        }
       });
 
       console.log("Respuesta de la función:", { data, error });
@@ -116,13 +162,18 @@ export const MercadoPagoSubscription = ({ currentPlan, onPlanChange }: MercadoPa
     }
   };
 
-  if (isCheckingStatus) {
+  if (isCheckingStatus || isProcessingPayment) {
     return (
       <Card>
         <CardContent className="flex items-center justify-center p-8">
           <div className="flex items-center gap-2">
             <Loader2 className="h-4 w-4 animate-spin" />
-            <span>Verificando estado de suscripción...</span>
+            <span>
+              {isProcessingPayment 
+                ? "Procesando pago y activando Plan Pro..." 
+                : "Verificando estado de suscripción..."
+              }
+            </span>
           </div>
         </CardContent>
       </Card>
@@ -193,7 +244,7 @@ export const MercadoPagoSubscription = ({ currentPlan, onPlanChange }: MercadoPa
             <div className="flex items-center justify-between text-sm">
               <span className="text-gray-600">Suscripción activa con MercadoPago</span>
               <span className="font-semibold text-brand-600">
-                Expira: {new Date(subscriptionStatus.premium_expires_at).toLocaleDateString('es-ES')}
+                Próxima renovación: {new Date(subscriptionStatus.premium_expires_at).toLocaleDateString('es-ES')}
               </span>
             </div>
           </CardContent>

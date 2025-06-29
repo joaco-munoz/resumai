@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
@@ -28,7 +29,6 @@ serve(async (req) => {
     const accessToken = Deno.env.get("MERCADOPAGO_ACCESS_TOKEN");
     if (!accessToken) throw new Error("MERCADOPAGO_ACCESS_TOKEN is not set");
     
-    // Detectar si es token de prueba o producción
     const isTestToken = accessToken.startsWith("TEST-");
     logStep("MercadoPago token verified", { 
       isTestMode: isTestToken,
@@ -45,25 +45,12 @@ serve(async (req) => {
     if (!user?.email) throw new Error("User not authenticated or email not available");
     logStep("User authenticated", { userId: user.id, email: user.email });
 
-    // Determinar el email del pagador según el tipo de token
-    let payerEmail = user.email;
-    
-    // Si es token de prueba, usar el email específico de tu cuenta de prueba de comprador
-    if (isTestToken) {
-      // Usar el email de tu cuenta de comprador de MercadoPago (basado en la imagen que compartiste)
-      payerEmail = "test_user_1716207734@testuser.com"; // Email de tu cuenta de comprador
-      logStep("Using test buyer email", { payerEmail });
-    }
-    
-    logStep("Payer email determined", { originalEmail: user.email, payerEmail, isTestMode: isTestToken });
-
-    // Construir URLs correctamente
+    // Construir URLs correctamente - SIN parámetros que MP puede sobreescribir
     const origin = req.headers.get("origin") || "https://jwitsagioonykrabioku.supabase.co";
-    const successUrl = `${origin}/app/billing?success=true`;
-    const failureUrl = `${origin}/app/billing?error=true`;
-    const pendingUrl = `${origin}/app/billing?pending=true`;
+    const backUrl = `${origin}/app/billing`; // Sin parámetros
+    const notificationUrl = `${origin}/functions/v1/mercadopago-webhook`;
     
-    logStep("URLs constructed", { origin, successUrl, failureUrl, pendingUrl });
+    logStep("URLs constructed", { origin, backUrl, notificationUrl });
 
     // Crear la suscripción en MercadoPago
     const subscriptionData = {
@@ -74,10 +61,11 @@ serve(async (req) => {
         transaction_amount: 6990,
         currency_id: "CLP"
       },
-      payer_email: payerEmail,
-      back_url: successUrl,
-      status: "pending",
-      external_reference: user.id // Para vincular con nuestro usuario
+      payer_email: user.email,
+      back_url: backUrl, // Mismo URL para éxito/fallo/pendiente
+      notification_url: notificationUrl, // ¡CRÍTICO para webhook!
+      external_reference: user.id, // Para identificar al usuario en webhook
+      status: "pending"
     };
 
     logStep("Creating subscription", { subscriptionData, isTestMode: isTestToken });
@@ -109,7 +97,6 @@ serve(async (req) => {
         cause: result.cause || "Unknown cause"
       });
       
-      // Proporcionar mensajes de error más específicos
       let errorMessage = "Error al crear la suscripción en MercadoPago";
       
       if (result.message?.includes("Both payer and collector must be real or test users")) {
@@ -125,15 +112,6 @@ serve(async (req) => {
       throw new Error(errorMessage);
     }
 
-    // Verificar si ya existe una suscripción para este usuario
-    const { data: existingSubscription, error: checkError } = await supabaseClient
-      .from("subscriptions")
-      .select("*")
-      .eq("user_id", user.id)
-      .single();
-
-    logStep("Checking existing subscription", { exists: !!existingSubscription, error: checkError });
-
     // Preparar los datos de la suscripción
     const subscriptionRecord = {
       user_id: user.id,
@@ -145,8 +123,14 @@ serve(async (req) => {
       updated_at: new Date().toISOString(),
     };
 
+    // Verificar si ya existe una suscripción para este usuario
+    const { data: existingSubscription } = await supabaseClient
+      .from("subscriptions")
+      .select("*")
+      .eq("user_id", user.id)
+      .single();
+
     if (existingSubscription) {
-      // Actualizar la suscripción existente
       const { error: updateError } = await supabaseClient
         .from("subscriptions")
         .update(subscriptionRecord)
@@ -158,7 +142,6 @@ serve(async (req) => {
       }
       logStep("Subscription updated successfully");
     } else {
-      // Crear nueva suscripción
       const { error: insertError } = await supabaseClient
         .from("subscriptions")
         .insert([subscriptionRecord]);
@@ -173,7 +156,9 @@ serve(async (req) => {
     logStep("Subscription processed successfully", {
       subscriptionId: result.id,
       checkoutUrl: result.init_point,
-      isTestMode: isTestToken
+      isTestMode: isTestToken,
+      notificationUrl,
+      externalReference: user.id
     });
 
     return new Response(JSON.stringify({
