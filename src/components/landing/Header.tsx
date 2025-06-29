@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { FileText } from "lucide-react";
+import Logo from "@/assets/Logo.png";
 
 interface HeaderProps {
   onScrollToSection: (id: string) => void;
@@ -15,9 +15,7 @@ export const Header = ({ onScrollToSection, onAuthNavigation, onSignUpNavigation
         <div className="flex items-center justify-between w-full max-w-6xl">
           {/* Logo */}
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center">
-              <FileText className="h-5 w-5 text-white" />
-            </div>
+            <img src={Logo} alt="ResumAI logo" className="w-16 h-16" />
             <span className="font-bold text-xl text-white">ResumAI</span>
           </div>
           

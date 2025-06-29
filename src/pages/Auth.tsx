@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import { Sparkles, Mail, Github, ArrowLeft, Rocket, Search, BadgeCheck, FileText } from "lucide-react";
+import Logo from "@/assets/Logo - copia.png";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
@@ -150,9 +151,7 @@ const Auth = () => {
 
           {/* Logo */}
           <div className="flex items-center justify-center mb-8">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-2xl flex items-center justify-center">
-              <Sparkles className="h-7 w-7 text-white" />
-            </div>
+            <img src={Logo} alt="ResumAI logo" className="w-16 h-16" />
           </div>
 
           {/* Title */}

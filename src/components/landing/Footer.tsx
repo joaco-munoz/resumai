@@ -1,4 +1,5 @@
-import { FileText, Instagram, Linkedin } from "lucide-react";
+import { Instagram, Linkedin } from "lucide-react";
+import Logo from "@/assets/Logo - copia.png";
 
 export const Footer = () => {
   return (
@@ -6,9 +7,7 @@ export const Footer = () => {
       <div className="container mx-auto px-4">
         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-lg flex items-center justify-center">
-              <FileText className="h-5 w-5 text-white" />
-            </div>
+            <img src={Logo} alt="ResumAI logo" className="w-16 h-16" />
             <span className="font-bold text-xl">ResumAI</span>
           </div>
 

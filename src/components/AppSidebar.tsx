@@ -13,7 +13,8 @@ import {
   useSidebar,
   SidebarFooter,
 } from "@/components/ui/sidebar";
-import { Sparkles, FileText, Target, User, CheckCircle, House, FolderOpen, LogOut } from "lucide-react";
+import { FileText, Target, User, CheckCircle, House, FolderOpen, LogOut } from "lucide-react";
+import Logo from "@/assets/Logo.png";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -98,7 +99,7 @@ export function AppSidebar() {
       <div className="p-4 border-b">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 bg-gradient-to-br from-brand-500 to-brand-700 rounded-lg flex items-center justify-center">
-            <Sparkles className="h-5 w-5 text-white" />
+            <img src={Logo} alt="ResumAI logo" className="h-10 w-10" />
           </div>
           {!isCollapsed && (
             <span className="font-bold text-lg gradient-text">ResumAI</span>
