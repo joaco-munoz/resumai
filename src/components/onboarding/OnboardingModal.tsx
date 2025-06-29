@@ -1,6 +1,11 @@
 
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import LogoPNG from "./Logo.png";
+import ImgStep1 from "./1er onboarding.png";
+import ImgStep2 from "./2do ob.png";
+import ImgStep3 from "./3er ob.png";
+import ImgStep4 from "./4to ob.png";
 import { useState } from "react";
 import { ChevronLeft, ChevronRight, X, Sparkles, FileText, Target, CheckCircle } from "lucide-react";
 
@@ -9,13 +14,13 @@ interface OnboardingModalProps {
   onClose: () => void;
 }
 
-const onboardingSteps = [
+const onboardingSteps: Array<any> = [
   {
     id: 1,
     title: "¡Bienvenido a ResumAI!",
     description: "La plataforma de inteligencia artificial que revoluciona la creación de currículums y la búsqueda de empleo.",
-    icon: Sparkles,
-    image: "photo-1649972904349-6e44c42644a7",
+    icon: LogoPNG,
+    image: ImgStep1,
     color: "from-brand-500 to-brand-700"
   },
   {
@@ -23,7 +28,7 @@ const onboardingSteps = [
     title: "Crea currículums profesionales",
     description: "Utiliza nuestro editor inteligente para crear currículums optimizados con IA que destacan tus fortalezas.",
     icon: FileText,
-    image: "photo-1488590528505-98d2b5aba04b",
+    image: ImgStep2,
     color: "from-blue-500 to-blue-700"
   },
   {
@@ -31,7 +36,7 @@ const onboardingSteps = [
     title: "Match inteligente con ofertas",
     description: "Adapta automáticamente tu currículum a cada oferta de trabajo usando nuestra IA avanzada.",
     icon: Target,
-    image: "photo-1461749280684-dccba630e2f6",
+    image: ImgStep3,
     color: "from-green-500 to-green-700"
   },
   {
@@ -39,7 +44,7 @@ const onboardingSteps = [
     title: "Gestiona tus postulaciones",
     description: "Organiza y da seguimiento a todas tus postulaciones en un tablero Kanban intuitivo.",
     icon: CheckCircle,
-    image: "photo-1581091226825-a6a2a5aee158",
+    image: ImgStep4,
     color: "from-purple-500 to-purple-700"
   }
 ];
@@ -91,7 +96,11 @@ export const OnboardingModal = ({ isOpen, onClose }: OnboardingModalProps) => {
             {/* Left side - Content */}
             <div className="p-8 lg:p-12 flex flex-col justify-center bg-gradient-to-br from-gray-50 to-white">
               <div className={`w-16 h-16 rounded-full bg-gradient-to-r ${currentStepData.color} flex items-center justify-center mb-6`}>
-                <currentStepData.icon className="h-8 w-8 text-white" />
+                {typeof currentStepData.icon === "string" ? (
+                  <img src={currentStepData.icon} alt="logo" className="h-8 w-8" />
+                ) : (
+                  <currentStepData.icon className="h-8 w-8 text-white" />
+                )}
               </div>
               
               <h2 className="text-3xl font-bold text-gray-900 mb-4">
@@ -153,7 +162,7 @@ export const OnboardingModal = ({ isOpen, onClose }: OnboardingModalProps) => {
             {/* Right side - Image */}
             <div className="relative overflow-hidden">
               <img
-                src={`https://images.unsplash.com/${currentStepData.image}?fm=jpg&w=800&h=600&fit=crop`}
+                src={currentStepData.image}
                 alt={currentStepData.title}
                 className="w-full h-full object-cover"
               />
