@@ -3,3 +3,9 @@ project_id = "jwitsagioonykrabioku"
 
 [functions.mercadopago-webhook]
 verify_jwt = false
+
+[functions.create-mercadopago-subscription]
+verify_jwt = true
+
+[functions.check-subscription-status]
+verify_jwt = true

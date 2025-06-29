@@ -47,14 +47,17 @@ serve(async (req) => {
     const payerEmail = isTestToken ? "test_user_123456@testuser.com" : user.email;
     logStep("Payer email determined", { originalEmail: user.email, payerEmail, isTestMode: isTestToken });
 
-    // Construir la back_url correctamente
-    const origin = req.headers.get("origin") || req.headers.get("referer")?.split('/').slice(0, 3).join('/') || "https://localhost:3000";
-    const backUrl = `${origin}/app/billing?success=true`;
-    logStep("Back URL constructed", { origin, backUrl });
+    // Construir URLs correctamente
+    const origin = req.headers.get("origin") || "https://jwitsagioonykrabioku.supabase.co";
+    const successUrl = `${origin}/app/billing?success=true`;
+    const failureUrl = `${origin}/app/billing?error=true`;
+    const pendingUrl = `${origin}/app/billing?pending=true`;
+    
+    logStep("URLs constructed", { origin, successUrl, failureUrl, pendingUrl });
 
-    // Crear la suscripción en MercadoPago con ajustes para prueba
+    // Crear la suscripción en MercadoPago
     const subscriptionData = {
-      reason: "Plan Pro CVMaster AI",
+      reason: "Plan Pro ResumAI - Suscripción Mensual",
       auto_recurring: {
         frequency: 1,
         frequency_type: "months",
@@ -62,8 +65,9 @@ serve(async (req) => {
         currency_id: "CLP"
       },
       payer_email: payerEmail,
-      back_url: backUrl,
-      status: "pending"
+      back_url: successUrl,
+      status: "pending",
+      external_reference: user.id // Para vincular con nuestro usuario
     };
 
     logStep("Creating subscription", { subscriptionData, isTestMode: isTestToken });
@@ -83,7 +87,6 @@ serve(async (req) => {
       status: response.status, 
       resultId: result.id,
       resultStatus: result.status,
-      payerEmail: result.payer_email,
       initPoint: result.init_point,
       error: result.error || "none"
     });
@@ -146,7 +149,6 @@ serve(async (req) => {
     logStep("Subscription processed successfully", {
       subscriptionId: result.id,
       checkoutUrl: result.init_point,
-      payerEmail: result.payer_email || "not_returned_by_mp",
       isTestMode: isTestToken
     });
 

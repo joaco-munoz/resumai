@@ -58,49 +58,82 @@ serve(async (req) => {
       throw new Error(`Error fetching subscription: ${JSON.stringify(subscriptionData)}`);
     }
 
-    // Actualizar estado en nuestra base de datos
-    const newStatus = subscriptionData.status === "authorized" ? "active" : subscriptionData.status;
+    // Determinar el nuevo estado de la suscripción
+    const newStatus = subscriptionData.status === "authorized" ? "active" : 
+                     subscriptionData.status === "cancelled" ? "cancelled" : 
+                     subscriptionData.status === "paused" ? "paused" : "pending";
+
     const subscriptionEnd = subscriptionData.status === "authorized" 
       ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 días
       : null;
 
-    const { error: updateError } = await supabaseClient
-      .from("subscriptions")
-      .update({
-        status: newStatus,
-        current_period_end: subscriptionEnd,
-        updated_at: new Date().toISOString(),
-      })
-      .eq("stripe_subscription_id", preapprovalId);
+    // Buscar el usuario por email del pagador
+    const { data: profile, error: profileError } = await supabaseClient
+      .from("profiles")
+      .select("id, email")
+      .eq("email", subscriptionData.payer_email)
+      .single();
 
-    if (updateError) {
-      logStep("Error updating subscription", updateError);
-      throw new Error(`Database update error: ${updateError.message}`);
+    if (profileError || !profile) {
+      logStep("User not found", { email: subscriptionData.payer_email, error: profileError });
+      throw new Error(`User not found: ${subscriptionData.payer_email}`);
     }
 
-    // Actualizar perfil del usuario si la suscripción está activa
-    if (newStatus === "active") {
-      const { error: profileError } = await supabaseClient
-        .from("profiles")
-        .update({
-          is_premium: true,
-          subscription_tier: "pro",
-          premium_expires_at: subscriptionEnd,
-          updated_at: new Date().toISOString(),
-        })
-        .eq("email", subscriptionData.payer_email);
+    // Actualizar o crear suscripción
+    const { error: upsertError } = await supabaseClient
+      .from("subscriptions")
+      .upsert({
+        user_id: profile.id,
+        tier: "pro",
+        status: newStatus,
+        price_per_month: 6990,
+        currency: "CLP",
+        stripe_subscription_id: preapprovalId, // Reutilizamos este campo para MP
+        current_period_end: subscriptionEnd,
+        updated_at: new Date().toISOString(),
+      }, {
+        onConflict: "user_id"
+      });
 
-      if (profileError) {
-        logStep("Warning: Could not update profile", profileError);
-      } else {
-        logStep("Profile updated to premium", { email: subscriptionData.payer_email });
-      }
+    if (upsertError) {
+      logStep("Error upserting subscription", upsertError);
+      throw new Error(`Database upsert error: ${upsertError.message}`);
+    }
+
+    // Actualizar perfil del usuario según el estado de la suscripción
+    const profileUpdates: any = {
+      subscription_tier: newStatus === "active" ? "pro" : "free",
+      is_premium: newStatus === "active",
+      updated_at: new Date().toISOString(),
+    };
+
+    if (newStatus === "active") {
+      profileUpdates.premium_expires_at = subscriptionEnd;
+    } else {
+      profileUpdates.premium_expires_at = null;
+    }
+
+    const { error: profileUpdateError } = await supabaseClient
+      .from("profiles")
+      .update(profileUpdates)
+      .eq("id", profile.id);
+
+    if (profileUpdateError) {
+      logStep("Warning: Could not update profile", profileUpdateError);
+    } else {
+      logStep("Profile updated", { 
+        userId: profile.id, 
+        email: profile.email, 
+        tier: profileUpdates.subscription_tier,
+        isPremium: profileUpdates.is_premium 
+      });
     }
 
     logStep("Webhook processed successfully", {
       preapprovalId,
       status: newStatus,
-      email: subscriptionData.payer_email
+      email: subscriptionData.payer_email,
+      userId: profile.id
     });
 
     return new Response("OK", { status: 200 });
