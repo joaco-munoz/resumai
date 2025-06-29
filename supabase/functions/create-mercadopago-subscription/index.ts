@@ -31,7 +31,10 @@ serve(async (req) => {
     
     // Detectar si es token de prueba o producción
     const isTestToken = accessToken.startsWith("TEST-");
-    logStep("MercadoPago token verified", { isTestMode: isTestToken });
+    logStep("MercadoPago token verified", { 
+      isTestMode: isTestToken,
+      tokenPrefix: accessToken.substring(0, 10) + "..." 
+    });
 
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) throw new Error("No authorization header provided");
@@ -115,11 +118,13 @@ serve(async (req) => {
       let errorMessage = "Error al crear la suscripción en MercadoPago";
       
       if (result.message?.includes("Both payer and collector must be real or test users")) {
-        errorMessage = isTestToken 
-          ? "Error de configuración: Token de prueba con usuario inválido. Contacta al soporte."
-          : "Error de configuración: El token de MercadoPago debe coincidir con el tipo de usuario.";
+        if (isTestToken) {
+          errorMessage = "Error: Estás usando un token de PRUEBA pero hay un problema de configuración. Por favor verifica que tu cuenta de MercadoPago esté correctamente configurada para modo de pruebas.";
+        } else {
+          errorMessage = "Error: Estás usando un token de PRODUCCIÓN pero tu cuenta no está verificada como usuario real en MercadoPago. Necesitas completar la verificación de tu cuenta o cambiar a un token de pruebas para desarrollo.";
+        }
       } else if (result.message?.includes("Invalid users")) {
-        errorMessage = "Usuario no válido para MercadoPago. Verifica tu configuración.";
+        errorMessage = "Usuario no válido para MercadoPago. Verifica tu configuración de cuenta.";
       }
       
       throw new Error(errorMessage);
