@@ -29,7 +29,7 @@ serve(async (req) => {
     const accessToken = Deno.env.get("MERCADOPAGO_ACCESS_TOKEN");
     if (!accessToken) throw new Error("MERCADOPAGO_ACCESS_TOKEN is not set");
     
-    // Detectar si es token de prueba
+    // Detectar si es token de prueba o producción
     const isTestToken = accessToken.startsWith("TEST-");
     logStep("MercadoPago token verified", { isTestMode: isTestToken });
 
@@ -43,8 +43,20 @@ serve(async (req) => {
     if (!user?.email) throw new Error("User not authenticated or email not available");
     logStep("User authenticated", { userId: user.id, email: user.email });
 
-    // Para modo de prueba, usar un email de prueba específico
-    const payerEmail = isTestToken ? "test_user_123456@testuser.com" : user.email;
+    // Determinar el email del pagador según el tipo de token
+    let payerEmail = user.email;
+    
+    // Si es token de prueba, usar un email de prueba válido
+    if (isTestToken) {
+      // Emails de prueba válidos de MercadoPago para Chile
+      const testEmails = [
+        "test_user_123456@testuser.com",
+        "test_user_246813@testuser.com", 
+        "test_user_369258@testuser.com"
+      ];
+      payerEmail = testEmails[0]; // Usar el primer email de prueba
+    }
+    
     logStep("Payer email determined", { originalEmail: user.email, payerEmail, isTestMode: isTestToken });
 
     // Construir URLs correctamente
@@ -98,7 +110,19 @@ serve(async (req) => {
         message: result.message || "Unknown error",
         cause: result.cause || "Unknown cause"
       });
-      throw new Error(`MercadoPago API error: ${JSON.stringify(result)}`);
+      
+      // Proporcionar mensajes de error más específicos
+      let errorMessage = "Error al crear la suscripción en MercadoPago";
+      
+      if (result.message?.includes("Both payer and collector must be real or test users")) {
+        errorMessage = isTestToken 
+          ? "Error de configuración: Token de prueba con usuario inválido. Contacta al soporte."
+          : "Error de configuración: El token de MercadoPago debe coincidir con el tipo de usuario.";
+      } else if (result.message?.includes("Invalid users")) {
+        errorMessage = "Usuario no válido para MercadoPago. Verifica tu configuración.";
+      }
+      
+      throw new Error(errorMessage);
     }
 
     // Verificar si ya existe una suscripción para este usuario
