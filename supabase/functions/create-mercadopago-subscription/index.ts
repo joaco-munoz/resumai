@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
@@ -49,15 +48,11 @@ serve(async (req) => {
     // Determinar el email del pagador según el tipo de token
     let payerEmail = user.email;
     
-    // Si es token de prueba, usar un email de prueba válido
+    // Si es token de prueba, usar el email específico de tu cuenta de prueba de comprador
     if (isTestToken) {
-      // Emails de prueba válidos de MercadoPago para Chile
-      const testEmails = [
-        "test_user_123456@testuser.com",
-        "test_user_246813@testuser.com", 
-        "test_user_369258@testuser.com"
-      ];
-      payerEmail = testEmails[0]; // Usar el primer email de prueba
+      // Usar el email de tu cuenta de comprador de MercadoPago (basado en la imagen que compartiste)
+      payerEmail = "test_user_1716207734@testuser.com"; // Email de tu cuenta de comprador
+      logStep("Using test buyer email", { payerEmail });
     }
     
     logStep("Payer email determined", { originalEmail: user.email, payerEmail, isTestMode: isTestToken });
@@ -119,7 +114,7 @@ serve(async (req) => {
       
       if (result.message?.includes("Both payer and collector must be real or test users")) {
         if (isTestToken) {
-          errorMessage = "Error: Estás usando un token de PRUEBA pero hay un problema de configuración. Por favor verifica que tu cuenta de MercadoPago esté correctamente configurada para modo de pruebas.";
+          errorMessage = "Error: Verifica que tu token de prueba y las cuentas de prueba estén correctamente configuradas. Asegúrate de estar usando las cuentas de prueba correctas.";
         } else {
           errorMessage = "Error: Estás usando un token de PRODUCCIÓN pero tu cuenta no está verificada como usuario real en MercadoPago. Necesitas completar la verificación de tu cuenta o cambiar a un token de pruebas para desarrollo.";
         }
