@@ -46,9 +46,24 @@ serve(async (req) => {
     logStep("User authenticated", { userId: user.id, email: user.email });
 
     // Construir URLs correctamente - SIN parámetros que MP puede sobreescribir
-    const origin = req.headers.get("origin") || "https://jwitsagioonykrabioku.supabase.co";
-    const backUrl = `${origin}/app/billing`; // Sin parámetros
-    const notificationUrl = `${origin}/functions/v1/mercadopago-webhook`;
+    // Asegurarse de que las URLs sean absolutas y válidas
+    // Para desarrollo local, usamos una URL pública ya que MercadoPago no acepta localhost
+    let origin = req.headers.get("origin") || "https://jwitsagioonykrabioku.supabase.co";
+    
+    // Si estamos en localhost, usar la URL de Supabase como fallback para MercadoPago
+    if (origin.includes("localhost") || origin.includes("127.0.0.1")) {
+      origin = "https://jwitsagioonykrabioku.supabase.co";
+      logStep("Using Supabase URL instead of localhost for MercadoPago", { origin });
+    }
+    
+    // Verificar que origin sea una URL válida con protocolo
+    if (!origin.startsWith("http://") && !origin.startsWith("https://")) {
+      origin = "https://" + origin;
+    }
+    
+    // Construir URLs completas y válidas
+    const backUrl = `${origin}/app/billing`; // URL absoluta para retorno
+    const notificationUrl = `${origin}/functions/v1/mercadopago-webhook`; // URL absoluta para webhook
     
     logStep("URLs constructed", { origin, backUrl, notificationUrl });
 

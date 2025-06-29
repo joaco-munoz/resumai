@@ -67,7 +67,15 @@ export const MercadoPagoSubscription = ({ currentPlan, onPlanChange }: MercadoPa
       }, 3000);
       
     } else if (status === 'cancelled') {
-      toast.error("Pago cancelado");
+      // Verificar si hay mensaje específico en la URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const errorMessage = urlParams.get('error_message');
+      
+      if (errorMessage?.includes('mismo')) {
+        toast.error("Error: No puedes pagarte a ti mismo. Para pruebas, debes usar una cuenta de comprador diferente a la cuenta de vendedor.");
+      } else {
+        toast.error("Pago cancelado");
+      }
       setIsProcessingPayment(false);
     } else if (status === 'pending') {
       toast.info("Pago pendiente de confirmación");
