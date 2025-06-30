@@ -37,6 +37,19 @@ serve(async (req) => {
       tokenPrefix: accessToken.substring(0, 15) + "..." 
     });
 
+    // Validación estricta de credenciales de prueba
+    if (!isTestToken) {
+      logStep("CRITICAL ERROR: Production token detected", {
+        tokenType: accessToken.startsWith("APP_USR-") ? "Production" : "Unknown",
+        message: "Must use TEST- token for testing"
+      });
+      throw new Error(
+        "❌ CREDENCIALES INCORRECTAS: Debes usar un Access Token que empiece con 'TEST-', " +
+        "no con 'APP_USR-'. Ve a tu cuenta MercadoPago → Desarrolladores → Credenciales → " +
+        "Credenciales de prueba y copia el Access Token que empiece con TEST-"
+      );
+    }
+
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
       throw new Error("No authorization header provided");
@@ -83,21 +96,14 @@ serve(async (req) => {
     
     logStep("URLs constructed", { origin, backUrl, notificationUrl });
 
-    // Para tokens de prueba, usar email de prueba específico
-    let payerEmail;
-    if (isTestToken) {
-      // Usar un email de prueba válido para el entorno de test
-      payerEmail = "test_user_123456@testuser.com";
-      logStep("Using test email for test token", { payerEmail });
-    } else {
-      payerEmail = user.email;
-      logStep("Using real user email", { payerEmail });
-    }
+    // Para tokens de prueba, usar email de prueba específico y datos mejorados
+    const payerEmail = "test_user_123456@testuser.com";
+    logStep("Using test email for TEST token", { payerEmail });
 
-    // Separar nombre y apellido
-    const [firstName = "", lastName = ""] = (profile?.full_name || "Test User").split(' ');
+    // Separar nombre y apellido con valores por defecto para pruebas
+    const [firstName = "Test", lastName = "User"] = (profile?.full_name || "Test User").split(' ');
 
-    // Crear la suscripción en MercadoPago con configuración optimizada para tokens de prueba
+    // Crear la suscripción en MercadoPago con datos más completos para mejorar calidad
     const subscriptionData = {
       reason: "Plan Pro ResumAI - Suscripción Mensual",
       auto_recurring: {
@@ -112,28 +118,38 @@ serve(async (req) => {
       external_reference: user.id,
       status: "pending",
       payer: {
-        first_name: firstName || "Test",
-        last_name: lastName || "User",
+        first_name: firstName,
+        last_name: lastName,
         email: payerEmail,
         phone: {
           area_code: "56",
           number: profile?.phone || "912345678"
         },
         address: {
-          country: profile?.country || "Chile",
-          city: profile?.city || "Santiago"
+          zip_code: "7500000",
+          street_name: "Test Street",
+          street_number: "123",
+          city: profile?.city || "Santiago",
+          state: "RM",
+          country: profile?.country || "CL"
+        },
+        identification: {
+          type: "RUN",
+          number: "12345678-9"
         }
       }
     };
 
-    logStep("Creating subscription with data", { 
+    logStep("Creating subscription with enhanced test data", { 
       subscriptionData: {
         reason: subscriptionData.reason,
         amount: subscriptionData.auto_recurring.transaction_amount,
         currency: subscriptionData.auto_recurring.currency_id,
         payer_email: payerEmail,
         external_reference: user.id,
-        isTestMode: isTestToken
+        isTestMode: isTestToken,
+        hasPayer: !!subscriptionData.payer,
+        hasAddress: !!subscriptionData.payer.address
       }
     });
 
@@ -171,8 +187,12 @@ serve(async (req) => {
       let errorMessage = "Error al crear la suscripción en MercadoPago";
       
       if (result.message) {
-        if (result.message.includes("payer") && result.message.includes("test")) {
-          errorMessage = "Error de configuración de prueba: Asegúrate de usar credenciales de TEST completas y cuentas de prueba específicas.";
+        if (result.message.includes("Both payer and collector must be real or test users")) {
+          errorMessage = "❌ ERROR DE CREDENCIALES: Estás usando credenciales de producción (APP_USR-) en modo de prueba. " +
+                        "DEBES usar credenciales que empiecen con 'TEST-'. " +
+                        "Ve a MercadoPago → Desarrolladores → Credenciales → Credenciales de prueba";
+        } else if (result.message.includes("payer") && result.message.includes("test")) {
+          errorMessage = "Error de configuración de prueba: Verifica que uses credenciales TEST- y cuentas de prueba específicas.";
         } else if (result.message.includes("Invalid users")) {
           errorMessage = "Usuario no válido para MercadoPago. Verifica las credenciales de prueba.";
         } else if (result.message.includes("forbidden") || result.message.includes("Forbidden")) {
