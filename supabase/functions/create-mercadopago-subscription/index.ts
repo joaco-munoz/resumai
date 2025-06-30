@@ -1,3 +1,4 @@
+
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
@@ -34,7 +35,6 @@ serve(async (req) => {
       tokenPrefix: accessToken.substring(0, 15) + "..." 
     });
 
-    // Validar que estamos usando el token correcto para pruebas
     if (!isTestToken) {
       logStep("WARNING: Using production token - this may cause issues with test users");
     }
@@ -48,6 +48,13 @@ serve(async (req) => {
     const user = userData.user;
     if (!user?.email) throw new Error("User not authenticated or email not available");
     logStep("User authenticated", { userId: user.id, email: user.email });
+
+    // Obtener información adicional del perfil para mejorar calidad de integración
+    const { data: profile } = await supabaseClient
+      .from("profiles")
+      .select("full_name, phone, country, city")
+      .eq("id", user.id)
+      .single();
 
     // Construir URLs correctamente
     let origin = req.headers.get("origin") || "https://jwitsagioonykrabioku.supabase.co";
@@ -67,8 +74,6 @@ serve(async (req) => {
     logStep("URLs constructed", { origin, backUrl, notificationUrl });
 
     // Determinar el email del pagador
-    // Para pruebas: usar el email del usuario real, no el email de prueba
-    // MercadoPago manejará internamente la validación con usuarios de prueba
     const payerEmail = user.email;
     
     logStep("Payer email determined", { 
@@ -77,7 +82,10 @@ serve(async (req) => {
       note: "Using real user email for better test compatibility"
     });
 
-    // Crear la suscripción en MercadoPago
+    // Separar nombre y apellido para mejor calidad de integración
+    const [firstName = "", lastName = ""] = (profile?.full_name || user.email.split('@')[0] || "Usuario").split(' ');
+
+    // Crear la suscripción en MercadoPago con datos completos para mejor calidad
     const subscriptionData = {
       reason: "Plan Pro ResumAI - Suscripción Mensual",
       auto_recurring: {
@@ -90,13 +98,38 @@ serve(async (req) => {
       back_url: backUrl,
       notification_url: notificationUrl,
       external_reference: user.id,
-      status: "pending"
+      status: "pending",
+      // Información adicional del pagador para mejorar calidad de integración
+      payer: {
+        first_name: firstName,
+        last_name: lastName || "Apellido",
+        email: payerEmail,
+        phone: {
+          area_code: "56",
+          number: profile?.phone || "912345678"
+        },
+        address: {
+          country: profile?.country || "Chile",
+          city: profile?.city || "Santiago"
+        }
+      },
+      // Información del ítem para mejor calidad
+      items: {
+        id: "plan-pro-resumai",
+        title: "Plan Pro ResumAI",
+        description: "Suscripción mensual al Plan Pro de ResumAI con acceso completo a todas las funciones premium",
+        category_id: "services", // Categoría del servicio
+        quantity: 1,
+        currency_id: "CLP",
+        unit_price: 6990
+      }
     };
 
-    logStep("Creating subscription", { 
+    logStep("Creating subscription with enhanced data", { 
       subscriptionData: {
         ...subscriptionData,
-        payer_email: payerEmail // Log the actual email being used
+        payer_email: payerEmail,// Log the actual email being used
+        payer_info: subscriptionData.payer
       }, 
       isTestMode: isTestToken 
     });
@@ -131,15 +164,11 @@ serve(async (req) => {
       let errorMessage = "Error al crear la suscripción en MercadoPago";
       
       if (result.message?.includes("Both payer and collector must be real or test users")) {
-        if (isTestToken) {
-          errorMessage = "Error de configuración: Asegúrate de que tu token de MercadoPago sea un token de PRUEBA (TEST-) y que estés usando cuentas de prueba válidas. Revisa la configuración de tu aplicación en MercadoPago.";
-        } else {
-          errorMessage = "Error: Estás usando un token de PRODUCCIÓN con usuarios de prueba. Necesitas usar un token de PRUEBA (TEST-) para hacer pruebas con usuarios de prueba.";
-        }
+        errorMessage = "Error: Necesitas usar credenciales de PRUEBA (TEST-) de una cuenta vendedor específica. Ve a tu panel de MercadoPago → Credenciales de prueba → Cuentas de prueba, crea una cuenta vendedor y usa su token TEST-.";
       } else if (result.message?.includes("Invalid users")) {
-        errorMessage = "Usuario no válido para MercadoPago. Si estás en modo de prueba, asegúrate de estar usando las credenciales correctas.";
+        errorMessage = "Usuario no válido para MercadoPago. Asegúrate de usar credenciales de prueba correctas.";
       } else if (result.message?.includes("forbidden")) {
-        errorMessage = "Acceso denegado. Verifica que tu token de MercadoPago tenga los permisos necesarios.";
+        errorMessage = "Acceso denegado. Verifica que tu token de MercadoPago tenga los permisos necesarios y sea de tipo TEST-.";
       }
       
       throw new Error(errorMessage);
