@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
@@ -32,8 +31,13 @@ serve(async (req) => {
     const isTestToken = accessToken.startsWith("TEST-");
     logStep("MercadoPago token verified", { 
       isTestMode: isTestToken,
-      tokenPrefix: accessToken.substring(0, 10) + "..." 
+      tokenPrefix: accessToken.substring(0, 15) + "..." 
     });
+
+    // Validar que estamos usando el token correcto para pruebas
+    if (!isTestToken) {
+      logStep("WARNING: Using production token - this may cause issues with test users");
+    }
 
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) throw new Error("No authorization header provided");
@@ -45,27 +49,33 @@ serve(async (req) => {
     if (!user?.email) throw new Error("User not authenticated or email not available");
     logStep("User authenticated", { userId: user.id, email: user.email });
 
-    // Construir URLs correctamente - SIN parámetros que MP puede sobreescribir
-    // Asegurarse de que las URLs sean absolutas y válidas
-    // Para desarrollo local, usamos una URL pública ya que MercadoPago no acepta localhost
+    // Construir URLs correctamente
     let origin = req.headers.get("origin") || "https://jwitsagioonykrabioku.supabase.co";
     
-    // Si estamos en localhost, usar la URL de Supabase como fallback para MercadoPago
     if (origin.includes("localhost") || origin.includes("127.0.0.1")) {
       origin = "https://jwitsagioonykrabioku.supabase.co";
       logStep("Using Supabase URL instead of localhost for MercadoPago", { origin });
     }
     
-    // Verificar que origin sea una URL válida con protocolo
     if (!origin.startsWith("http://") && !origin.startsWith("https://")) {
       origin = "https://" + origin;
     }
     
-    // Construir URLs completas y válidas
-    const backUrl = `${origin}/app/billing`; // URL absoluta para retorno
-    const notificationUrl = `${origin}/functions/v1/mercadopago-webhook`; // URL absoluta para webhook
+    const backUrl = `${origin}/app/billing`;
+    const notificationUrl = `${origin}/functions/v1/mercadopago-webhook`;
     
     logStep("URLs constructed", { origin, backUrl, notificationUrl });
+
+    // Determinar el email del pagador
+    // Para pruebas: usar el email del usuario real, no el email de prueba
+    // MercadoPago manejará internamente la validación con usuarios de prueba
+    const payerEmail = user.email;
+    
+    logStep("Payer email determined", { 
+      payerEmail, 
+      isTestMode: isTestToken,
+      note: "Using real user email for better test compatibility"
+    });
 
     // Crear la suscripción en MercadoPago
     const subscriptionData = {
@@ -76,14 +86,20 @@ serve(async (req) => {
         transaction_amount: 6990,
         currency_id: "CLP"
       },
-      payer_email: user.email,
-      back_url: backUrl, // Mismo URL para éxito/fallo/pendiente
-      notification_url: notificationUrl, // ¡CRÍTICO para webhook!
-      external_reference: user.id, // Para identificar al usuario en webhook
+      payer_email: payerEmail,
+      back_url: backUrl,
+      notification_url: notificationUrl,
+      external_reference: user.id,
       status: "pending"
     };
 
-    logStep("Creating subscription", { subscriptionData, isTestMode: isTestToken });
+    logStep("Creating subscription", { 
+      subscriptionData: {
+        ...subscriptionData,
+        payer_email: payerEmail // Log the actual email being used
+      }, 
+      isTestMode: isTestToken 
+    });
 
     const response = await fetch("https://api.mercadopago.com/preapproval", {
       method: "POST",
@@ -116,12 +132,14 @@ serve(async (req) => {
       
       if (result.message?.includes("Both payer and collector must be real or test users")) {
         if (isTestToken) {
-          errorMessage = "Error: Verifica que tu token de prueba y las cuentas de prueba estén correctamente configuradas. Asegúrate de estar usando las cuentas de prueba correctas.";
+          errorMessage = "Error de configuración: Asegúrate de que tu token de MercadoPago sea un token de PRUEBA (TEST-) y que estés usando cuentas de prueba válidas. Revisa la configuración de tu aplicación en MercadoPago.";
         } else {
-          errorMessage = "Error: Estás usando un token de PRODUCCIÓN pero tu cuenta no está verificada como usuario real en MercadoPago. Necesitas completar la verificación de tu cuenta o cambiar a un token de pruebas para desarrollo.";
+          errorMessage = "Error: Estás usando un token de PRODUCCIÓN con usuarios de prueba. Necesitas usar un token de PRUEBA (TEST-) para hacer pruebas con usuarios de prueba.";
         }
       } else if (result.message?.includes("Invalid users")) {
-        errorMessage = "Usuario no válido para MercadoPago. Verifica tu configuración de cuenta.";
+        errorMessage = "Usuario no válido para MercadoPago. Si estás en modo de prueba, asegúrate de estar usando las credenciales correctas.";
+      } else if (result.message?.includes("forbidden")) {
+        errorMessage = "Acceso denegado. Verifica que tu token de MercadoPago tenga los permisos necesarios.";
       }
       
       throw new Error(errorMessage);
@@ -134,7 +152,7 @@ serve(async (req) => {
       status: "pending",
       price_per_month: 6990,
       currency: "CLP",
-      stripe_subscription_id: result.id, // Reutilizamos este campo para MP
+      stripe_subscription_id: result.id,
       updated_at: new Date().toISOString(),
     };
 
