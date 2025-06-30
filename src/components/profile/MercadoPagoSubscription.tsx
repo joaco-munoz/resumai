@@ -42,10 +42,27 @@ export const MercadoPagoSubscription = ({ currentPlan, onPlanChange }: MercadoPa
     const urlParams = new URLSearchParams(window.location.search);
     const status = urlParams.get('status');
     const preapprovalId = urlParams.get('preapproval_id');
+    const errorMessage = urlParams.get('error_message');
 
     if (status && preapprovalId) {
       console.log('Processing MP return parameters:', { status, preapprovalId });
       handlePaymentResult(status, preapprovalId);
+      
+      // Limpiar URL
+      window.history.replaceState({}, '', window.location.pathname);
+    } else if (errorMessage) {
+      // Manejar errores específicos de MercadoPago
+      console.log('MercadoPago error:', errorMessage);
+      
+      if (errorMessage.includes('prueba')) {
+        toast.error(
+          "Error: Estás mezclando entornos de prueba y producción. " +
+          "Asegúrate de usar un token de prueba (TEST-) y cuentas de prueba específicas. " +
+          "Consulta la documentación de MercadoPago para tarjetas de prueba."
+        );
+      } else {
+        toast.error(`Error de MercadoPago: ${errorMessage}`);
+      }
       
       // Limpiar URL
       window.history.replaceState({}, '', window.location.pathname);
