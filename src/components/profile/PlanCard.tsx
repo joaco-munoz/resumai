@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -34,8 +33,12 @@ export const PlanCard = ({ currentPlan, isUpgrading, onUpgrade }: PlanCardProps)
       console.log("Usuario autenticado, redirigiendo a Reveniu...");
       toast.success("Redirigiendo a Reveniu...");
       
-      // Redirect to Reveniu payment page
-      window.open("https://app.reveniu.com/checkout-custom-link/Qwzj4TVXBcYOKSqsNLzRvM7DFOYv2PHF", '_blank');
+      // Obtener el ID del usuario para incluirlo como parámetro en la URL
+      const userId = session.user.id;
+      
+      // Redirect to Reveniu payment page with user ID as a parameter
+      const reveniuUrl = `https://app.reveniu.com/checkout-custom-link/Qwzj4TVXBcYOKSqsNLzRvM7DFOYv2PHF?user_id=${userId}`;
+      window.open(reveniuUrl, '_blank');
     } catch (error: any) {
       console.error('Subscription error:', error);
       toast.error("Error inesperado al procesar la suscripción");

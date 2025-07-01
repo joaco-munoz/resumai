@@ -1,4 +1,3 @@
-
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 
@@ -72,6 +71,7 @@ serve(async (req) => {
       
       logStep("Checking subscription status", {
         subscriptionId: subscription.stripe_subscription_id,
+        provider: subscription.provider || "mercadopago", // Añadimos el proveedor
         status: subscription.status,
         expiryDate: expiryDate?.toISOString(),
         now: now.toISOString()
