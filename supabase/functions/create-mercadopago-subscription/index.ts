@@ -31,13 +31,15 @@ serve(async (req) => {
       throw new Error("MERCADOPAGO_ACCESS_TOKEN no configurado");
     }
 
-    // Validar que sea un token de TEST para suscripciones
-    if (!accessToken.startsWith("TEST-")) {
-      logStep("Token no válido para testing", { tokenPrefix: accessToken.substring(0, 10) });
-      throw new Error("Para testing, debes usar un token que comience con TEST-");
+    // Validar que sea un token válido (TEST- para pruebas, APP_USR- para producción)
+    if (!accessToken.startsWith("TEST-") && !accessToken.startsWith("APP_USR-")) {
+      logStep("Token no válido", { tokenPrefix: accessToken.substring(0, 10) });
+      throw new Error("Token de MercadoPago debe comenzar con TEST- (pruebas) o APP_USR- (producción)");
     }
 
-    logStep("Token MercadoPago TEST verificado", { 
+    const isTestToken = accessToken.startsWith("TEST-");
+    logStep("Token MercadoPago verificado", { 
+      tipo: isTestToken ? "TEST" : "PRODUCCIÓN",
       tokenPrefix: accessToken.substring(0, 20) + "..." 
     });
 
@@ -110,7 +112,8 @@ serve(async (req) => {
       amount: 6990,
       currency: "CLP",
       frequency: "mensual",
-      userId: user.id
+      userId: user.id,
+      tokenType: isTestToken ? "TEST" : "PRODUCCIÓN"
     });
 
     // Crear suscripción usando la API de PreApproval

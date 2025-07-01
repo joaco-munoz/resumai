@@ -31,10 +31,16 @@ serve(async (req) => {
       throw new Error("MERCADOPAGO_ACCESS_TOKEN no configurado");
     }
 
-    // Verificar que sea un token TEST para desarrollo
+    // Verificar que sea un token válido (TEST- o APP_USR-)
     if (!accessToken.startsWith("TEST-") && !accessToken.startsWith("APP_USR-")) {
       logStep("Advertencia: Token no reconocido", { tokenPrefix: accessToken.substring(0, 10) });
     }
+
+    const isTestToken = accessToken.startsWith("TEST-");
+    logStep("Token verificado", { 
+      tipo: isTestToken ? "TEST" : "PRODUCCIÓN",
+      tokenPrefix: accessToken.substring(0, 20) + "..." 
+    });
 
     const body = await req.json();
     logStep("Payload del webhook", body);
