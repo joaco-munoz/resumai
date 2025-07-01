@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -43,39 +42,70 @@ export const MercadoPagoSubscription = ({ currentPlan, onPlanChange }: MercadoPa
     const urlParams = new URLSearchParams(window.location.search);
     const status = urlParams.get('status');
     const preapprovalId = urlParams.get('preapproval_id');
+    const collectionStatus = urlParams.get('collection_status');
+    const paymentId = urlParams.get('payment_id');
 
-    if (status && preapprovalId) {
-      console.log('Procesando parámetros de retorno de MP:', { status, preapprovalId });
-      handlePaymentResult(status, preapprovalId);
+    console.log('🔍 Parámetros de retorno detectados:', { 
+      status, 
+      preapprovalId, 
+      collectionStatus,
+      paymentId,
+      allParams: Object.fromEntries(urlParams.entries())
+    });
+
+    if (status || preapprovalId || collectionStatus) {
+      handlePaymentResult(status, preapprovalId, collectionStatus);
       
-      // Limpiar URL
-      window.history.replaceState({}, '', window.location.pathname);
+      // Limpiar URL después de procesar
+      setTimeout(() => {
+        window.history.replaceState({}, '', window.location.pathname);
+      }, 3000);
     }
   }, []);
 
-  const handlePaymentResult = async (status: string, preapprovalId: string) => {
+  const handlePaymentResult = async (status: string | null, preapprovalId: string | null, collectionStatus: string | null) => {
+    console.log('🎯 Procesando resultado de pago:', { status, preapprovalId, collectionStatus });
+    
     setIsProcessingPayment(true);
     
-    if (status === 'authorized') {
-      toast.success("¡Suscripción autorizada! Verificando activación de tu Plan Pro...");
+    if (status === 'authorized' || collectionStatus === 'approved') {
+      toast.success("¡Suscripción autorizada! 🎉", {
+        description: "Verificando activación de tu Plan Pro..."
+      });
       
-      // Esperar para que el webhook procese
+      // Esperar para que el webhook procese (más tiempo en TEST)
       setTimeout(async () => {
         await checkSubscriptionStatus();
-        toast.success("¡Plan Pro activado exitosamente!");
+        toast.success("¡Plan Pro activado exitosamente! ✨");
         setTimeout(() => window.location.reload(), 2000);
-      }, 3000);
+      }, 5000); // Más tiempo de espera para TEST
       
     } else if (status === 'cancelled') {
-      toast.error("Suscripción cancelada");
+      toast.error("Suscripción cancelada ❌");
       setIsProcessingPayment(false);
-    } else if (status === 'pending') {
-      toast.info("Suscripción pendiente de confirmación");
-      setTimeout(async () => {
+    } else if (status === 'pending' || collectionStatus === 'pending') {
+      toast.info("Suscripción pendiente de confirmación ⏳", {
+        description: "Verificaremos el estado en unos momentos..."
+      });
+      
+      // Verificar estado varias veces para TEST
+      let attempts = 0;
+      const maxAttempts = 6;
+      const checkPendingStatus = async () => {
+        attempts++;
         await checkSubscriptionStatus();
-      }, 2000);
-      setIsProcessingPayment(false);
+        
+        if (attempts < maxAttempts) {
+          setTimeout(checkPendingStatus, 10000); // Cada 10 segundos
+        } else {
+          setIsProcessingPayment(false);
+          toast.info("La verificación sigue en proceso. Actualiza la página en unos minutos.");
+        }
+      };
+      
+      setTimeout(checkPendingStatus, 5000);
     } else {
+      console.error('❌ Estado no reconocido:', { status, collectionStatus });
       toast.error("Error en el procesamiento de la suscripción");
       setIsProcessingPayment(false);
     }
@@ -119,7 +149,7 @@ export const MercadoPagoSubscription = ({ currentPlan, onPlanChange }: MercadoPa
     setIsCreatingSubscription(true);
     
     try {
-      console.log("Iniciando proceso de suscripción MercadoPago...");
+      console.log("🚀 Iniciando proceso de suscripción MercadoPago...");
       
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
@@ -128,7 +158,7 @@ export const MercadoPagoSubscription = ({ currentPlan, onPlanChange }: MercadoPa
         return;
       }
 
-      console.log("Usuario autenticado, creando suscripción...");
+      console.log("👤 Usuario autenticado, creando suscripción...");
       
       const { data, error } = await supabase.functions.invoke('create-mercadopago-subscription', {
         headers: {
@@ -136,33 +166,36 @@ export const MercadoPagoSubscription = ({ currentPlan, onPlanChange }: MercadoPa
         },
       });
 
-      console.log("Respuesta de la función:", { data, error });
+      console.log("📨 Respuesta de la función:", { data, error });
 
       if (error) {
-        console.error('Error creando suscripción:', error);
+        console.error('❌ Error creando suscripción:', error);
         toast.error(`Error al crear la suscripción: ${error.message}`);
         return;
       }
 
       if (data?.checkout_url) {
-        console.log("Redirigiendo a:", data.checkout_url);
+        console.log("🔗 Redirigiendo a:", data.checkout_url);
         setIsTestMode(data.test_mode || false);
         
         if (data.test_mode) {
-          toast.success("Redirigiendo a MercadoPago (Modo Prueba) para procesar suscripción...", {
-            description: "Utiliza las tarjetas de prueba de MercadoPago"
+          toast.success("🧪 Redirigiendo a MercadoPago (Modo Prueba)", {
+            description: "Recuerda usar las tarjetas de prueba especificadas"
           });
         } else {
           toast.success("Redirigiendo a MercadoPago para procesar suscripción...");
         }
         
-        window.location.href = data.checkout_url;
+        // Añadir un pequeño delay para que el usuario vea el mensaje
+        setTimeout(() => {
+          window.location.href = data.checkout_url;
+        }, 2000);
       } else {
-        console.error("No se recibió checkout URL:", data);
+        console.error("❌ No se recibió checkout URL:", data);
         toast.error("No se pudo obtener la URL de pago");
       }
     } catch (error: any) {
-      console.error('Error de suscripción:', error);
+      console.error('💥 Error de suscripción:', error);
       toast.error("Error inesperado al procesar la suscripción");
     } finally {
       setIsCreatingSubscription(false);
@@ -353,16 +386,20 @@ export const MercadoPagoSubscription = ({ currentPlan, onPlanChange }: MercadoPa
         </Card>
       )}
 
-      {/* Información adicional para modo TEST */}
+      {/* Información actualizada para modo TEST */}
       <Card className="border-blue-200 bg-blue-50">
         <CardContent className="p-4">
           <div className="text-blue-700 text-sm">
-            <h4 className="font-medium mb-2">💳 Para probar pagos, usa estas tarjetas de MercadoPago:</h4>
+            <h4 className="font-medium mb-2">🧪 Para probar pagos en modo TEST:</h4>
             <div className="space-y-1 text-xs">
-              <div><strong>Visa:</strong> 4013 5406 8274 2643</div>
-              <div><strong>Mastercard:</strong> 5031 7557 3453 0604</div>
-              <div><strong>CVV:</strong> 123 | <strong>Fecha:</strong> 11/25</div>
-              <div><strong>Nombre:</strong> APRO (para aprobar) | CONT (para continuar)</div>
+              <div><strong>✅ Tarjetas de Aprobación:</strong></div>
+              <div>• <strong>Visa:</strong> 4013 5406 8274 2643</div>
+              <div>• <strong>Mastercard:</strong> 5031 7557 3453 0604</div>
+              <div>• <strong>CVV:</strong> 123 | <strong>Fecha:</strong> 11/25</div>
+              <div>• <strong>Nombre:</strong> APRO</div>
+              <div className="mt-2"><strong>❌ Para rechazar:</strong> Nombre: OTHE</div>
+              <div><strong>⏳ Para pendiente:</strong> Nombre: CONT</div>
+              <div className="mt-2 text-blue-600"><strong>💡 Importante:</strong> Usa un email de cuenta TEST de MercadoPago</div>
             </div>
           </div>
         </CardContent>
@@ -382,7 +419,7 @@ export const MercadoPagoSubscription = ({ currentPlan, onPlanChange }: MercadoPa
               Verificando...
             </>
           ) : (
-            'Actualizar Estado'
+            '🔄 Actualizar Estado'
           )}
         </Button>
       </div>
