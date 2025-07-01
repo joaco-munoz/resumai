@@ -9,7 +9,7 @@ const corsHeaders = {
 
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
-  console.log(`[CREATE-MP-SUBSCRIPTION] ${step}${detailsStr}`);
+  console.log(`[MP-SUBSCRIPTION] ${step}${detailsStr}`);
 };
 
 serve(async (req) => {
@@ -24,63 +24,54 @@ serve(async (req) => {
   );
 
   try {
-    logStep("Function started");
+    logStep("Iniciando creación de suscripción MercadoPago");
 
     const accessToken = Deno.env.get("MERCADOPAGO_ACCESS_TOKEN");
     if (!accessToken) {
-      throw new Error("MERCADOPAGO_ACCESS_TOKEN is not set");
+      throw new Error("MERCADOPAGO_ACCESS_TOKEN no configurado");
     }
-    
-    // Para Checkout Pro, aceptamos tokens APP_USR- también
-    const isTestToken = accessToken.startsWith("TEST-");
-    const isCheckoutProToken = accessToken.startsWith("APP_USR-");
-    
-    logStep("MercadoPago token verified", { 
-      isTestMode: isTestToken,
-      isCheckoutPro: isCheckoutProToken,
-      tokenPrefix: accessToken.substring(0, 15) + "..." 
+
+    logStep("Token MercadoPago verificado", { 
+      tokenPrefix: accessToken.substring(0, 20) + "..." 
     });
 
-    // Validar que sea un token válido
-    if (!isTestToken && !isCheckoutProToken) {
-      throw new Error("Token de MercadoPago no válido. Debe empezar con TEST- o APP_USR-");
-    }
-
+    // Autenticación del usuario
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) {
-      throw new Error("No authorization header provided");
+      throw new Error("No se proporcionó header de autorización");
     }
 
     const token = authHeader.replace("Bearer ", "");
     const { data: userData, error: userError } = await supabaseClient.auth.getUser(token);
     if (userError) {
-      logStep("Authentication error", userError);
-      throw new Error(`Authentication error: ${userError.message}`);
+      logStep("Error de autenticación", userError);
+      throw new Error(`Error de autenticación: ${userError.message}`);
     }
+
     const user = userData.user;
     if (!user?.email) {
-      throw new Error("User not authenticated or email not available");
+      throw new Error("Usuario no autenticado o email no disponible");
     }
-    logStep("User authenticated", { userId: user.id, email: user.email });
 
-    // Obtener información adicional del perfil
+    logStep("Usuario autenticado", { userId: user.id, email: user.email });
+
+    // Obtener perfil del usuario
     const { data: profile } = await supabaseClient
       .from("profiles")
       .select("full_name, phone, country, city")
       .eq("id", user.id)
       .single();
 
-    logStep("Profile data retrieved", { 
+    logStep("Datos del perfil obtenidos", { 
       hasProfile: !!profile,
-      fullName: profile?.full_name || "not available"
+      fullName: profile?.full_name || "no disponible"
     });
 
-    // Construir URLs correctamente
-    let origin = req.headers.get("origin") || "https://jwitsagioonykrabioku.supabase.co";
+    // Construir URLs
+    let origin = req.headers.get("origin") || req.headers.get("host") || "https://jwitsagioonykrabioku.supabase.co";
     
     if (origin.includes("localhost") || origin.includes("127.0.0.1")) {
       origin = "https://jwitsagioonykrabioku.supabase.co";
-      logStep("Using Supabase URL instead of localhost for MercadoPago", { origin });
     }
     
     if (!origin.startsWith("http://") && !origin.startsWith("https://")) {
@@ -90,42 +81,33 @@ serve(async (req) => {
     const backUrl = `${origin}/app/billing`;
     const notificationUrl = `${origin}/functions/v1/mercadopago-webhook`;
     
-    logStep("URLs constructed", { origin, backUrl, notificationUrl });
+    logStep("URLs configuradas", { origin, backUrl, notificationUrl });
 
-    // Para Checkout Pro, usar el email real del usuario
-    const payerEmail = user.email;
-    logStep("Using user email for Checkout Pro", { payerEmail });
-
-    // Separar nombre y apellido
-    const [firstName = "Usuario", lastName = "Prueba"] = (profile?.full_name || "Usuario Prueba").split(' ');
-
-    // Crear la suscripción en MercadoPago para Checkout Pro
+    // Datos para la suscripción (PreApproval)
     const subscriptionData = {
       reason: "Plan Pro ResumAI - Suscripción Mensual",
+      payer_email: user.email,
+      back_url: backUrl,
+      notification_url: notificationUrl,
       auto_recurring: {
         frequency: 1,
         frequency_type: "months",
         transaction_amount: 6990,
         currency_id: "CLP"
       },
-      payer_email: payerEmail,
-      back_url: backUrl,
-      notification_url: notificationUrl,
-      external_reference: user.id,
-      status: "pending"
+      status: "pending",
+      external_reference: user.id
     };
 
-    logStep("Creating subscription for Checkout Pro", { 
-      subscriptionData: {
-        reason: subscriptionData.reason,
-        amount: subscriptionData.auto_recurring.transaction_amount,
-        currency: subscriptionData.auto_recurring.currency_id,
-        payer_email: payerEmail,
-        external_reference: user.id,
-        isCheckoutPro: isCheckoutProToken
-      }
+    logStep("Creando suscripción en MercadoPago", {
+      email: user.email,
+      amount: 6990,
+      currency: "CLP",
+      frequency: "mensual",
+      userId: user.id
     });
 
+    // Crear suscripción usando la API de PreApproval
     const response = await fetch("https://api.mercadopago.com/preapproval", {
       method: "POST",
       headers: {
@@ -138,36 +120,28 @@ serve(async (req) => {
 
     const result = await response.json();
     
-    logStep("MercadoPago response received", { 
+    logStep("Respuesta de MercadoPago recibida", { 
       status: response.status,
       statusText: response.statusText,
-      resultId: result.id,
-      resultStatus: result.status,
-      hasInitPoint: !!result.init_point,
-      errorPresent: !!result.error
+      subscriptionId: result.id,
+      status: result.status,
+      hasInitPoint: !!result.init_point
     });
 
     if (!response.ok) {
-      logStep("MercadoPago API Error Details", {
+      logStep("Error en API de MercadoPago", {
         status: response.status,
-        statusText: response.statusText,
         error: result,
-        message: result.message || "Unknown error",
-        cause: result.cause || "Unknown cause",
-        details: result.details || "No details"
+        message: result.message || "Error desconocido"
       });
       
       let errorMessage = "Error al crear la suscripción en MercadoPago";
       
       if (result.message) {
-        if (result.message.includes("Both payer and collector must be real or test users")) {
-          errorMessage = "❌ Para Checkout Pro: Asegúrate de que tu cuenta de MercadoPago esté en modo de prueba. " +
-                        "Ve a tu Panel → Configuración → Activar modo de prueba. " +
-                        "También puedes probar con datos de tarjeta de prueba específicos.";
-        } else if (result.message.includes("Invalid users")) {
-          errorMessage = "Usuario no válido para MercadoPago Checkout Pro. Verifica la configuración de tu cuenta.";
-        } else if (result.message.includes("forbidden") || result.message.includes("Forbidden")) {
-          errorMessage = "Acceso denegado. Verifica que tu token de MercadoPago tenga los permisos necesarios para crear suscripciones.";
+        if (result.message.includes("payer")) {
+          errorMessage = "Error con el email del pagador. Verifica que uses un email válido para pruebas.";
+        } else if (result.message.includes("currency")) {
+          errorMessage = "Error con la moneda. CLP podría no estar disponible para tu cuenta de prueba.";
         } else {
           errorMessage = `Error de MercadoPago: ${result.message}`;
         }
@@ -177,22 +151,22 @@ serve(async (req) => {
     }
 
     if (!result.init_point) {
-      logStep("No init_point in response", result);
+      logStep("No se recibió init_point", result);
       throw new Error("No se pudo obtener la URL de pago de MercadoPago");
     }
 
-    // Preparar los datos de la suscripción
+    // Guardar/actualizar suscripción en la base de datos
     const subscriptionRecord = {
       user_id: user.id,
       tier: "pro",
       status: "pending",
       price_per_month: 6990,
       currency: "CLP",
-      stripe_subscription_id: result.id,
+      stripe_subscription_id: result.id, // Reutilizamos este campo para MercadoPago
       updated_at: new Date().toISOString(),
     };
 
-    // Verificar si ya existe una suscripción para este usuario
+    // Verificar si ya existe una suscripción
     const { data: existingSubscription } = await supabaseClient
       .from("subscriptions")
       .select("*")
@@ -206,34 +180,34 @@ serve(async (req) => {
         .eq("user_id", user.id);
       
       if (updateError) {
-        logStep("Database update error", updateError);
-        throw new Error(`Database update error: ${updateError.message}`);
+        logStep("Error actualizando suscripción en BD", updateError);
+        throw new Error(`Error de base de datos: ${updateError.message}`);
       }
-      logStep("Subscription updated successfully");
+      logStep("Suscripción actualizada en BD");
     } else {
       const { error: insertError } = await supabaseClient
         .from("subscriptions")
         .insert([subscriptionRecord]);
       
       if (insertError) {
-        logStep("Database insert error", insertError);
-        throw new Error(`Database insert error: ${insertError.message}`);
+        logStep("Error insertando suscripción en BD", insertError);
+        throw new Error(`Error de base de datos: ${insertError.message}`);
       }
-      logStep("Subscription created successfully");
+      logStep("Suscripción creada en BD");
     }
 
-    logStep("Subscription processed successfully", {
+    logStep("Suscripción procesada exitosamente", {
       subscriptionId: result.id,
       checkoutUrl: result.init_point,
-      isCheckoutPro: isCheckoutProToken,
-      externalReference: user.id
+      status: result.status
     });
 
     return new Response(JSON.stringify({
       subscription_id: result.id,
       checkout_url: result.init_point,
       status: result.status,
-      is_checkout_pro: isCheckoutProToken
+      currency: "CLP",
+      amount: 6990
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
@@ -241,14 +215,14 @@ serve(async (req) => {
 
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    logStep("ERROR in create-mercadopago-subscription", { 
+    logStep("ERROR en create-mercadopago-subscription", { 
       message: errorMessage,
       stack: error instanceof Error ? error.stack : "No stack trace"
     });
     
     return new Response(JSON.stringify({ 
       error: errorMessage,
-      details: "Check the function logs for more details"
+      details: "Revisa los logs de la función para más detalles"
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,

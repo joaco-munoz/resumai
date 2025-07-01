@@ -9,7 +9,7 @@ const corsHeaders = {
 
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
-  console.log(`[MP-WEBHOOK] ${step}${detailsStr}`);
+  console.log(`[MP-WEBHOOK-SUBSCRIPTION] ${step}${detailsStr}`);
 };
 
 serve(async (req) => {
@@ -24,25 +24,29 @@ serve(async (req) => {
   );
 
   try {
-    logStep("Webhook received");
+    logStep("Webhook recibido");
 
     const accessToken = Deno.env.get("MERCADOPAGO_ACCESS_TOKEN");
-    if (!accessToken) throw new Error("MERCADOPAGO_ACCESS_TOKEN is not set");
+    if (!accessToken) {
+      throw new Error("MERCADOPAGO_ACCESS_TOKEN no configurado");
+    }
 
     const body = await req.json();
-    logStep("Webhook payload", body);
+    logStep("Payload del webhook", body);
 
-    // Verificar que es una notificación de preapproval (suscripción)
-    if (body.type !== "preapproval") {
-      logStep("Not a preapproval notification, ignoring");
+    // Verificar que es una notificación de suscripción (preapproval)
+    if (body.type !== "subscription_preapproval") {
+      logStep("No es una notificación de suscripción, ignorando", { type: body.type });
       return new Response("OK", { status: 200 });
     }
 
     const preapprovalId = body.data?.id;
     if (!preapprovalId) {
-      logStep("No preapproval ID found");
+      logStep("No se encontró ID de preapproval");
       return new Response("OK", { status: 200 });
     }
+
+    logStep("Procesando suscripción", { preapprovalId });
 
     // Obtener detalles de la suscripción desde MercadoPago
     const mpResponse = await fetch(`https://api.mercadopago.com/preapproval/${preapprovalId}`, {
@@ -52,37 +56,48 @@ serve(async (req) => {
     });
 
     const subscriptionData = await mpResponse.json();
-    logStep("Subscription data from MP", subscriptionData);
+    logStep("Datos de suscripción desde MP", subscriptionData);
 
     if (!mpResponse.ok) {
-      throw new Error(`Error fetching subscription: ${JSON.stringify(subscriptionData)}`);
+      throw new Error(`Error obteniendo suscripción: ${JSON.stringify(subscriptionData)}`);
     }
 
-    // Determinar el nuevo estado de la suscripción
-    const newStatus = subscriptionData.status === "authorized" ? "active" : 
-                     subscriptionData.status === "cancelled" ? "cancelled" : 
-                     subscriptionData.status === "paused" ? "paused" : "pending";
+    // Determinar el nuevo estado
+    let newStatus = "pending";
+    if (subscriptionData.status === "authorized") {
+      newStatus = "active";
+    } else if (subscriptionData.status === "cancelled") {
+      newStatus = "cancelled";
+    } else if (subscriptionData.status === "paused") {
+      newStatus = "paused";
+    }
 
-    // Usar la fecha real de renovación de MercadoPago
-    const subscriptionEnd = subscriptionData.auto_recurring?.next_payment_date || 
-                           (subscriptionData.status === "authorized" 
-                             ? new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString() // 30 días como fallback
-                             : null);
+    // Calcular fecha de próximo pago
+    let subscriptionEnd = null;
+    if (subscriptionData.status === "authorized" && subscriptionData.auto_recurring?.next_payment_date) {
+      subscriptionEnd = subscriptionData.auto_recurring.next_payment_date;
+    } else if (subscriptionData.status === "authorized") {
+      // Fallback: 30 días desde ahora
+      const nextMonth = new Date();
+      nextMonth.setMonth(nextMonth.getMonth() + 1);
+      subscriptionEnd = nextMonth.toISOString();
+    }
 
-    logStep("Processing subscription status", {
+    logStep("Estado procesado", {
       preapprovalId,
       newStatus,
       subscriptionEnd,
       externalReference: subscriptionData.external_reference
     });
 
-    // Buscar el usuario por external_reference (más confiable)
+    // Buscar usuario por external_reference
     const userId = subscriptionData.external_reference;
     if (!userId) {
-      logStep("No external_reference found, cannot identify user");
-      throw new Error("No external_reference found in subscription data");
+      logStep("No se encontró external_reference, no se puede identificar usuario");
+      throw new Error("No se encontró external_reference en datos de suscripción");
     }
 
+    // Verificar que el usuario existe
     const { data: profile, error: profileError } = await supabaseClient
       .from("profiles")
       .select("id, email")
@@ -90,11 +105,11 @@ serve(async (req) => {
       .single();
 
     if (profileError || !profile) {
-      logStep("User not found by external_reference", { userId, error: profileError });
-      throw new Error(`User not found: ${userId}`);
+      logStep("Usuario no encontrado por external_reference", { userId, error: profileError });
+      throw new Error(`Usuario no encontrado: ${userId}`);
     }
 
-    logStep("User found", { userId: profile.id, email: profile.email });
+    logStep("Usuario encontrado", { userId: profile.id, email: profile.email });
 
     // Actualizar o crear suscripción
     const { error: upsertError } = await supabaseClient
@@ -113,11 +128,11 @@ serve(async (req) => {
       });
 
     if (upsertError) {
-      logStep("Error upserting subscription", upsertError);
-      throw new Error(`Database upsert error: ${upsertError.message}`);
+      logStep("Error actualizando suscripción", upsertError);
+      throw new Error(`Error de base de datos: ${upsertError.message}`);
     }
 
-    // Actualizar perfil del usuario según el estado de la suscripción
+    // Actualizar perfil del usuario
     const profileUpdates: any = {
       subscription_tier: newStatus === "active" ? "pro" : "free",
       is_premium: newStatus === "active",
@@ -136,9 +151,9 @@ serve(async (req) => {
       .eq("id", profile.id);
 
     if (profileUpdateError) {
-      logStep("Warning: Could not update profile", profileUpdateError);
+      logStep("Advertencia: No se pudo actualizar perfil", profileUpdateError);
     } else {
-      logStep("Profile updated successfully", { 
+      logStep("Perfil actualizado exitosamente", { 
         userId: profile.id, 
         email: profile.email, 
         tier: profileUpdates.subscription_tier,
@@ -147,7 +162,7 @@ serve(async (req) => {
       });
     }
 
-    logStep("Webhook processed successfully", {
+    logStep("Webhook procesado exitosamente", {
       preapprovalId,
       status: newStatus,
       userId: profile.id,
@@ -158,7 +173,7 @@ serve(async (req) => {
 
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    logStep("ERROR in mercadopago-webhook", { message: errorMessage });
+    logStep("ERROR en mercadopago-webhook", { message: errorMessage });
     return new Response(JSON.stringify({ error: errorMessage }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 500,
