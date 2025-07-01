@@ -31,6 +31,11 @@ serve(async (req) => {
       throw new Error("MERCADOPAGO_ACCESS_TOKEN no configurado");
     }
 
+    // Verificar que sea un token TEST para desarrollo
+    if (!accessToken.startsWith("TEST-") && !accessToken.startsWith("APP_USR-")) {
+      logStep("Advertencia: Token no reconocido", { tokenPrefix: accessToken.substring(0, 10) });
+    }
+
     const body = await req.json();
     logStep("Payload del webhook", body);
 
@@ -62,7 +67,7 @@ serve(async (req) => {
       throw new Error(`Error obteniendo suscripción: ${JSON.stringify(subscriptionData)}`);
     }
 
-    // Determinar el nuevo estado
+    // Determinar el nuevo estado basado en el estado de MercadoPago
     let newStatus = "pending";
     if (subscriptionData.status === "authorized") {
       newStatus = "active";
@@ -77,7 +82,7 @@ serve(async (req) => {
     if (subscriptionData.status === "authorized" && subscriptionData.auto_recurring?.next_payment_date) {
       subscriptionEnd = subscriptionData.auto_recurring.next_payment_date;
     } else if (subscriptionData.status === "authorized") {
-      // Fallback: 30 días desde ahora
+      // Fallback: 30 días desde ahora para suscripciones activas
       const nextMonth = new Date();
       nextMonth.setMonth(nextMonth.getMonth() + 1);
       subscriptionEnd = nextMonth.toISOString();

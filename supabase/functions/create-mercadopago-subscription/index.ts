@@ -31,7 +31,13 @@ serve(async (req) => {
       throw new Error("MERCADOPAGO_ACCESS_TOKEN no configurado");
     }
 
-    logStep("Token MercadoPago verificado", { 
+    // Validar que sea un token de TEST para suscripciones
+    if (!accessToken.startsWith("TEST-")) {
+      logStep("Token no válido para testing", { tokenPrefix: accessToken.substring(0, 10) });
+      throw new Error("Para testing, debes usar un token que comience con TEST-");
+    }
+
+    logStep("Token MercadoPago TEST verificado", { 
       tokenPrefix: accessToken.substring(0, 20) + "..." 
     });
 
@@ -139,9 +145,11 @@ serve(async (req) => {
       
       if (result.message) {
         if (result.message.includes("payer")) {
-          errorMessage = "Error con el email del pagador. Verifica que uses un email válido para pruebas.";
+          errorMessage = "Error con el email del pagador. Verifica tu configuración de prueba.";
         } else if (result.message.includes("currency")) {
-          errorMessage = "Error con la moneda. CLP podría no estar disponible para tu cuenta de prueba.";
+          errorMessage = "Error con la moneda CLP. Verifica tu configuración de MercadoPago.";
+        } else if (result.message.includes("test")) {
+          errorMessage = "Error de configuración de prueba. Verifica tu token TEST-.";
         } else {
           errorMessage = `Error de MercadoPago: ${result.message}`;
         }
