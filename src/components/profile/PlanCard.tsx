@@ -31,30 +31,11 @@ export const PlanCard = ({ currentPlan, isUpgrading, onUpgrade }: PlanCardProps)
         return;
       }
 
-      console.log("Usuario autenticado, creando suscripción...");
+      console.log("Usuario autenticado, redirigiendo a Reveniu...");
+      toast.success("Redirigiendo a Reveniu...");
       
-      const { data, error } = await supabase.functions.invoke('create-mercadopago-subscription', {
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
-      });
-
-      console.log("Respuesta de la función:", { data, error });
-
-      if (error) {
-        console.error('Error creating subscription:', error);
-        toast.error(`Error al crear la suscripción: ${error.message}`);
-        return;
-      }
-
-      if (data?.checkout_url) {
-        console.log("Redirigiendo a:", data.checkout_url);
-        toast.success("Redirigiendo a MercadoPago...");
-        window.open(data.checkout_url, '_blank');
-      } else {
-        console.error("No checkout URL received:", data);
-        toast.error("No se pudo obtener la URL de pago");
-      }
+      // Redirect to Reveniu payment page
+      window.open("https://app.reveniu.com/checkout-custom-link/Qwzj4TVXBcYOKSqsNLzRvM7DFOYv2PHF", '_blank');
     } catch (error: any) {
       console.error('Subscription error:', error);
       toast.error("Error inesperado al procesar la suscripción");
@@ -123,7 +104,7 @@ export const PlanCard = ({ currentPlan, isUpgrading, onUpgrade }: PlanCardProps)
         {currentPlan === 'pro' && (
           <CardContent>
             <div className="flex items-center justify-between text-sm">
-              <span className="text-gray-600 dark:text-gray-300">Suscripción activa con MercadoPago</span>
+              <span className="text-gray-600 dark:text-gray-300">Suscripción activa con Reveniu</span>
               <span className="font-semibold text-brand-600 dark:text-brand-400">$6.990 CLP/mes</span>
             </div>
           </CardContent>
