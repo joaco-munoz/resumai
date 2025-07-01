@@ -75,7 +75,7 @@ serve(async (req) => {
       fullName: profile?.full_name || "no disponible"
     });
 
-    // Construir URLs
+    // Construir URLs - importante para pruebas
     let origin = req.headers.get("origin") || req.headers.get("host") || "https://jwitsagioonykrabioku.supabase.co";
     
     if (origin.includes("localhost") || origin.includes("127.0.0.1")) {
@@ -91,7 +91,7 @@ serve(async (req) => {
     
     logStep("URLs configuradas", { origin, backUrl, notificationUrl });
 
-    // Datos para la suscripción (PreApproval)
+    // Datos para la suscripción (PreApproval) - configuración específica para TEST
     const subscriptionData = {
       reason: "Plan Pro ResumAI - Suscripción Mensual",
       payer_email: user.email,
@@ -116,13 +116,22 @@ serve(async (req) => {
       tokenType: isTestToken ? "TEST" : "PRODUCCIÓN"
     });
 
+    // Usar el endpoint correcto según el tipo de token
+    const apiUrl = isTestToken 
+      ? "https://api.mercadopago.com/preapproval"
+      : "https://api.mercadopago.com/preapproval";
+
     // Crear suscripción usando la API de PreApproval
-    const response = await fetch("https://api.mercadopago.com/preapproval", {
+    const response = await fetch(apiUrl, {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${accessToken}`,
         "Content-Type": "application/json",
-        "X-Idempotency-Key": `subscription-${user.id}-${Date.now()}`
+        "X-Idempotency-Key": `subscription-${user.id}-${Date.now()}`,
+        // Headers adicionales para modo TEST
+        ...(isTestToken && {
+          "X-Test-Token": "true"
+        })
       },
       body: JSON.stringify(subscriptionData),
     });
@@ -134,7 +143,9 @@ serve(async (req) => {
       statusText: response.statusText,
       subscriptionId: result.id,
       status: result.status,
-      hasInitPoint: !!result.init_point
+      hasInitPoint: !!result.init_point,
+      sandboxInitPoint: result.sandbox_init_point,
+      fullResponse: result
     });
 
     if (!response.ok) {
@@ -148,11 +159,11 @@ serve(async (req) => {
       
       if (result.message) {
         if (result.message.includes("payer")) {
-          errorMessage = "Error con el email del pagador. Verifica tu configuración de prueba.";
+          errorMessage = "Error con el email del pagador. Asegúrate de usar un email de cuenta de prueba de MercadoPago.";
         } else if (result.message.includes("currency")) {
           errorMessage = "Error con la moneda CLP. Verifica tu configuración de MercadoPago.";
-        } else if (result.message.includes("test")) {
-          errorMessage = "Error de configuración de prueba. Verifica tu token TEST-.";
+        } else if (result.message.includes("test") || result.message.includes("sandbox")) {
+          errorMessage = "Error de configuración de prueba. Verifica que tu token TEST- esté configurado correctamente.";
         } else {
           errorMessage = `Error de MercadoPago: ${result.message}`;
         }
@@ -161,8 +172,13 @@ serve(async (req) => {
       throw new Error(errorMessage);
     }
 
-    if (!result.init_point) {
-      logStep("No se recibió init_point", result);
+    // Para tokens TEST, usar sandbox_init_point si está disponible
+    const checkoutUrl = isTestToken && result.sandbox_init_point 
+      ? result.sandbox_init_point 
+      : result.init_point;
+
+    if (!checkoutUrl) {
+      logStep("No se recibió init_point ni sandbox_init_point", result);
       throw new Error("No se pudo obtener la URL de pago de MercadoPago");
     }
 
@@ -209,16 +225,18 @@ serve(async (req) => {
 
     logStep("Suscripción procesada exitosamente", {
       subscriptionId: result.id,
-      checkoutUrl: result.init_point,
-      status: result.status
+      checkoutUrl: checkoutUrl,
+      status: result.status,
+      isTestMode: isTestToken
     });
 
     return new Response(JSON.stringify({
       subscription_id: result.id,
-      checkout_url: result.init_point,
+      checkout_url: checkoutUrl,
       status: result.status,
       currency: "CLP",
-      amount: 6990
+      amount: 6990,
+      test_mode: isTestToken
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,

@@ -63,6 +63,11 @@ serve(async (req) => {
     const mpResponse = await fetch(`https://api.mercadopago.com/preapproval/${preapprovalId}`, {
       headers: {
         "Authorization": `Bearer ${accessToken}`,
+        "Content-Type": "application/json",
+        // Headers adicionales para modo TEST
+        ...(isTestToken && {
+          "X-Test-Token": "true"
+        })
       },
     });
 
@@ -98,7 +103,8 @@ serve(async (req) => {
       preapprovalId,
       newStatus,
       subscriptionEnd,
-      externalReference: subscriptionData.external_reference
+      externalReference: subscriptionData.external_reference,
+      isTestMode: isTestToken
     });
 
     // Buscar usuario por external_reference
@@ -169,7 +175,8 @@ serve(async (req) => {
         email: profile.email, 
         tier: profileUpdates.subscription_tier,
         isPremium: profileUpdates.is_premium,
-        expiresAt: profileUpdates.premium_expires_at
+        expiresAt: profileUpdates.premium_expires_at,
+        isTestMode: isTestToken
       });
     }
 
@@ -177,7 +184,8 @@ serve(async (req) => {
       preapprovalId,
       status: newStatus,
       userId: profile.id,
-      subscriptionEnd
+      subscriptionEnd,
+      isTestMode: isTestToken
     });
 
     return new Response("OK", { status: 200 });

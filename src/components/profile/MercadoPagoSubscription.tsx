@@ -1,7 +1,8 @@
+
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Crown, CreditCard, Loader2, CheckCircle, AlertCircle } from "lucide-react";
+import { Crown, CreditCard, Loader2, CheckCircle, AlertCircle, TestTube } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Badge } from "@/components/ui/badge";
@@ -30,6 +31,7 @@ export const MercadoPagoSubscription = ({ currentPlan, onPlanChange }: MercadoPa
   const [isCheckingStatus, setIsCheckingStatus] = useState(true);
   const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus | null>(null);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [isTestMode, setIsTestMode] = useState(false);
 
   // Verificar estado de suscripción al cargar
   useEffect(() => {
@@ -144,7 +146,16 @@ export const MercadoPagoSubscription = ({ currentPlan, onPlanChange }: MercadoPa
 
       if (data?.checkout_url) {
         console.log("Redirigiendo a:", data.checkout_url);
-        toast.success("Redirigiendo a MercadoPago para procesar suscripción...");
+        setIsTestMode(data.test_mode || false);
+        
+        if (data.test_mode) {
+          toast.success("Redirigiendo a MercadoPago (Modo Prueba) para procesar suscripción...", {
+            description: "Utiliza las tarjetas de prueba de MercadoPago"
+          });
+        } else {
+          toast.success("Redirigiendo a MercadoPago para procesar suscripción...");
+        }
+        
         window.location.href = data.checkout_url;
       } else {
         console.error("No se recibió checkout URL:", data);
@@ -181,6 +192,20 @@ export const MercadoPagoSubscription = ({ currentPlan, onPlanChange }: MercadoPa
 
   return (
     <div className="space-y-6">
+      {/* Aviso de modo TEST */}
+      {isTestMode && (
+        <Card className="border-orange-200 bg-orange-50">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 text-orange-700">
+              <TestTube className="h-4 w-4" />
+              <span className="text-sm font-medium">
+                Modo de Prueba Activo - Usar tarjetas de prueba de MercadoPago
+              </span>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       <Card className={isPro ? 'border-2 border-brand-500' : ''}>
         <CardHeader>
           <div className="flex items-center justify-between">
@@ -327,6 +352,21 @@ export const MercadoPagoSubscription = ({ currentPlan, onPlanChange }: MercadoPa
           </CardContent>
         </Card>
       )}
+
+      {/* Información adicional para modo TEST */}
+      <Card className="border-blue-200 bg-blue-50">
+        <CardContent className="p-4">
+          <div className="text-blue-700 text-sm">
+            <h4 className="font-medium mb-2">💳 Para probar pagos, usa estas tarjetas de MercadoPago:</h4>
+            <div className="space-y-1 text-xs">
+              <div><strong>Visa:</strong> 4013 5406 8274 2643</div>
+              <div><strong>Mastercard:</strong> 5031 7557 3453 0604</div>
+              <div><strong>CVV:</strong> 123 | <strong>Fecha:</strong> 11/25</div>
+              <div><strong>Nombre:</strong> APRO (para aprobar) | CONT (para continuar)</div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Refresh Status Button */}
       <div className="text-center">
