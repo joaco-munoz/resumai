@@ -65,7 +65,8 @@ serve(async (req) => {
     });
 
     // Determinar si estamos en sandbox o producción
-    const isProduction = Deno.env.get("DENO_DEPLOYMENT_ID") !== undefined;
+    // Para desarrollo/testing siempre usar sandbox
+    const isProduction = false; // Cambiar a true solo en producción
     const apiUrl = isProduction ? "https://api.reveniu.com/api/v1" : "https://integration.reveniu.com/api/v1";
     
     logStep("🌍 Entorno determinado", { 
