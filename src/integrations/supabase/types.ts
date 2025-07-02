@@ -630,7 +630,6 @@ export type Database = {
           current_period_start: string | null
           id: string
           price_per_month: number | null
-          provider: string | null
           status: string
           stripe_customer_id: string | null
           stripe_subscription_id: string | null
@@ -649,7 +648,6 @@ export type Database = {
           current_period_start?: string | null
           id?: string
           price_per_month?: number | null
-          provider?: string | null
           status: string
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
@@ -668,7 +666,6 @@ export type Database = {
           current_period_start?: string | null
           id?: string
           price_per_month?: number | null
-          provider?: string | null
           status?: string
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null

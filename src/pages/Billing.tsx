@@ -9,7 +9,7 @@ import { Progress } from "@/components/ui/progress";
 import { CreditCard, Crown, Download, FileText, Zap, CheckCircle, Calendar, TrendingUp, ArrowLeft } from "lucide-react";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
-import { ReveniuSubscription } from "@/components/profile/ReveniuSubscription";
+import { MercadoPagoSubscription } from "@/components/profile/MercadoPagoSubscription";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const Billing = () => {
@@ -60,8 +60,8 @@ const Billing = () => {
 
           <div className="p-4 sm:p-6 max-w-7xl mx-auto">
             <div className="space-y-4 sm:space-y-6">
-              {/* Reveniu Subscription Component */}
-              <ReveniuSubscription 
+              {/* MercadoPago Subscription Component */}
+              <MercadoPagoSubscription 
                 currentPlan={currentPlan}
                 onPlanChange={setCurrentPlan}
               />

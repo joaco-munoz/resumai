@@ -36,27 +36,9 @@ export const PlanCard = ({ currentPlan, isUpgrading, onUpgrade }: PlanCardProps)
       // Obtener el ID del usuario para incluirlo como parámetro en la URL
       const userId = session.user.id;
       
-      // Usar la función de Reveniu en lugar del link directo
-      const { data, error } = await supabase.functions.invoke('create-reveniu-subscription', {
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
-      });
-
-      if (error) {
-        console.error('Subscription error:', error);
-        toast.error(`Error al crear la suscripción: ${error.message}`);
-        return;
-      }
-
-      if (data?.checkout_url) {
-        toast.success("Redirigiendo a Reveniu...");
-        setTimeout(() => {
-          window.location.href = data.checkout_url;
-        }, 1500);
-      } else {
-        toast.error("No se pudo obtener la URL de pago");
-      }
+      // Redirect to Reveniu payment page with user ID as a parameter
+      const reveniuUrl = `https://app.reveniu.com/checkout-custom-link/Qwzj4TVXBcYOKSqsNLzRvM7DFOYv2PHF?user_id=${userId}`;
+      window.open(reveniuUrl, '_blank');
     } catch (error: any) {
       console.error('Subscription error:', error);
       toast.error("Error inesperado al procesar la suscripción");

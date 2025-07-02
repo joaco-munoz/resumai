@@ -1,10 +1,10 @@
 
 project_id = "jwitsagioonykrabioku"
 
-[functions.reveniu-webhook]
+[functions.mercadopago-webhook]
 verify_jwt = false
 
-[functions.create-reveniu-subscription]
+[functions.create-mercadopago-subscription]
 verify_jwt = true
 
 [functions.check-subscription-status]

@@ -1,0 +1,428 @@
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Crown, CreditCard, Loader2, CheckCircle, AlertCircle, TestTube } from "lucide-react";
+import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { Badge } from "@/components/ui/badge";
+
+interface MercadoPagoSubscriptionProps {
+  currentPlan: string;
+  onPlanChange: (plan: string) => void;
+}
+
+interface SubscriptionStatus {
+  subscription_tier: string;
+  is_premium: boolean;
+  premium_expires_at: string | null;
+  benefits: {
+    unlimited_cvs: boolean;
+    unlimited_exports: boolean;
+    unlimited_ai_improvements: boolean;
+    job_matcher_advanced: boolean;
+    premium_templates: boolean;
+    priority_support: boolean;
+  };
+}
+
+export const MercadoPagoSubscription = ({ currentPlan, onPlanChange }: MercadoPagoSubscriptionProps) => {
+  const [isCreatingSubscription, setIsCreatingSubscription] = useState(false);
+  const [isCheckingStatus, setIsCheckingStatus] = useState(true);
+  const [subscriptionStatus, setSubscriptionStatus] = useState<SubscriptionStatus | null>(null);
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [isTestMode, setIsTestMode] = useState(false);
+
+  // Verificar estado de suscripción al cargar
+  useEffect(() => {
+    checkSubscriptionStatus();
+  }, []);
+
+  // Procesar parámetros de retorno de MercadoPago
+  useEffect(() => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const status = urlParams.get('status');
+    const preapprovalId = urlParams.get('preapproval_id');
+    const collectionStatus = urlParams.get('collection_status');
+    const paymentId = urlParams.get('payment_id');
+
+    console.log('🔍 Parámetros de retorno detectados:', { 
+      status, 
+      preapprovalId, 
+      collectionStatus,
+      paymentId,
+      allParams: Object.fromEntries(urlParams.entries())
+    });
+
+    if (status || preapprovalId || collectionStatus) {
+      handlePaymentResult(status, preapprovalId, collectionStatus);
+      
+      // Limpiar URL después de procesar
+      setTimeout(() => {
+        window.history.replaceState({}, '', window.location.pathname);
+      }, 3000);
+    }
+  }, []);
+
+  const handlePaymentResult = async (status: string | null, preapprovalId: string | null, collectionStatus: string | null) => {
+    console.log('🎯 Procesando resultado de pago:', { status, preapprovalId, collectionStatus });
+    
+    setIsProcessingPayment(true);
+    
+    if (status === 'authorized' || collectionStatus === 'approved') {
+      toast.success("¡Suscripción autorizada! 🎉", {
+        description: "Verificando activación de tu Plan Pro..."
+      });
+      
+      // Esperar para que el webhook procese (más tiempo en TEST)
+      setTimeout(async () => {
+        await checkSubscriptionStatus();
+        toast.success("¡Plan Pro activado exitosamente! ✨");
+        setTimeout(() => window.location.reload(), 2000);
+      }, 5000); // Más tiempo de espera para TEST
+      
+    } else if (status === 'cancelled') {
+      toast.error("Suscripción cancelada ❌");
+      setIsProcessingPayment(false);
+    } else if (status === 'pending' || collectionStatus === 'pending') {
+      toast.info("Suscripción pendiente de confirmación ⏳", {
+        description: "Verificaremos el estado en unos momentos..."
+      });
+      
+      // Verificar estado varias veces para TEST
+      let attempts = 0;
+      const maxAttempts = 6;
+      const checkPendingStatus = async () => {
+        attempts++;
+        await checkSubscriptionStatus();
+        
+        if (attempts < maxAttempts) {
+          setTimeout(checkPendingStatus, 10000); // Cada 10 segundos
+        } else {
+          setIsProcessingPayment(false);
+          toast.info("La verificación sigue en proceso. Actualiza la página en unos minutos.");
+        }
+      };
+      
+      setTimeout(checkPendingStatus, 5000);
+    } else {
+      console.error('❌ Estado no reconocido:', { status, collectionStatus });
+      toast.error("Error en el procesamiento de la suscripción");
+      setIsProcessingPayment(false);
+    }
+  };
+
+  const checkSubscriptionStatus = async () => {
+    setIsCheckingStatus(true);
+    
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        setIsCheckingStatus(false);
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke('check-subscription-status', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (error) {
+        console.error('Error verificando estado de suscripción:', error);
+        toast.error("Error al verificar el estado de la suscripción");
+        return;
+      }
+
+      if (data) {
+        setSubscriptionStatus(data);
+        onPlanChange(data.subscription_tier);
+        console.log("Estado de suscripción:", data);
+      }
+    } catch (error: any) {
+      console.error('Error de estado de suscripción:', error);
+    } finally {
+      setIsCheckingStatus(false);
+    }
+  };
+
+  const handleCreateSubscription = async () => {
+    setIsCreatingSubscription(true);
+    
+    try {
+      console.log("🚀 Iniciando proceso de suscripción MercadoPago...");
+      
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error("Debes iniciar sesión para suscribirte");
+        setIsCreatingSubscription(false);
+        return;
+      }
+
+      console.log("👤 Usuario autenticado, creando suscripción...");
+      
+      const { data, error } = await supabase.functions.invoke('create-mercadopago-subscription', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      console.log("📨 Respuesta de la función:", { data, error });
+
+      if (error) {
+        console.error('❌ Error creando suscripción:', error);
+        toast.error(`Error al crear la suscripción: ${error.message}`);
+        return;
+      }
+
+      if (data?.checkout_url) {
+        console.log("🔗 Redirigiendo a:", data.checkout_url);
+        setIsTestMode(data.test_mode || false);
+        
+        if (data.test_mode) {
+          toast.success("🧪 Redirigiendo a MercadoPago (Modo Prueba)", {
+            description: "Recuerda usar las tarjetas de prueba especificadas"
+          });
+        } else {
+          toast.success("Redirigiendo a MercadoPago para procesar suscripción...");
+        }
+        
+        // Añadir un pequeño delay para que el usuario vea el mensaje
+        setTimeout(() => {
+          window.location.href = data.checkout_url;
+        }, 2000);
+      } else {
+        console.error("❌ No se recibió checkout URL:", data);
+        toast.error("No se pudo obtener la URL de pago");
+      }
+    } catch (error: any) {
+      console.error('💥 Error de suscripción:', error);
+      toast.error("Error inesperado al procesar la suscripción");
+    } finally {
+      setIsCreatingSubscription(false);
+    }
+  };
+
+  if (isCheckingStatus || isProcessingPayment) {
+    return (
+      <Card>
+        <CardContent className="flex items-center justify-center p-8">
+          <div className="flex items-center gap-2">
+            <Loader2 className="h-4 w-4 animate-spin" />
+            <span>
+              {isProcessingPayment 
+                ? "Procesando suscripción y activando Plan Pro..." 
+                : "Verificando estado de suscripción..."
+              }
+            </span>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const isPro = subscriptionStatus?.subscription_tier === 'pro';
+  const benefits = subscriptionStatus?.benefits;
+
+  return (
+    <div className="space-y-6">
+      {/* Aviso de modo TEST */}
+      {isTestMode && (
+        <Card className="border-orange-200 bg-orange-50">
+          <CardContent className="p-4">
+            <div className="flex items-center gap-2 text-orange-700">
+              <TestTube className="h-4 w-4" />
+              <span className="text-sm font-medium">
+                Modo de Prueba Activo - Usar tarjetas de prueba de MercadoPago
+              </span>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      <Card className={isPro ? 'border-2 border-brand-500' : ''}>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className={`p-2 rounded-lg ${isPro ? 'bg-brand-100' : 'bg-gray-100'}`}>
+                {isPro ? (
+                  <Crown className="h-6 w-6 text-brand-600" />
+                ) : (
+                  <CreditCard className="h-6 w-6 text-gray-600" />
+                )}
+              </div>
+              <div>
+                <CardTitle className="flex items-center gap-2">
+                  Plan {isPro ? 'Pro' : 'Gratuito'}
+                  {isPro && (
+                    <Badge className="bg-brand-100 text-brand-700">Activo</Badge>
+                  )}
+                </CardTitle>
+                <CardDescription>
+                  {isPro 
+                    ? 'Suscripción mensual activa con MercadoPago'
+                    : 'Suscríbete para acceder a todas las funciones premium'
+                  }
+                </CardDescription>
+              </div>
+            </div>
+            
+            {!isPro && (
+              <div className="text-right">
+                <div className="text-2xl font-bold text-brand-600 mb-1">
+                  $6.990 <span className="text-sm font-normal text-gray-500">CLP/mes</span>
+                </div>
+                <Button 
+                  onClick={handleCreateSubscription}
+                  disabled={isCreatingSubscription}
+                  className="bg-gradient-to-r from-brand-500 to-brand-700 hover:from-brand-600 hover:to-brand-800"
+                >
+                  {isCreatingSubscription ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Procesando...
+                    </>
+                  ) : (
+                    <>
+                      <Crown className="h-4 w-4 mr-2" />
+                      Suscribirse a Pro
+                    </>
+                  )}
+                </Button>
+              </div>
+            )}
+          </div>
+        </CardHeader>
+        
+        {isPro && subscriptionStatus?.premium_expires_at && (
+          <CardContent>
+            <div className="flex items-center justify-between text-sm">
+              <span className="text-gray-600">Suscripción mensual recurrente</span>
+              <span className="font-semibold text-brand-600">
+                Próximo pago: {new Date(subscriptionStatus.premium_expires_at).toLocaleDateString('es-ES')}
+              </span>
+            </div>
+          </CardContent>
+        )}
+      </Card>
+
+      {/* Benefits Card */}
+      {benefits && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">Beneficios de tu Plan</CardTitle>
+            <CardDescription>
+              {isPro ? 'Disfruta de todos estos beneficios premium' : 'Estos beneficios se activarán con el Plan Pro'}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div className="flex items-center gap-2">
+                {benefits.unlimited_cvs ? (
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                ) : (
+                  <AlertCircle className="h-4 w-4 text-gray-400" />
+                )}
+                <span className={benefits.unlimited_cvs ? 'text-green-700' : 'text-gray-500'}>
+                  CVs ilimitados
+                </span>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                {benefits.unlimited_exports ? (
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                ) : (
+                  <AlertCircle className="h-4 w-4 text-gray-400" />
+                )}
+                <span className={benefits.unlimited_exports ? 'text-green-700' : 'text-gray-500'}>
+                  Exportaciones ilimitadas
+                </span>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                {benefits.unlimited_ai_improvements ? (
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                ) : (
+                  <AlertCircle className="h-4 w-4 text-gray-400" />
+                )}
+                <span className={benefits.unlimited_ai_improvements ? 'text-green-700' : 'text-gray-500'}>
+                  Mejoras IA ilimitadas
+                </span>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                {benefits.job_matcher_advanced ? (
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                ) : (
+                  <AlertCircle className="h-4 w-4 text-gray-400" />
+                )}
+                <span className={benefits.job_matcher_advanced ? 'text-green-700' : 'text-gray-500'}>
+                  Job Matcher avanzado
+                </span>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                {benefits.premium_templates ? (
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                ) : (
+                  <AlertCircle className="h-4 w-4 text-gray-400" />
+                )}
+                <span className={benefits.premium_templates ? 'text-green-700' : 'text-gray-500'}>
+                  Plantillas premium
+                </span>
+              </div>
+              
+              <div className="flex items-center gap-2">
+                {benefits.priority_support ? (
+                  <CheckCircle className="h-4 w-4 text-green-500" />
+                ) : (
+                  <AlertCircle className="h-4 w-4 text-gray-400" />
+                )}
+                <span className={benefits.priority_support ? 'text-green-700' : 'text-gray-500'}>
+                  Soporte prioritario
+                </span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Información actualizada para modo TEST */}
+      <Card className="border-blue-200 bg-blue-50">
+        <CardContent className="p-4">
+          <div className="text-blue-700 text-sm">
+            <h4 className="font-medium mb-2">🧪 Para probar pagos en modo TEST:</h4>
+            <div className="space-y-1 text-xs">
+              <div><strong>✅ Tarjetas de Aprobación:</strong></div>
+              <div>• <strong>Visa:</strong> 4013 5406 8274 2643</div>
+              <div>• <strong>Mastercard:</strong> 5031 7557 3453 0604</div>
+              <div>• <strong>CVV:</strong> 123 | <strong>Fecha:</strong> 11/25</div>
+              <div>• <strong>Nombre:</strong> APRO</div>
+              <div className="mt-2"><strong>❌ Para rechazar:</strong> Nombre: OTHE</div>
+              <div><strong>⏳ Para pendiente:</strong> Nombre: CONT</div>
+              <div className="mt-2 text-blue-600"><strong>💡 Importante:</strong> Usa un email de cuenta TEST de MercadoPago</div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Refresh Status Button */}
+      <div className="text-center">
+        <Button
+          variant="outline"
+          onClick={checkSubscriptionStatus}
+          disabled={isCheckingStatus}
+          className="text-sm"
+        >
+          {isCheckingStatus ? (
+            <>
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              Verificando...
+            </>
+          ) : (
+            '🔄 Actualizar Estado'
+          )}
+        </Button>
+      </div>
+    </div>
+  );
+};
