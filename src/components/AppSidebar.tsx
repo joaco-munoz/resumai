@@ -23,9 +23,9 @@ import { supabase } from "@/integrations/supabase/client";
 
 const mainMenuItems = [
   { title: "Inicio", url: "/app", icon: House },
-  { title: "Mis Currículums", url: "/app/cvs", icon: FolderOpen },
   { title: "Editor de CV principal", url: "/app/cv/new", icon: FileText },
   { title: "Match de Ofertas", url: "/app/match", icon: Target },
+  { title: "Mis Currículums", url: "/app/cvs", icon: FolderOpen },
   { title: "Seguimiento de Postulaciones", url: "/app/kanban", icon: CheckCircle },
 ];
 

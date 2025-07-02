@@ -86,11 +86,6 @@ const Index = () => {
         <StatsSection ref={statsRef} />
         <PricingSection ref={pricingRef} onSignUpNavigation={handleSignUpNavigation} />
         <FAQSection ref={faqRef} faqItems={faqItems} />
-        <WaitlistSection 
-          email={email} 
-          setEmail={setEmail} 
-          handleWaitlistSubmit={handleWaitlistSubmit} 
-        />
       </main>
       <Footer />
     </div>
