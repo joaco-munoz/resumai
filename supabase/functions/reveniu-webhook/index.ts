@@ -29,21 +29,17 @@ serve(async (req) => {
       headers: Object.fromEntries(req.headers.entries())
     });
 
-    // Verificar la clave secreta de Reveniu (deberías configurarla en las variables de entorno)
-    const reveniuWebhookSecret = Deno.env.get("REVENIU_WEBHOOK_SECRET");
-    if (!reveniuWebhookSecret) {
-      throw new Error("REVENIU_WEBHOOK_SECRET no configurado");
+    // Verificar la clave secreta de Reveniu
+    const reveniuSecret = Deno.env.get("REVENIU_SECRET_KEY");
+    if (!reveniuSecret) {
+      throw new Error("REVENIU_SECRET_KEY no configurado");
     }
 
-    // Verificar la firma del webhook (si Reveniu proporciona este mecanismo)
-    const signature = req.headers.get("x-reveniu-signature") || req.headers.get("x-webhook-signature");
-    
-    // Aquí deberías implementar la verificación de la firma según la documentación de Reveniu
-    // Este es un placeholder, deberás ajustarlo según la documentación específica
-    if (!signature) {
-      logStep("⚠️ No se encontró firma de webhook");
-      // Dependiendo de tu configuración, podrías rechazar webhooks sin firma
-      // return new Response("Unauthorized", { status: 401 });
+    // Verificar la firma del webhook
+    const signature = req.headers.get("reveniu-secret-key");
+    if (signature !== reveniuSecret) {
+      logStep("❌ Firma de webhook inválida");
+      return new Response("Unauthorized", { status: 401 });
     }
 
     let body;
@@ -64,45 +60,63 @@ serve(async (req) => {
     logStep("📋 Payload procesado", body);
 
     // Procesar diferentes tipos de eventos de Reveniu
-    // Ajusta esto según la documentación específica de Reveniu
-    const eventType = body.event || body.type || "unknown";
-    const subscriptionId = body.subscription_id || body.id;
-    const userId = body.metadata?.user_id || body.user_id || body.external_reference;
-    const status = body.status || "unknown";
+    const eventType = body.event;
+    const subscriptionData = body.data;
 
-    logStep("🔍 Evento recibido", { eventType, subscriptionId, userId, status });
-
-    if (!subscriptionId) {
-      logStep("❌ No se encontró ID de suscripción", { body });
-      return new Response("OK - No subscription ID", { status: 200 });
+    if (!eventType || !subscriptionData) {
+      logStep("❌ Evento o datos de suscripción faltantes", { body });
+      return new Response("OK - Invalid data", { status: 200 });
     }
 
-    if (!userId) {
-      logStep("❌ No se encontró ID de usuario", { body });
-      return new Response("OK - No user ID", { status: 200 });
+    const subscriptionId = subscriptionData.id;
+    const userId = subscriptionData.external_id;
+
+    if (!subscriptionId || !userId) {
+      logStep("❌ ID de suscripción o usuario faltantes", { subscriptionData });
+      return new Response("OK - Missing IDs", { status: 200 });
     }
+
+    logStep("🔍 Procesando evento", { eventType, subscriptionId, userId });
 
     // Determinar el nuevo estado de la suscripción
     let newStatus = "pending";
     let subscriptionEnd = null;
 
-    // Ajusta esta lógica según los estados que maneja Reveniu
-    if (status === "active" || status === "paid" || status === "completed") {
-      newStatus = "active";
-      
-      // Calcular fecha de fin de suscripción (30 días por defecto o según lo que indique Reveniu)
-      if (body.next_payment_date || body.expiration_date) {
-        subscriptionEnd = body.next_payment_date || body.expiration_date;
-      } else {
-        // Fallback: 30 días desde ahora
+    switch (eventType) {
+      case "subscription_activated":
+      case "subscription_payment_succeeded":
+        newStatus = "active";
+        
+        // Calcular fecha de fin de suscripción (30 días desde ahora)
         const nextMonth = new Date();
         nextMonth.setMonth(nextMonth.getMonth() + 1);
         subscriptionEnd = nextMonth.toISOString();
-      }
-    } else if (status === "cancelled" || status === "expired") {
-      newStatus = "cancelled";
-    } else if (status === "paused") {
-      newStatus = "paused";
+        break;
+        
+      case "subscription_payment_in_recovery":
+        newStatus = "pending";
+        break;
+        
+      case "subscription_payment_failed":
+      case "subscription_deactivated":
+        newStatus = "cancelled";
+        break;
+        
+      case "subscription_reactivated":
+        newStatus = "active";
+        
+        const reactivatedMonth = new Date();
+        reactivatedMonth.setMonth(reactivatedMonth.getMonth() + 1);
+        subscriptionEnd = reactivatedMonth.toISOString();
+        break;
+        
+      case "subscription_renewal_cancelled":
+        newStatus = "cancelled";
+        break;
+        
+      default:
+        logStep("❓ Tipo de evento no reconocido", { eventType });
+        return new Response("OK - Unknown event", { status: 200 });
     }
 
     logStep("🔄 Actualizando base de datos", {
@@ -133,8 +147,8 @@ serve(async (req) => {
         status: newStatus,
         price_per_month: 6990,
         currency: "CLP",
-        provider: "reveniu", // Indicar que es una suscripción de Reveniu
-        stripe_subscription_id: subscriptionId, // Mantener el mismo campo por compatibilidad
+        provider: "reveniu",
+        stripe_subscription_id: subscriptionId.toString(),
         current_period_end: subscriptionEnd,
         updated_at: new Date().toISOString(),
       }, {
@@ -177,6 +191,7 @@ serve(async (req) => {
 
     logStep("🎉 WEBHOOK PROCESADO EXITOSAMENTE", {
       subscriptionId,
+      eventType,
       status: newStatus,
       userId: profile.id
     });
