@@ -71,7 +71,7 @@ serve(async (req) => {
       
       logStep("Checking subscription status", {
         subscriptionId: subscription.stripe_subscription_id,
-        provider: subscription.provider || "mercadopago", // Añadimos el proveedor
+        provider: subscription.provider || "mercadopago",
         status: subscription.status,
         expiryDate: expiryDate?.toISOString(),
         now: now.toISOString()
