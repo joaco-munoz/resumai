@@ -399,8 +399,10 @@ export default function CVsList() {
           onClose={() => setJobReportCV(null)}
           reportData={jobReportCV?.content || null}
           reportTitle={jobReportCV?.title || ""}
+          reportId={jobReportCV?.id}
           onApply={() => {
             setJobReportCV(null);
+            loadCVs(); // Reload CVs after adaptation
           }}
         />
 

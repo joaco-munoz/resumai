@@ -28,6 +28,7 @@ interface CVAdaptationModalProps {
   onClose: () => void;
   matchResult: MatchResult | null;
   jobDetails: JobDetails;
+  existingReportId?: string;
   onSave: () => void;
 }
 
@@ -36,6 +37,7 @@ export const CVAdaptationModal = ({
   onClose, 
   matchResult, 
   jobDetails, 
+  existingReportId,
   onSave 
 }: CVAdaptationModalProps) => {
   const [isAdapting, setIsAdapting] = useState(false);
@@ -391,6 +393,7 @@ export const CVAdaptationModal = ({
           adaptedCvData={adaptedCvData}
           jobTitle={jobDetails.title}
           companyName={jobDetails.company}
+          existingCVId={existingReportId}
           onSave={() => {
             setShowPreviewModal(false);
             onSave();

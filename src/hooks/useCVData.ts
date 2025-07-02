@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { CVData } from "@/types/cv";
 
 const LOCAL_STORAGE_KEY = 'cv-editor-data';
+const LOCAL_STORAGE_DRAFT_KEY = 'cv-editor-draft';
 const LOCAL_STORAGE_TAB_KEY = 'cv-editor-active-tab';
 
 export const useCVData = () => {
@@ -51,18 +52,37 @@ export const useCVData = () => {
   // Save data to localStorage whenever cvData changes
   useEffect(() => {
     if (currentCvId) {
+      // Persist edits for existing CVs
       localStorage.setItem(`${LOCAL_STORAGE_KEY}-${currentCvId}`, JSON.stringify(cvData));
+    } else {
+      // Persist edits for a new (unsaved) CV draft
+      localStorage.setItem(LOCAL_STORAGE_DRAFT_KEY, JSON.stringify(cvData));
     }
   }, [cvData, currentCvId]);
 
   // Load data from localStorage when component mounts or cvId changes
   useEffect(() => {
-    if (user) {
-      if (cvId && cvId !== 'new') {
-        loadCV(cvId);
-      } else {
-        loadLastCV();
+    if (!user) return;
+
+    // 1. If we are creating a new CV, try to restore the local draft first
+    if (!cvId || cvId === 'new') {
+      const draft = localStorage.getItem(LOCAL_STORAGE_DRAFT_KEY);
+      if (draft) {
+        try {
+          const parsed = JSON.parse(draft);
+          setCvData(parsed);
+          console.log('Draft CV loaded from localStorage');
+        } catch (err) {
+          console.error('Error parsing draft CV from localStorage', err);
+        }
       }
+    }
+
+    // 2. Then follow the normal load logic
+    if (cvId && cvId !== 'new') {
+      loadCV(cvId);
+    } else {
+      loadLastCV();
     }
   }, [cvId, user]);
 
@@ -71,19 +91,6 @@ export const useCVData = () => {
     try {
       console.log('Loading CV with ID:', id);
       
-      // Try to pre-populate quickly with cached data while we fetch the latest version
-      const localData = localStorage.getItem(`${LOCAL_STORAGE_KEY}-${id}`);
-      if (localData) {
-        try {
-          const parsedData = JSON.parse(localData);
-          setCvData(parsedData);
-          setCurrentCvId(id);
-          console.log('CV pre-populated from localStorage (will refresh with latest):', parsedData);
-        } catch (error) {
-          console.error('Error parsing localStorage data:', error);
-        }
-      }
-
       const { data, error } = await supabase
         .from('cvs')
         .select('*')
@@ -100,8 +107,22 @@ export const useCVData = () => {
 
       if (data && data.content) {
         console.log('CV loaded successfully:', data);
-        setCvData(data.content as unknown as CVData);
         setCurrentCvId(data.id);
+        
+        // Check if we have unsaved local changes for this CV
+        const localData = localStorage.getItem(`${LOCAL_STORAGE_KEY}-${id}`);
+        if (localData) {
+          try {
+            const parsedData = JSON.parse(localData);
+            setCvData(parsedData);
+            console.log('CV loaded from localStorage (unsaved changes preserved):', parsedData);
+          } catch (error) {
+            console.error('Error parsing localStorage data:', error);
+            setCvData(data.content as unknown as CVData);
+          }
+        } else {
+          setCvData(data.content as unknown as CVData);
+        }
       }
     } catch (error) {
       console.error('Error loading CV:', error);

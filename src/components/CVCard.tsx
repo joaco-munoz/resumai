@@ -186,7 +186,7 @@ export const CVCard = ({
                     {getStatusLabel(cv.status)}
                   </Badge>
                 )}
-                {cv.ai_score && (
+                {cv.ai_score && isJobReportCV && (
                   <Badge className={getScoreColor(cv.ai_score)}>
                     {cv.ai_score}%
                   </Badge>
@@ -370,7 +370,7 @@ export const CVCard = ({
                     {getStatusLabel(cv.status)}
                   </Badge>
                 )}
-                {cv.ai_score && (
+                {cv.ai_score && isJobReportCV && (
                   <Badge className={getScoreColor(cv.ai_score)}>
                     {cv.ai_score}%
                   </Badge>

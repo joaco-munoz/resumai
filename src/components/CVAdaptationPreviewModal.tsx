@@ -342,10 +342,38 @@ export const CVAdaptationPreviewModal = ({
       console.log('Saving CV with content:', contentToSave);
 
       if (existingCVId) {
+        // Generate new title for converted CV
+        let newTitle;
+        if (companyName && jobTitle) {
+          newTitle = `CV - ${jobTitle} en ${companyName}`;
+        } else if (companyName) {
+          newTitle = `CV - ${companyName}`;
+        } else if (jobTitle) {
+          newTitle = `CV - ${jobTitle}`;
+        } else {
+          const now = new Date();
+          const dateTime = now.toLocaleString('es-ES', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit'
+          });
+          newTitle = `CV - ${cvData.personalInfo?.fullName || 'Sin nombre'} - ${dateTime}`;
+        }
+
+        // Remove percentage field from content when converting to CV
+        const cvContentWithoutPercentage = {
+          ...contentToSave,
+          matchPercentage: undefined // Remove percentage field
+        };
+
         const { error: updateError } = await supabase
           .from('cvs')
           .update({
-            content: contentToSave as any,
+            title: newTitle,
+            content: cvContentWithoutPercentage as any,
+            cv_source: 'job_matcher', // Ensure it's marked as job_matcher CV
             last_updated: new Date().toISOString()
           })
           .eq('id', existingCVId);

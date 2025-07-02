@@ -1,10 +1,12 @@
 
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useState } from "react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { CheckCircle, AlertCircle, TrendingUp, Target } from "lucide-react";
+import { CheckCircle, AlertCircle, TrendingUp, Target, Sparkles } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { CVAdaptationModal } from "@/components/CVAdaptationModal";
 
 interface MatchResult {
   score: number;
@@ -31,6 +33,7 @@ interface JobReportModalProps {
   onClose: () => void;
   reportData: ReportData | null;
   reportTitle: string;
+  reportId?: string;
   onApply: () => void;
 }
 
@@ -39,8 +42,11 @@ export const JobReportModal = ({
   onClose, 
   reportData, 
   reportTitle,
+  reportId,
   onApply 
 }: JobReportModalProps) => {
+  const [showAdaptationModal, setShowAdaptationModal] = useState(false);
+
   if (!reportData || !reportData.matchResult) return null;
 
   const { matchResult, jobDetails, jobDescription } = reportData;
@@ -58,8 +64,12 @@ export const JobReportModal = ({
   };
 
   const handleApply = () => {
-    onApply();
-    // Aquí se podría implementar la lógica para abrir el modal de adaptación
+    setShowAdaptationModal(true);
+  };
+
+  const handleAdaptationSave = () => {
+    setShowAdaptationModal(false);
+    onApply(); // This will close the report modal and refresh the CVs list
   };
 
   const handleNoApply = () => {
@@ -67,6 +77,7 @@ export const JobReportModal = ({
   };
 
   return (
+    <>
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
@@ -218,5 +229,16 @@ export const JobReportModal = ({
         </div>
       </DialogContent>
     </Dialog>
+
+    {/* Modal de Adaptación de CV */}
+    <CVAdaptationModal
+      isOpen={showAdaptationModal}
+      onClose={() => setShowAdaptationModal(false)}
+      matchResult={matchResult}
+      jobDetails={jobDetails}
+      existingReportId={reportId}
+      onSave={handleAdaptationSave}
+    />
+  </>
   );
 };
