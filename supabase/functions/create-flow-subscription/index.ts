@@ -127,27 +127,55 @@ serve(async (req) => {
 
     logStep("✅ Respuesta de Flow", flowData);
 
-    // Guardar suscripción en base de datos con el commerceOrder para identificación posterior
-    const { error: subscriptionError } = await supabaseClient
+    // Verificar si ya existe una suscripción para este usuario
+    const { data: existingSubscription } = await supabaseClient
       .from("subscriptions")
-      .upsert({
-        user_id: user.id,
-        tier: "pro",
-        status: "pending",
-        price_per_month: 6990,
-        currency: "CLP",
-        provider: "flow",
-        stripe_subscription_id: flowData.token || flowData.flowOrder || commerceOrder,
-        current_period_start: new Date().toISOString(),
-        current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-        updated_at: new Date().toISOString(),
-      }, {
-        onConflict: "user_id"
-      });
+      .select("id")
+      .eq("user_id", user.id)
+      .single();
 
-    if (subscriptionError) {
-      logStep("❌ Error guardando suscripción", subscriptionError);
-      throw new Error(`Database error: ${subscriptionError.message}`);
+    if (existingSubscription) {
+      // Actualizar suscripción existente
+      const { error: updateError } = await supabaseClient
+        .from("subscriptions")
+        .update({
+          tier: "pro",
+          status: "pending",
+          price_per_month: 6990,
+          currency: "CLP",
+          provider: "flow",
+          stripe_subscription_id: flowData.token || flowData.flowOrder || commerceOrder,
+          current_period_start: new Date().toISOString(),
+          current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .eq("user_id", user.id);
+
+      if (updateError) {
+        logStep("❌ Error actualizando suscripción", updateError);
+        throw new Error(`Database error: ${updateError.message}`);
+      }
+    } else {
+      // Crear nueva suscripción
+      const { error: insertError } = await supabaseClient
+        .from("subscriptions")
+        .insert({
+          user_id: user.id,
+          tier: "pro",
+          status: "pending",
+          price_per_month: 6990,
+          currency: "CLP",
+          provider: "flow",
+          stripe_subscription_id: flowData.token || flowData.flowOrder || commerceOrder,
+          current_period_start: new Date().toISOString(),
+          current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+          updated_at: new Date().toISOString(),
+        });
+
+      if (insertError) {
+        logStep("❌ Error creando suscripción", insertError);
+        throw new Error(`Database error: ${insertError.message}`);
+      }
     }
 
     logStep("🎉 Suscripción creada exitosamente");
