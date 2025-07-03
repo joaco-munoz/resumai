@@ -64,10 +64,16 @@ serve(async (req) => {
       throw new Error("Flow API credentials not configured");
     }
 
+    // Crear un commerceOrder más corto (máximo 45 caracteres)
+    // Usar los primeros 8 caracteres del user ID + timestamp corto
+    const shortUserId = user.id.substring(0, 8);
+    const shortTimestamp = Date.now().toString().slice(-8); // Últimos 8 dígitos
+    const commerceOrder = `resumai-${shortUserId}-${shortTimestamp}`; // ~28 caracteres
+
     // Parámetros para crear el pago según documentación de Flow
     const paymentParams = {
       apiKey: flowApiKey,
-      commerceOrder: `resumai-${user.id}-${Date.now()}`,
+      commerceOrder: commerceOrder,
       subject: "Suscripción Pro ResumAI - Plan Mensual",
       currency: "CLP",
       amount: 6990,
@@ -86,6 +92,7 @@ serve(async (req) => {
       .join('&');
 
     logStep("📝 Parámetros para Flow", paymentParams);
+    logStep("📏 Longitud commerceOrder", { length: commerceOrder.length, commerceOrder });
 
     // Generar firma
     const signature = await generateSignature(paramString, flowSecretKey);
@@ -120,7 +127,7 @@ serve(async (req) => {
 
     logStep("✅ Respuesta de Flow", flowData);
 
-    // Guardar suscripción en base de datos
+    // Guardar suscripción en base de datos con el commerceOrder para identificación posterior
     const { error: subscriptionError } = await supabaseClient
       .from("subscriptions")
       .upsert({
@@ -130,7 +137,7 @@ serve(async (req) => {
         price_per_month: 6990,
         currency: "CLP",
         provider: "flow",
-        stripe_subscription_id: flowData.token || flowData.flowOrder,
+        stripe_subscription_id: flowData.token || flowData.flowOrder || commerceOrder,
         current_period_start: new Date().toISOString(),
         current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
         updated_at: new Date().toISOString(),
@@ -150,6 +157,7 @@ serve(async (req) => {
       paymentUrl: flowData.url + "?token=" + flowData.token,
       token: flowData.token,
       flowOrder: flowData.flowOrder,
+      commerceOrder: commerceOrder,
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
       status: 200,
