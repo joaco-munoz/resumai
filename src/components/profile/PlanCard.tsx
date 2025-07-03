@@ -1,7 +1,8 @@
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Crown, CreditCard, Zap, CheckCircle, Loader2 } from "lucide-react";
+import { Crown, CreditCard, CheckCircle, Loader2, AlertTriangle } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -15,13 +16,14 @@ interface PlanCardProps {
 
 export const PlanCard = ({ currentPlan, isUpgrading, onUpgrade }: PlanCardProps) => {
   const [isCreatingSubscription, setIsCreatingSubscription] = useState(false);
+  const [isCancelling, setIsCancelling] = useState(false);
   const isMobile = useIsMobile();
 
   const handleCreateSubscription = async () => {
     setIsCreatingSubscription(true);
     
     try {
-      console.log("Iniciando proceso de suscripción desde Profile...");
+      console.log("Iniciando proceso de suscripción con Flow desde Profile...");
       
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
@@ -30,20 +32,70 @@ export const PlanCard = ({ currentPlan, isUpgrading, onUpgrade }: PlanCardProps)
         return;
       }
 
-      console.log("Usuario autenticado, redirigiendo a Reveniu...");
-      toast.success("Redirigiendo a Reveniu...");
+      console.log("Usuario autenticado, creando suscripción con Flow...");
       
-      // Obtener el ID del usuario para incluirlo como parámetro en la URL
-      const userId = session.user.id;
-      
-      // Redirect to Reveniu payment page with user ID as a parameter
-      const reveniuUrl = `https://app.reveniu.com/checkout-custom-link/Qwzj4TVXBcYOKSqsNLzRvM7DFOYv2PHF?user_id=${userId}`;
-      window.open(reveniuUrl, '_blank');
+      const { data, error } = await supabase.functions.invoke('create-flow-subscription', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (error) {
+        console.error('Error al crear suscripción:', error);
+        toast.error("Error al procesar la suscripción: " + error.message);
+        return;
+      }
+
+      if (data?.paymentUrl) {
+        console.log("Redirigiendo a Flow...");
+        toast.success("Redirigiendo a Flow para el pago...");
+        window.open(data.paymentUrl, '_blank');
+      } else {
+        toast.error("No se pudo obtener la URL de pago");
+      }
     } catch (error: any) {
-      console.error('Subscription error:', error);
+      console.error('Error inesperado:', error);
       toast.error("Error inesperado al procesar la suscripción");
     } finally {
       setIsCreatingSubscription(false);
+    }
+  };
+
+  const handleCancelSubscription = async () => {
+    if (!confirm("¿Estás seguro de que quieres cancelar tu suscripción Pro?")) {
+      return;
+    }
+
+    setIsCancelling(true);
+    
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast.error("Debes iniciar sesión");
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke('cancel-flow-subscription', {
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
+
+      if (error) {
+        console.error('Error cancelando suscripción:', error);
+        toast.error("Error al cancelar la suscripción: " + error.message);
+        return;
+      }
+
+      if (data?.success) {
+        toast.success("Suscripción cancelada exitosamente");
+        window.location.reload();
+      }
+    } catch (error: any) {
+      console.error('Error inesperado:', error);
+      toast.error("Error inesperado al cancelar la suscripción");
+    } finally {
+      setIsCancelling(false);
     }
   };
 
@@ -77,7 +129,7 @@ export const PlanCard = ({ currentPlan, isUpgrading, onUpgrade }: PlanCardProps)
               </div>
             </div>
             
-            {currentPlan === 'free' && (
+            {currentPlan === 'free' ? (
               <div className={`${isMobile ? 'w-full' : 'text-right'}`}>
                 <div className="text-xl sm:text-2xl font-bold text-brand-600 dark:text-brand-400 mb-1">
                   $6.990 <span className="text-sm font-normal text-gray-500 dark:text-gray-400">CLP/mes</span>
@@ -101,13 +153,34 @@ export const PlanCard = ({ currentPlan, isUpgrading, onUpgrade }: PlanCardProps)
                   )}
                 </Button>
               </div>
+            ) : (
+              <div className={`${isMobile ? 'w-full' : 'text-right'}`}>
+                <Button 
+                  onClick={handleCancelSubscription}
+                  disabled={isCancelling}
+                  variant="outline"
+                  className={`border-red-500 text-red-600 hover:bg-red-50 ${isMobile ? 'w-full' : ''}`}
+                >
+                  {isCancelling ? (
+                    <>
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                      Cancelando...
+                    </>
+                  ) : (
+                    <>
+                      <AlertTriangle className="h-4 w-4 mr-2" />
+                      Cancelar Suscripción
+                    </>
+                  )}
+                </Button>
+              </div>
             )}
           </div>
         </CardHeader>
         {currentPlan === 'pro' && (
           <CardContent>
             <div className="flex items-center justify-between text-sm">
-              <span className="text-gray-600 dark:text-gray-300">Suscripción activa con Reveniu</span>
+              <span className="text-gray-600 dark:text-gray-300">Suscripción activa con Flow.cl</span>
               <span className="font-semibold text-brand-600 dark:text-brand-400">$6.990 CLP/mes</span>
             </div>
           </CardContent>

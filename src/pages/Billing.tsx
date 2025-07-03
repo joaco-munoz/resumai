@@ -4,12 +4,10 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { CreditCard, Crown, Download, FileText, Zap, CheckCircle, Calendar, TrendingUp, ArrowLeft } from "lucide-react";
-import { toast } from "sonner";
+import { Download, FileText, Zap, ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { MercadoPagoSubscription } from "@/components/profile/MercadoPagoSubscription";
+import { FlowSubscription } from "@/components/profile/FlowSubscription";
 import { useIsMobile } from "@/hooks/use-mobile";
 
 const Billing = () => {
@@ -60,8 +58,8 @@ const Billing = () => {
 
           <div className="p-4 sm:p-6 max-w-7xl mx-auto">
             <div className="space-y-4 sm:space-y-6">
-              {/* MercadoPago Subscription Component */}
-              <MercadoPagoSubscription 
+              {/* Flow Subscription Component */}
+              <FlowSubscription 
                 currentPlan={currentPlan}
                 onPlanChange={setCurrentPlan}
               />
@@ -137,83 +135,6 @@ const Billing = () => {
                   </CardContent>
                 </Card>
               </div>
-
-              {/* Plan Comparison */}
-              {currentPlan === 'free' && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="text-lg sm:text-xl">Desbloquea Todo el Potencial</CardTitle>
-                    <CardDescription className="text-sm sm:text-base">
-                      Compara los beneficios del plan Pro vs Gratuito
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
-                      {/* Free Plan */}
-                      <div className="space-y-4">
-                        <div className="flex items-center gap-2">
-                          <h3 className="text-base sm:text-lg font-semibold">Plan Gratuito</h3>
-                          <Badge variant="secondary">Actual</Badge>
-                        </div>
-                        <div className="text-xl sm:text-2xl font-bold">$0<span className="text-sm font-normal text-gray-500 dark:text-gray-400">/mes</span></div>
-                        <ul className="space-y-2 text-sm">
-                          <li className="flex items-center gap-2">
-                            <CheckCircle className="h-4 w-4 text-success-500 shrink-0" />
-                            <span>1 CV con IA</span>
-                          </li>
-                          <li className="flex items-center gap-2">
-                            <CheckCircle className="h-4 w-4 text-success-500 shrink-0" />
-                            <span>1 exportación PDF gratis</span>
-                          </li>
-                          <li className="flex items-center gap-2">
-                            <CheckCircle className="h-4 w-4 text-success-500 shrink-0" />
-                            <span>5 mejoras con IA/mes</span>
-                          </li>
-                          <li className="flex items-center gap-2">
-                            <CheckCircle className="h-4 w-4 text-success-500 shrink-0" />
-                            <span>Análisis básico ATS</span>
-                          </li>
-                        </ul>
-                      </div>
-
-                      {/* Pro Plan */}
-                      <div className="space-y-4 p-4 bg-gradient-to-br from-brand-50 to-purple-50 dark:from-brand-900/20 dark:to-purple-900/20 rounded-lg border border-brand-200 dark:border-brand-700">
-                        <div className="flex items-center gap-2">
-                          <h3 className="text-base sm:text-lg font-semibold">Plan Pro</h3>
-                          <Badge className="bg-brand-100 text-brand-700 dark:bg-brand-800 dark:text-brand-200">Recomendado</Badge>
-                        </div>
-                        <div className="text-xl sm:text-2xl font-bold">$6.990<span className="text-sm font-normal text-gray-500 dark:text-gray-400"> CLP/mes</span></div>
-                        <ul className="space-y-2 text-sm">
-                          <li className="flex items-center gap-2">
-                            <CheckCircle className="h-4 w-4 text-success-500 shrink-0" />
-                            <span>CVs ilimitados con IA</span>
-                          </li>
-                          <li className="flex items-center gap-2">
-                            <CheckCircle className="h-4 w-4 text-success-500 shrink-0" />
-                            <span>Exportaciones ilimitadas</span>
-                          </li>
-                          <li className="flex items-center gap-2">
-                            <CheckCircle className="h-4 w-4 text-success-500 shrink-0" />
-                            <span>DOCX y JSON export</span>
-                          </li>
-                          <li className="flex items-center gap-2">
-                            <CheckCircle className="h-4 w-4 text-success-500 shrink-0" />
-                            <span>Job Matcher avanzado</span>
-                          </li>
-                          <li className="flex items-center gap-2">
-                            <CheckCircle className="h-4 w-4 text-success-500 shrink-0" />
-                            <span>Mejoras IA ilimitadas</span>
-                          </li>
-                          <li className="flex items-center gap-2">
-                            <CheckCircle className="h-4 w-4 text-success-500 shrink-0" />
-                            <span>Plantillas premium</span>
-                          </li>
-                        </ul>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              )}
 
               {/* Help Section */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">

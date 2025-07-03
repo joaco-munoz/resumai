@@ -1,10 +1,13 @@
 
 project_id = "jwitsagioonykrabioku"
 
-[functions.mercadopago-webhook]
+[functions.flow-webhook]
 verify_jwt = false
 
-[functions.create-mercadopago-subscription]
+[functions.create-flow-subscription]
+verify_jwt = true
+
+[functions.cancel-flow-subscription]
 verify_jwt = true
 
 [functions.check-subscription-status]
