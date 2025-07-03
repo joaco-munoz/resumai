@@ -235,43 +235,25 @@ export const downloadCVAsPDF = (cvData: CVData, filename: string) => {
       pdf.setFontSize(9); // Equivalent to text-sm in preview
       pdf.setFont('times', 'normal');
       
-      // Implementación de skills en formato horizontal como en el preview
-      const skillsPerRow = 4; // Número aproximado de skills por fila
-      const skillRows = [];
-      let currentRow = [];
-      
-      // Agrupar skills en filas
-      cvData.skills.forEach((skill, index) => {
-        currentRow.push(skill);
-        if (currentRow.length === skillsPerRow || index === cvData.skills.length - 1) {
-          skillRows.push([...currentRow]);
-          currentRow = [];
+      // Implementación de skills distribuidas en columnas para ocupar todo el ancho
+      const columns = 3; // Ajusta este valor si deseas más o menos columnas
+      const columnWidth = (pageWidth - margin * 2) / columns;
+      const lineHeight = 4.5;
+
+      const totalRows = Math.ceil(cvData.skills.length / columns);
+
+      for (let row = 0; row < totalRows; row++) {
+        checkNewPage(lineHeight);
+        for (let col = 0; col < columns; col++) {
+          const index = row * columns + col;
+          if (index >= cvData.skills.length) break;
+
+          const skillText = `• ${cvData.skills[index]}`;
+          const x = margin + col * columnWidth;
+          pdf.text(skillText, x, yPosition);
         }
-      });
-      
-      // Renderizar skills en filas horizontales
-      skillRows.forEach((row, rowIndex) => {
-        let currentX = margin;
-        
-        row.forEach((skill, index) => {
-          const skillText = `• ${skill}`;
-          const skillWidth = pdf.getTextWidth(skillText);
-          
-          // Si no hay espacio suficiente, pasar a la siguiente línea
-          if (currentX + skillWidth > pageWidth - margin) {
-            yPosition += 4.5;
-            currentX = margin;
-          }
-          
-          pdf.text(skillText, currentX, yPosition);
-          currentX += skillWidth + 12; // Espaciado horizontal reducido entre skills
-        });
-        
-        // Pasar a la siguiente fila
-        if (rowIndex < skillRows.length - 1) {
-          yPosition += 4.5;
-        }
-      });
+        yPosition += lineHeight;
+      }
     }
     
     // Save the PDF
