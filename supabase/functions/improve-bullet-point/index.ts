@@ -30,6 +30,7 @@ serve(async (req) => {
 OBJETIVO: Transformar bullet points de experiencia laboral en declaraciones de impacto profesional que cumplan con los más altos estándares ATS y principios éticos de reclutamiento.
 
 PRINCIPIOS ÉTICOS Y PROFESIONALES:
+- No hagas llamados a nombres de empresas.
 - Mantén la veracidad absoluta de la información proporcionada
 - No inventes métricas, logros o responsabilidades no mencionadas
 - Respeta la experiencia real del candidato sin exagerar
