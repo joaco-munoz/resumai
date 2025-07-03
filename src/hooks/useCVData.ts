@@ -64,7 +64,14 @@ export const useCVData = () => {
   useEffect(() => {
     if (!user) return;
 
-    // 1. If we are creating a new CV, try to restore the local draft first
+    // 1. If we have a specific CV ID, load that CV directly
+    if (cvId && cvId !== 'new') {
+      console.log('Loading specific CV with ID:', cvId);
+      loadCV(cvId);
+      return;
+    }
+
+    // 2. If we are creating a new CV, try to restore the local draft first
     if (!cvId || cvId === 'new') {
       const draft = localStorage.getItem(LOCAL_STORAGE_DRAFT_KEY);
       if (draft) {
@@ -76,12 +83,7 @@ export const useCVData = () => {
           console.error('Error parsing draft CV from localStorage', err);
         }
       }
-    }
-
-    // 2. Then follow the normal load logic
-    if (cvId && cvId !== 'new') {
-      loadCV(cvId);
-    } else {
+      // Only load last CV if we don't have a draft and we're creating a new CV
       loadLastCV();
     }
   }, [cvId, user]);
