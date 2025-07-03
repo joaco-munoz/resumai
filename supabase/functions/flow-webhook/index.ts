@@ -12,28 +12,6 @@ const logStep = (step: string, details?: any) => {
   console.log(`[FLOW-WEBHOOK] ${step}${detailsStr}`);
 };
 
-// Función para validar firma de Flow
-const validateSignature = async (params: string, signature: string, secretKey: string): Promise<boolean> => {
-  const encoder = new TextEncoder();
-  const keyData = encoder.encode(secretKey);
-  const data = encoder.encode(params);
-  
-  const key = await crypto.subtle.importKey(
-    "raw",
-    keyData,
-    { name: "HMAC", hash: "SHA-256" },
-    false,
-    ["sign"]
-  );
-  
-  const expectedSignature = await crypto.subtle.sign("HMAC", key, data);
-  const expectedHex = Array.from(new Uint8Array(expectedSignature))
-    .map(b => b.toString(16).padStart(2, '0'))
-    .join('');
-  
-  return expectedHex === signature;
-};
-
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -56,12 +34,12 @@ serve(async (req) => {
     const token = formData.get("token")?.toString();
     const signature = formData.get("s")?.toString();
 
-    if (!token || !signature) {
-      logStep("❌ Token o firma faltante");
-      return new Response("Missing token or signature", { status: 400 });
+    if (!token) {
+      logStep("❌ Token faltante");
+      return new Response("Missing token", { status: 400 });
     }
 
-    logStep("📋 Datos recibidos", { token, signature });
+    logStep("📋 Webhook data received", { token, signature });
 
     const flowSecretKey = Deno.env.get("FLOW_SECRET_KEY");
     const flowApiKey = Deno.env.get("FLOW_API_KEY");
@@ -101,96 +79,58 @@ serve(async (req) => {
     if (!flowResponse.ok) {
       const errorText = await flowResponse.text();
       logStep("❌ Error consultando Flow", { status: flowResponse.status, error: errorText });
-      throw new Error(`Flow API error: ${flowResponse.status}`);
+      return new Response("OK", { status: 200 }); // Siempre retornar 200 para evitar reintentos
     }
 
     const paymentData = await flowResponse.json();
     logStep("💳 Datos del pago", paymentData);
 
     const status = paymentData.status;
-    const customerId = paymentData.optional; // Aquí debería estar el user_id
-    const amount = paymentData.amount;
+    const commerceOrder = paymentData.commerceOrder;
 
-    if (status === 2) { // Status 2 = Pagado
-      logStep("✅ Pago confirmado", { customerId, amount });
+    // Extraer user_id del commerce order
+    const userIdMatch = commerceOrder?.match(/resumai-([^-]+)-/);
+    const userId = userIdMatch ? userIdMatch[1] : null;
 
-      // Buscar y actualizar suscripción
-      const { data: subscription, error: subError } = await supabaseClient
+    if (status === 2 && userId) { // Status 2 = Pagado
+      logStep("✅ Pago confirmado", { userId, commerceOrder });
+
+      // Actualizar suscripción
+      const { error: updateError } = await supabaseClient
         .from("subscriptions")
-        .select("*")
-        .eq("stripe_subscription_id", token)
-        .single();
+        .update({
+          status: "active",
+          current_period_start: new Date().toISOString(),
+          current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .eq("user_id", userId)
+        .eq("provider", "flow");
 
-      if (subError) {
-        logStep("❌ Error buscando suscripción", subError);
-        // Intentar buscar por user_id si tenemos el customerId
-        if (customerId) {
-          const { data: subByUser, error: subByUserError } = await supabaseClient
-            .from("subscriptions")
-            .select("*")
-            .eq("user_id", customerId)
-            .single();
-
-          if (subByUserError) {
-            logStep("❌ Error buscando suscripción por user_id", subByUserError);
-            return new Response("Subscription not found", { status: 404 });
-          }
-          
-          // Actualizar suscripción encontrada por user_id
-          const { error: updateError } = await supabaseClient
-            .from("subscriptions")
-            .update({
-              status: "active",
-              stripe_subscription_id: token,
-              current_period_start: new Date().toISOString(),
-              current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-              updated_at: new Date().toISOString(),
-            })
-            .eq("user_id", customerId);
-
-          if (updateError) {
-            logStep("❌ Error actualizando suscripción", updateError);
-          } else {
-            logStep("✅ Suscripción actualizada por user_id");
-          }
-        }
+      if (updateError) {
+        logStep("❌ Error actualizando suscripción", updateError);
       } else {
-        // Actualizar suscripción encontrada por token
-        const { error: updateError } = await supabaseClient
-          .from("subscriptions")
-          .update({
-            status: "active",
-            current_period_start: new Date().toISOString(),
-            current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", subscription.id);
+        logStep("✅ Suscripción actualizada");
+      }
 
-        if (updateError) {
-          logStep("❌ Error actualizando suscripción", updateError);
-        } else {
-          logStep("✅ Suscripción actualizada");
-        }
+      // Actualizar perfil del usuario
+      const { error: profileError } = await supabaseClient
+        .from("profiles")
+        .update({
+          subscription_tier: "pro",
+          is_premium: true,
+          premium_expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+          updated_at: new Date().toISOString(),
+        })
+        .eq("id", userId);
 
-        // Actualizar perfil del usuario
-        const { error: profileError } = await supabaseClient
-          .from("profiles")
-          .update({
-            subscription_tier: "pro",
-            is_premium: true,
-            premium_expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", subscription.user_id);
-
-        if (profileError) {
-          logStep("❌ Error actualizando perfil", profileError);
-        } else {
-          logStep("✅ Perfil actualizado a Pro");
-        }
+      if (profileError) {
+        logStep("❌ Error actualizando perfil", profileError);
+      } else {
+        logStep("✅ Perfil actualizado a Pro");
       }
     } else {
-      logStep("⚠️ Pago no completado", { status, statusText: paymentData.statusText });
+      logStep("⚠️ Pago no completado o userId no encontrado", { status, userId, commerceOrder });
     }
 
     logStep("🎉 Webhook procesado exitosamente");

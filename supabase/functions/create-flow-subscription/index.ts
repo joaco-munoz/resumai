@@ -1,7 +1,6 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
-import { createHash } from "https://deno.land/std@0.190.0/crypto/mod.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -14,24 +13,23 @@ const logStep = (step: string, details?: any) => {
 };
 
 // Función para generar firma HMAC-SHA256
-const generateSignature = (params: string, secretKey: string): string => {
+const generateSignature = async (params: string, secretKey: string): Promise<string> => {
   const encoder = new TextEncoder();
   const keyData = encoder.encode(secretKey);
   const data = encoder.encode(params);
   
-  return crypto.subtle.importKey(
+  const key = await crypto.subtle.importKey(
     "raw",
     keyData,
     { name: "HMAC", hash: "SHA-256" },
     false,
     ["sign"]
-  ).then(key => {
-    return crypto.subtle.sign("HMAC", key, data);
-  }).then(signature => {
-    return Array.from(new Uint8Array(signature))
-      .map(b => b.toString(16).padStart(2, '0'))
-      .join('');
-  });
+  );
+  
+  const signature = await crypto.subtle.sign("HMAC", key, data);
+  return Array.from(new Uint8Array(signature))
+    .map(b => b.toString(16).padStart(2, '0'))
+    .join('');
 };
 
 serve(async (req) => {
@@ -59,18 +57,6 @@ serve(async (req) => {
 
     logStep("👤 Usuario autenticado", { userId: user.id, email: user.email });
 
-    // Obtener perfil del usuario
-    const { data: profile, error: profileError } = await supabaseClient
-      .from("profiles")
-      .select("*")
-      .eq("id", user.id)
-      .single();
-
-    if (profileError) {
-      logStep("❌ Error obteniendo perfil", profileError);
-      throw new Error(`Profile error: ${profileError.message}`);
-    }
-
     const flowApiKey = Deno.env.get("FLOW_API_KEY");
     const flowSecretKey = Deno.env.get("FLOW_SECRET_KEY");
 
@@ -78,49 +64,60 @@ serve(async (req) => {
       throw new Error("Flow API credentials not configured");
     }
 
-    // Parámetros para crear la suscripción en Flow
-    const subscriptionParams = {
+    // Parámetros para crear el pago según documentación de Flow
+    const paymentParams = {
       apiKey: flowApiKey,
-      planId: "pro-plan-resumai", // ID único del plan
-      customerId: user.id,
+      commerceOrder: `resumai-${user.id}-${Date.now()}`,
+      subject: "Suscripción Pro ResumAI - Plan Mensual",
       currency: "CLP",
       amount: 6990,
-      subject: "Suscripción Pro ResumAI",
-      email: user.email,
+      email: user.email || "",
+      paymentMethod: 9, // Todos los métodos de pago
       urlConfirmation: `${Deno.env.get("SUPABASE_URL")}/functions/v1/flow-webhook`,
-      urlReturn: "https://jwitsagioonykrabioku.supabase.co/app/billing?status=success",
+      urlReturn: `${Deno.env.get("SUPABASE_URL").replace('supabase.co', 'supabase.co')}/app/billing?status=success`,
+      merchantId: flowApiKey, // Usar API key como merchant ID
+      timeout: 300 // 5 minutos
     };
 
     // Crear string de parámetros ordenados para firma
-    const paramString = Object.keys(subscriptionParams)
+    const paramString = Object.keys(paymentParams)
       .sort()
-      .map(key => `${key}=${subscriptionParams[key as keyof typeof subscriptionParams]}`)
+      .map(key => `${key}=${paymentParams[key as keyof typeof paymentParams]}`)
       .join('&');
 
-    logStep("📝 Parámetros para Flow", subscriptionParams);
+    logStep("📝 Parámetros para Flow", paymentParams);
 
     // Generar firma
     const signature = await generateSignature(paramString, flowSecretKey);
 
-    // Crear suscripción en Flow
-    const flowResponse = await fetch("https://www.flow.cl/api/payment/createSubscription", {
+    // Crear el pago en Flow usando la API correcta
+    const flowResponse = await fetch("https://www.flow.cl/api/payment/create", {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
       },
       body: new URLSearchParams({
-        ...subscriptionParams,
+        ...paymentParams,
         s: signature,
       }).toString(),
     });
 
+    const responseText = await flowResponse.text();
+    logStep("📨 Respuesta Flow (raw)", { status: flowResponse.status, body: responseText });
+
     if (!flowResponse.ok) {
-      const errorText = await flowResponse.text();
-      logStep("❌ Error en Flow API", { status: flowResponse.status, error: errorText });
-      throw new Error(`Flow API error: ${flowResponse.status} - ${errorText}`);
+      logStep("❌ Error en Flow API", { status: flowResponse.status, error: responseText });
+      throw new Error(`Flow API error: ${flowResponse.status} - ${responseText}`);
     }
 
-    const flowData = await flowResponse.json();
+    let flowData;
+    try {
+      flowData = JSON.parse(responseText);
+    } catch (e) {
+      logStep("❌ Error parsing JSON", { responseText });
+      throw new Error(`Invalid JSON response from Flow: ${responseText}`);
+    }
+
     logStep("✅ Respuesta de Flow", flowData);
 
     // Guardar suscripción en base de datos
@@ -133,9 +130,9 @@ serve(async (req) => {
         price_per_month: 6990,
         currency: "CLP",
         provider: "flow",
-        stripe_subscription_id: flowData.token || flowData.flowOrder, // Usar token de Flow
+        stripe_subscription_id: flowData.token || flowData.flowOrder,
         current_period_start: new Date().toISOString(),
-        current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 días
+        current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
         updated_at: new Date().toISOString(),
       }, {
         onConflict: "user_id"
