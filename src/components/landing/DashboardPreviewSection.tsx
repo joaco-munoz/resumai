@@ -3,24 +3,16 @@ import { forwardRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Plus, ArrowRight, Target, TrendingUp, FileText, BarChart3 } from "lucide-react";
+import { Plus, ArrowRight, Target, TrendingUp, BarChart3 } from "lucide-react";
 
-export const DashboardPreviewSection = forwardRef<HTMLDivElement>((props, ref) => {
+interface DashboardPreviewSectionProps {
+  onSignUpNavigation?: () => void;
+}
+
+export const DashboardPreviewSection = forwardRef<HTMLDivElement, DashboardPreviewSectionProps>(({ onSignUpNavigation }, ref) => {
   return (
-    <section ref={ref} className="py-20 bg-gradient-to-b from-slate-900 to-blue-900">
-      <div className="container mx-auto px-4">
-        {/* Main dashboard mockup */}
-        <div className="max-w-6xl mx-auto">
-          <div className="bg-slate-800 rounded-3xl p-8 shadow-2xl border border-slate-700">
-            {/* Dashboard header */}
-            <div className="bg-slate-900 rounded-2xl p-6 mb-8">
-              <div className="flex items-center gap-3 mb-4">
-                <FileText className="h-8 w-8 text-blue-400" />
-                <h2 className="text-2xl font-bold text-white">ResumAI</h2>
-              </div>
-            </div>
-
-            {/* Dashboard content */}
+    <div ref={ref} className="max-w-6xl mx-auto">
+      {/* Dashboard content */}
             <div className="grid md:grid-cols-3 gap-6">
               {/* Crear CV Card */}
               <Card className="bg-white/95 backdrop-blur-sm border-0 shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1">
@@ -30,10 +22,10 @@ export const DashboardPreviewSection = forwardRef<HTMLDivElement>((props, ref) =
                     <div className="text-4xl font-bold text-blue-600 mb-2">12</div>
                     <p className="text-slate-600 mb-4">CV creados</p>
                     
-                    <Button className="w-full mb-4 bg-blue-100 text-blue-600 hover:bg-blue-200 border border-blue-200">
+                    <div className="w-full mb-4 bg-blue-50 text-blue-600 border border-blue-200 rounded-md px-3 py-2 text-sm font-medium flex items-center justify-center">
                       <Plus className="h-4 w-4 mr-2" />
                       Nuevo CV
-                    </Button>
+                    </div>
 
                     <div className="bg-slate-50 rounded-lg p-3 text-left">
                       <div className="flex items-center justify-between">
@@ -73,10 +65,10 @@ export const DashboardPreviewSection = forwardRef<HTMLDivElement>((props, ref) =
                       </div>
                     </div>
 
-                    <Button variant="outline" className="w-full">
+                    <div className="w-full border border-slate-200 rounded-md px-3 py-2 text-sm font-medium flex items-center justify-center text-slate-600">
                       <Target className="h-4 w-4 mr-2" />
                       Haz tu Match
-                    </Button>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -101,28 +93,26 @@ export const DashboardPreviewSection = forwardRef<HTMLDivElement>((props, ref) =
                       </div>
                     </div>
 
-                    <Button variant="outline" className="w-full">
+                    <div className="w-full border border-slate-200 rounded-md px-3 py-2 text-sm font-medium flex items-center justify-center text-slate-600">
                       <TrendingUp className="h-4 w-4 mr-2" />
                       Ver Estadísticas
-                    </Button>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
             </div>
 
-            {/* Call to action */}
-            <div className="text-center mt-8">
-              <Button 
-                size="lg" 
-                className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white px-8 py-4 text-lg"
-              >
-                Regístrate y mejora tu búsqueda
-              </Button>
-            </div>
-          </div>
-        </div>
+      {/* Call to action */}
+      <div className="text-center mt-8">
+        <Button 
+          size="lg" 
+          className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white px-8 py-4 text-lg"
+          onClick={onSignUpNavigation}
+        >
+          Regístrate y mejora tu búsqueda
+        </Button>
       </div>
-    </section>
+    </div>
   );
 });
 

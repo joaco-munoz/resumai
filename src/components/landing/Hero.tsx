@@ -2,7 +2,8 @@
 import { forwardRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Sparkles, FileText, Calendar, MoreHorizontal } from "lucide-react";
+import { Sparkles } from "lucide-react";
+import { DashboardPreviewSection } from "./DashboardPreviewSection";
 
 interface HeroProps {
   onSignUpNavigation: () => void;
@@ -38,132 +39,9 @@ export const Hero = forwardRef<HTMLDivElement, HeroProps>(({ onSignUpNavigation 
           </Button>
         </div>
 
-        {/* App Preview Mockup - CV Table View */}
+        {/* Dashboard Preview */}
         <div className="max-w-5xl mx-auto mb-12">
-          <div className="bg-slate-800 rounded-3xl p-8 shadow-2xl border border-slate-700">
-            <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-              <div className="bg-slate-100 p-4 flex items-center gap-2">
-                <div className="flex gap-2">
-                  <div className="w-3 h-3 bg-red-400 rounded-full"></div>
-                  <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
-                  <div className="w-3 h-3 bg-green-400 rounded-full"></div>
-                </div>
-                <div className="flex-1 bg-white rounded mx-4 px-3 py-1 text-sm text-slate-600">resumai.com/app/cvs</div>
-              </div>
-              <div className="p-8 bg-white">
-                {/* Header with title and icon */}
-                <div className="flex items-center gap-3 mb-8">
-                  <FileText className="h-8 w-8 text-slate-600" />
-                  <h2 className="text-xl font-bold text-slate-800">Currículums</h2>
-                </div>
-
-                {/* Table header */}
-                <div className="grid grid-cols-5 gap-4 py-4 border-b border-slate-200 text-sm font-medium text-slate-600">
-                  <div>CV</div>
-                  <div className="text-center">Puntuación</div>
-                  <div className="text-center">Estado</div>
-                  <div className="text-center">Actualizado</div>
-                  <div></div>
-                </div>
-
-                {/* CV List Items */}
-                <div className="space-y-4 mt-4">
-                  {/* CV 1 - Desarrollador Frontend */}
-                  <div className="grid grid-cols-5 gap-4 py-4 items-center hover:bg-slate-50 rounded-lg transition-colors">
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                        <FileText className="h-6 w-6 text-blue-600" />
-                      </div>
-                      <div>
-                        <div className="font-semibold text-slate-800 text-sm">CV - Desarrollador Frontend</div>
-                        <div className="text-xs text-slate-500">Creado hace 5 días</div>
-                      </div>
-                    </div>
-                    <div className="text-center">
-                      <Badge className="bg-green-100 text-green-700 hover:bg-green-100 text-xs">85%</Badge>
-                    </div>
-                    <div className="text-center">
-                      <Badge className="bg-green-100 text-green-700 hover:bg-green-100 text-xs">Activo</Badge>
-                    </div>
-                    <div className="text-center flex items-center justify-center gap-2">
-                      <Calendar className="h-4 w-4 text-slate-400" />
-                      <span className="text-xs text-slate-600">hace 2 días</span>
-                    </div>
-                    <div className="text-center">
-                      <div className="h-8 w-8 flex items-center justify-center text-slate-400 cursor-default">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* CV 2 - Data Analyst */}
-                  <div className="grid grid-cols-5 gap-4 py-4 items-center hover:bg-slate-50 rounded-lg transition-colors">
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                        <FileText className="h-6 w-6 text-blue-600" />
-                      </div>
-                      <div>
-                        <div className="font-semibold text-slate-800 text-sm">CV - Data Analyst</div>
-                        <div className="text-xs text-slate-500">Creado hace 12 días</div>
-                      </div>
-                    </div>
-                    <div className="text-center">
-                      <Badge className="bg-green-100 text-green-700 hover:bg-green-100 text-xs">92%</Badge>
-                    </div>
-                    <div className="text-center">
-                      <Badge className="bg-green-100 text-green-700 hover:bg-green-100 text-xs">Activo</Badge>
-                    </div>
-                    <div className="text-center flex items-center justify-center gap-2">
-                      <Calendar className="h-4 w-4 text-slate-400" />
-                      <span className="text-xs text-slate-600">hace 8 días</span>
-                    </div>
-                    <div className="text-center">
-                      <div className="h-8 w-8 flex items-center justify-center text-slate-400 cursor-default">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* CV 3 - Product Manager */}
-                  <div className="grid grid-cols-5 gap-4 py-4 items-center hover:bg-slate-50 rounded-lg transition-colors">
-                    <div className="flex items-center gap-3">
-                      <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                        <FileText className="h-6 w-6 text-blue-600" />
-                      </div>
-                      <div>
-                        <div className="font-semibold text-slate-800 text-sm">CV - Product Manager</div>
-                        <div className="text-xs text-slate-500">Creado hace 20 días</div>
-                      </div>
-                    </div>
-                    <div className="text-center">
-                      <Badge className="bg-yellow-100 text-yellow-700 hover:bg-yellow-100 text-xs">78%</Badge>
-                    </div>
-                    <div className="text-center">
-                      <Badge className="bg-slate-100 text-slate-600 hover:bg-slate-100 text-xs">Borrador</Badge>
-                    </div>
-                    <div className="text-center flex items-center justify-center gap-2">
-                      <Calendar className="h-4 w-4 text-slate-400" />
-                      <span className="text-xs text-slate-600">hace 15 días</span>
-                    </div>
-                    <div className="text-center">
-                      <div className="h-8 w-8 flex items-center justify-center text-slate-400 cursor-default">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Footer pagination */}
-                <div className="flex items-center justify-between mt-8 pt-4 border-t border-slate-200">
-                  <div className="text-sm text-slate-600">Mostrando 1 a 3 de 3 CVs</div>
-                  <div className="flex gap-2">
-                    <div className="px-3 py-1 text-sm text-slate-400 border border-slate-200 rounded cursor-default">Anterior</div>
-                    <div className="px-3 py-1 text-sm text-slate-400 border border-slate-200 rounded cursor-default">Siguiente</div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+          <DashboardPreviewSection onSignUpNavigation={onSignUpNavigation} />
         </div>
       </div>
     </section>
