@@ -1,8 +1,10 @@
+
 import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Header } from "@/components/landing/Header";
 import { Hero } from "@/components/landing/Hero";
+import { DashboardPreviewSection } from "@/components/landing/DashboardPreviewSection";
 import { VideoSection } from "@/components/landing/VideoSection";
 import { FeaturesSection } from "@/components/landing/FeaturesSection";
 import { StatsSection } from "@/components/landing/StatsSection";
@@ -19,6 +21,7 @@ const Index = () => {
   const { user } = useAuth();
 
   const heroRef = useRef<HTMLDivElement>(null);
+  const dashboardPreviewRef = useRef<HTMLDivElement>(null);
   const videoRef = useRef<HTMLDivElement>(null);
   const featuresRef = useRef<HTMLDivElement>(null);
   const statsRef = useRef<HTMLDivElement>(null);
@@ -81,6 +84,7 @@ const Index = () => {
       />
       <main>
         <Hero ref={heroRef} onSignUpNavigation={handleSignUpNavigation} />
+        <DashboardPreviewSection ref={dashboardPreviewRef} />
         <VideoSection ref={videoRef} onSignUpNavigation={handleSignUpNavigation} />
         <FeaturesSection ref={featuresRef} features={features} />
         <StatsSection ref={statsRef} />
