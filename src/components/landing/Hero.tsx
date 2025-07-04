@@ -11,7 +11,7 @@ interface HeroProps {
 export const Hero = forwardRef<HTMLDivElement, HeroProps>(({ onSignUpNavigation }, ref) => {
   return (
     <section id="empieza-gratis" ref={ref} className="relative py-20 overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-cyan-600/10 animate-pulse"></div>
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-blue-600/10 to-cyan-600/10 animate-pulse"></div>
       <div className="container mx-auto px-4 text-center relative z-10">
         <Badge variant="secondary" className="mb-6 animate-fade-in bg-slate-800 text-blue-400 text-xl border-slate-700">
           <Sparkles className="h-4 w-4 mr-2" />
