@@ -22,6 +22,12 @@ export const CVPreview = ({ cvData }: CVPreviewProps) => {
             <span>{cvData.personalInfo.phone}</span>
             <span>•</span>
             <span>{cvData.personalInfo.email}</span>
+            {cvData.personalInfo.website && (
+              <>
+                <span>•</span>
+                <span>{cvData.personalInfo.website}</span>
+              </>
+            )}
           </div>
         </div>
 
