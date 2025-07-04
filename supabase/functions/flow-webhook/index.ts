@@ -39,10 +39,11 @@ serve(async (req) => {
       return new Response("Missing token", { status: 400 });
     }
 
-    logStep("📋 Webhook data received", { token, signature });
+    logStep(" Webhook data received", { token, signature });
 
     const flowSecretKey = Deno.env.get("FLOW_SECRET_KEY");
     const flowApiKey = Deno.env.get("FLOW_API_KEY");
+    const flowBaseUrl = Deno.env.get("FLOW_BASE_URL") || (Deno.env.get("FLOW_ENV") === "sandbox" ? "https://sandbox.flow.cl/api" : "https://www.flow.cl/api");
 
     if (!flowSecretKey || !flowApiKey) {
       throw new Error("Flow credentials not configured");
@@ -64,7 +65,7 @@ serve(async (req) => {
         .join('');
     });
 
-    const flowResponse = await fetch("https://www.flow.cl/api/payment/getStatus", {
+    const flowResponse = await fetch(`${flowBaseUrl}/payment/getStatus`, {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",

@@ -59,6 +59,10 @@ serve(async (req) => {
 
     const flowApiKey = Deno.env.get("FLOW_API_KEY");
     const flowSecretKey = Deno.env.get("FLOW_SECRET_KEY");
+    // Determine Flow base URL: allow explicit FLOW_BASE_URL, otherwise decide by FLOW_ENV ("sandbox" | "production")
+    const flowBaseUrl = Deno.env.get("FLOW_BASE_URL") || (Deno.env.get("FLOW_ENV") === "sandbox"
+      ? "https://sandbox.flow.cl/api"
+      : "https://www.flow.cl/api");
 
     if (!flowApiKey || !flowSecretKey) {
       throw new Error("Flow API credentials not configured");
@@ -80,7 +84,7 @@ serve(async (req) => {
       email: user.email || "",
       paymentMethod: 9, // Todos los métodos de pago
       urlConfirmation: `${Deno.env.get("SUPABASE_URL")}/functions/v1/flow-webhook`,
-      urlReturn: `${Deno.env.get("SUPABASE_URL").replace('supabase.co', 'supabase.co')}/app/billing?status=success`,
+      urlReturn: `${(Deno.env.get("APP_BASE_URL") || Deno.env.get("SUPABASE_URL"))}/?redirect=profile`,
       merchantId: flowApiKey, // Usar API key como merchant ID
       timeout: 300 // 5 minutos
     };
@@ -98,7 +102,7 @@ serve(async (req) => {
     const signature = await generateSignature(paramString, flowSecretKey);
 
     // Crear el pago en Flow usando la API correcta
-    const flowResponse = await fetch("https://www.flow.cl/api/payment/create", {
+    const flowResponse = await fetch(`${flowBaseUrl}/payment/create`, {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
