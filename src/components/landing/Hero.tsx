@@ -38,7 +38,7 @@ export const Hero = forwardRef<HTMLDivElement, HeroProps>(({ onSignUpNavigation 
           </Button>
         </div>
 
-        {/* App Preview Mockup */}
+        {/* App Preview Mockup - CV Table View */}
         <div className="max-w-5xl mx-auto mb-12">
           <div className="bg-slate-800 rounded-3xl p-8 shadow-2xl border border-slate-700">
             <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
@@ -68,7 +68,7 @@ export const Hero = forwardRef<HTMLDivElement, HeroProps>(({ onSignUpNavigation 
 
                 {/* CV List Items */}
                 <div className="space-y-4 mt-4">
-                  {/* CV 1 */}
+                  {/* CV 1 - Desarrollador Frontend */}
                   <div className="grid grid-cols-5 gap-4 py-4 items-center hover:bg-slate-50 rounded-lg transition-colors">
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -90,13 +90,13 @@ export const Hero = forwardRef<HTMLDivElement, HeroProps>(({ onSignUpNavigation 
                       <span className="text-xs text-slate-600">hace 2 días</span>
                     </div>
                     <div className="text-center">
-                      <Button variant="ghost" size="sm">
+                      <div className="h-8 w-8 flex items-center justify-center text-slate-400 cursor-default">
                         <MoreHorizontal className="h-4 w-4" />
-                      </Button>
+                      </div>
                     </div>
                   </div>
 
-                  {/* CV 2 */}
+                  {/* CV 2 - Data Analyst */}
                   <div className="grid grid-cols-5 gap-4 py-4 items-center hover:bg-slate-50 rounded-lg transition-colors">
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -118,13 +118,13 @@ export const Hero = forwardRef<HTMLDivElement, HeroProps>(({ onSignUpNavigation 
                       <span className="text-xs text-slate-600">hace 8 días</span>
                     </div>
                     <div className="text-center">
-                      <Button variant="ghost" size="sm">
+                      <div className="h-8 w-8 flex items-center justify-center text-slate-400 cursor-default">
                         <MoreHorizontal className="h-4 w-4" />
-                      </Button>
+                      </div>
                     </div>
                   </div>
 
-                  {/* CV 3 */}
+                  {/* CV 3 - Product Manager */}
                   <div className="grid grid-cols-5 gap-4 py-4 items-center hover:bg-slate-50 rounded-lg transition-colors">
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -146,9 +146,9 @@ export const Hero = forwardRef<HTMLDivElement, HeroProps>(({ onSignUpNavigation 
                       <span className="text-xs text-slate-600">hace 15 días</span>
                     </div>
                     <div className="text-center">
-                      <Button variant="ghost" size="sm">
+                      <div className="h-8 w-8 flex items-center justify-center text-slate-400 cursor-default">
                         <MoreHorizontal className="h-4 w-4" />
-                      </Button>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -157,8 +157,8 @@ export const Hero = forwardRef<HTMLDivElement, HeroProps>(({ onSignUpNavigation 
                 <div className="flex items-center justify-between mt-8 pt-4 border-t border-slate-200">
                   <div className="text-sm text-slate-600">Mostrando 1 a 3 de 3 CVs</div>
                   <div className="flex gap-2">
-                    <Button variant="outline" size="sm" disabled className="text-slate-400">Anterior</Button>
-                    <Button variant="outline" size="sm" disabled className="text-slate-400">Siguiente</Button>
+                    <div className="px-3 py-1 text-sm text-slate-400 border border-slate-200 rounded cursor-default">Anterior</div>
+                    <div className="px-3 py-1 text-sm text-slate-400 border border-slate-200 rounded cursor-default">Siguiente</div>
                   </div>
                 </div>
               </div>
