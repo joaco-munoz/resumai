@@ -77,7 +77,7 @@ export const PersonalInfoTab = ({
               onChange={(e) => handlePersonalInfoChange('linkedin', e.target.value)}
             />
           </div>
-          <div className="space-y-2">
+          <div className="space-y-1">
             <div className="flex items-center gap-1 h-2">
               <Label htmlFor="website">Sitio web (opcional)</Label>
               <TooltipProvider>
