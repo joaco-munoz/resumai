@@ -53,6 +53,11 @@ export const downloadCVAsPDF = (cvData: CVData, filename: string) => {
       cvData.personalInfo.email
     ].filter(Boolean);
     
+    // Add website if it exists
+    if (cvData.personalInfo.website) {
+      contactParts.push(cvData.personalInfo.website);
+    }
+    
     const contactInfo = contactParts.join(' • ');
     const contactWidth = pdf.getTextWidth(contactInfo);
     const contactX = (pageWidth - contactWidth) / 2;

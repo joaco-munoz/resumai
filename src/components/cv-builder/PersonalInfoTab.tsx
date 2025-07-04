@@ -78,7 +78,7 @@ export const PersonalInfoTab = ({
             />
           </div>
           <div className="space-y-2">
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-1 h-5">
               <Label htmlFor="website">Sitio web (opcional)</Label>
               <TooltipProvider>
                 <Tooltip>
