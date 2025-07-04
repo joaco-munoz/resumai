@@ -67,7 +67,7 @@ export const DashboardPreviewSection = forwardRef<HTMLDivElement, DashboardPrevi
 
                     <div className="w-full border border-slate-200 rounded-md px-3 py-2 text-sm font-medium flex items-center justify-center text-slate-600">
                       <Target className="h-4 w-4 mr-2" />
-                      Haz tu Match
+                      Has tu Match
                     </div>
                   </div>
                 </CardContent>
@@ -79,7 +79,7 @@ export const DashboardPreviewSection = forwardRef<HTMLDivElement, DashboardPrevi
                   <div className="text-center">
                     <h3 className="text-xl font-bold text-slate-800 mb-2">Seguimiento de Postulaciones</h3>
                     <div className="text-4xl font-bold text-cyan-600 mb-2">65%</div>
-                    <p className="text-slate-600 mb-4">tase de respuesta</p>
+                    <p className="text-slate-600 mb-4">Tasa de respuesta</p>
 
                     <div className="bg-slate-50 rounded-lg p-3 mb-4">
                       <div className="flex items-center gap-3">

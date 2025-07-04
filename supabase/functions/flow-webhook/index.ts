@@ -50,7 +50,8 @@ serve(async (req) => {
     }
 
     // Obtener información del pago desde Flow
-    const getPaymentParams = `apiKey=${flowApiKey}&token=${token}`;
+    // Concatenar parámetros en orden alfabético sin separadores, como exige Flow
+    const getPaymentParams = `apiKey${flowApiKey}token${token}`;
     const getPaymentSignature = await crypto.subtle.importKey(
       "raw",
       new TextEncoder().encode(flowSecretKey),
@@ -65,16 +66,17 @@ serve(async (req) => {
         .join('');
     });
 
-    const flowResponse = await fetch(`${flowBaseUrl}/payment/getStatus`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-      },
-      body: new URLSearchParams({
-        apiKey: flowApiKey,
-        token: token,
-        s: getPaymentSignature,
-      }).toString(),
+    // Log para verificar qué endpoint se está utilizando
+    logStep("🌐 Consultando Flow en", { flowBaseUrl });
+
+    const queryString = new URLSearchParams({
+      apiKey: flowApiKey,
+      token: token,
+      s: getPaymentSignature,
+    }).toString();
+
+    const flowResponse = await fetch(`${flowBaseUrl}/payment/getStatus?${queryString}`, {
+      method: "GET",
     });
 
     if (!flowResponse.ok) {
@@ -89,9 +91,15 @@ serve(async (req) => {
     const status = paymentData.status;
     const commerceOrder = paymentData.commerceOrder;
 
-    // Extraer user_id del commerce order
-    const userIdMatch = commerceOrder?.match(/resumai-([^-]+)-/);
-    const userId = userIdMatch ? userIdMatch[1] : null;
+    // Buscar la suscripción en la base de datos por token para obtener el user_id completo
+    const { data: subscriptionRow } = await supabaseClient
+      .from("subscriptions")
+      .select("user_id")
+      .eq("stripe_subscription_id", token)
+      .eq("provider", "flow")
+      .single();
+
+    const userId = subscriptionRow?.user_id || null;
 
     if (status === 2 && userId) { // Status 2 = Pagado
       logStep("✅ Pago confirmado", { userId, commerceOrder });
