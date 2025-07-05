@@ -13,7 +13,7 @@ import {
   SidebarHeader,
   SidebarFooter,
 } from "@/components/ui/sidebar"
-import { LogoIcon } from "./LogoIcon"
+import LogoIcon from "./LogoIcon"
 import { useAuth } from "@/contexts/AuthContext"
 import { PlanBadge } from "./PlanBadge"
 import { useFeatureLimits } from "@/hooks/useFeatureLimits"

@@ -1,3 +1,4 @@
+
 import jsPDF from 'jspdf';
 import { CVData } from '@/types/cv';
 import { supabase } from '@/integrations/supabase/client';
@@ -82,9 +83,9 @@ export const generatePDF = async (cvData: CVData, templateName: string = 'modern
 
     doc.setFontSize(12);
     doc.setFont('helvetica', 'normal');
-    if (cvData.personalInfo.jobTitle) {
+    if (cvData.personalInfo.profession) {
       currentY = addNewPage(doc, currentY, pageHeight);
-      doc.text(cvData.personalInfo.jobTitle, margin, currentY);
+      doc.text(cvData.personalInfo.profession, margin, currentY);
       currentY += 8;
     }
 
@@ -139,7 +140,7 @@ export const generatePDF = async (cvData: CVData, templateName: string = 'modern
         currentY = addNewPage(doc, currentY, pageHeight);
         doc.setFontSize(12);
         doc.setFont('helvetica', 'bold');
-        doc.text(exp.jobTitle, margin, currentY);
+        doc.text(exp.position, margin, currentY);
         currentY += 7;
 
         doc.setFontSize(10);
@@ -174,7 +175,7 @@ export const generatePDF = async (cvData: CVData, templateName: string = 'modern
         doc.setFont('helvetica', 'normal');
         doc.text(edu.institution, margin, currentY);
         currentY += 6;
-        doc.text(`${edu.startDate} - ${edu.endDate || 'Actualidad'}`, margin, currentY);
+        doc.text(`${edu.year || 'Año no especificado'}`, margin, currentY);
         currentY += 6;
 
         if (edu.description) {
@@ -193,7 +194,7 @@ export const generatePDF = async (cvData: CVData, templateName: string = 'modern
 
       doc.setFontSize(10);
       doc.setFont('helvetica', 'normal');
-      const skillsText = cvData.skills.map(skill => skill.name).join(', ');
+      const skillsText = cvData.skills.join(', ');
       currentY = addWrappedText(doc, skillsText, margin, currentY, 190, 6) + 10;
     }
 

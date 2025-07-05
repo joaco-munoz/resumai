@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
@@ -5,7 +6,7 @@ import { AppSidebar } from "@/components/AppSidebar";
 import { toast } from "sonner";
 import { CVPreviewModal } from "@/components/CVPreviewModal";
 import { DeleteConfirmDialog } from "@/components/DeleteConfirmDialog";
-import { downloadCVAsPDF } from "@/utils/pdfUtils";
+import { generatePDF } from "@/utils/pdfUtils";
 import { downloadCVAsWord } from "@/utils/wordUtils";
 import { JobReportModal } from "@/components/JobReportModal";
 import { CVAdaptationModal } from "@/components/CVAdaptationModal";
@@ -107,19 +108,24 @@ export default function CVsList() {
     }
   }
 
-  function handleDownloadCV(cv: CV, format: 'pdf' | 'word' = 'pdf') {
+  async function handleDownloadCV(cv: CV, format: 'pdf' | 'word' = 'pdf') {
     if (isJobReport(cv)) {
       toast.error("Los informes no se pueden descargar");
       return;
     }
     
     if (cv.content) {
-      if (format === 'pdf') {
-        downloadCVAsPDF(cv.content, cv.title);
-        toast.success("CV descargado como PDF exitosamente");
-      } else if (format === 'word') {
-        downloadCVAsWord(cv.content, cv.title);
-        toast.success("CV descargado como Word exitosamente");
+      try {
+        if (format === 'pdf') {
+          await generatePDF(cv.content);
+          toast.success("CV descargado como PDF exitosamente");
+        } else if (format === 'word') {
+          downloadCVAsWord(cv.content, cv.title);
+          toast.success("CV descargado como Word exitosamente");
+        }
+      } catch (error) {
+        console.error('Error downloading CV:', error);
+        toast.error("Error al descargar el CV");
       }
     } else {
       toast.error("No se pudo descargar el CV");

@@ -64,7 +64,7 @@ export const useFeatureLimits = (): UseFeatureLimitsReturn => {
         return;
       }
 
-      setLimits(limitsData);
+      setLimits(limitsData as FeatureLimits);
 
       // Obtener uso actual del mes
       const currentMonth = new Date().toISOString().slice(0, 7) + '-01';

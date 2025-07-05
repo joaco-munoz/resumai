@@ -1,3 +1,4 @@
+
 import { DashboardStats } from "@/components/dashboard/DashboardStats";
 import { QuickActions } from "@/components/dashboard/QuickActions";
 import { RecentActivity } from "@/components/dashboard/RecentActivity";
@@ -6,6 +7,32 @@ import { AppSidebar } from "@/components/AppSidebar";
 import { UsageLimits } from "@/components/UsageLimits";
 
 const Dashboard = () => {
+  const mockStats = {
+    totalCVs: 3,
+    totalApplications: 12,
+    interviewsScheduled: 2,
+    responseRate: 25
+  };
+
+  const mockActivities = [
+    {
+      id: '1',
+      type: 'cv_created',
+      title: 'Nuevo CV creado',
+      description: 'CV para Desarrollador Frontend',
+      timestamp: new Date().toISOString(),
+      metadata: {}
+    },
+    {
+      id: '2',
+      type: 'application_sent',
+      title: 'Aplicación enviada',
+      description: 'Desarrollador React en TechCorp',
+      timestamp: new Date(Date.now() - 3600000).toISOString(),
+      metadata: {}
+    }
+  ];
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-gray-50">
@@ -24,9 +51,9 @@ const Dashboard = () => {
           <div className="p-6 space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="lg:col-span-2 space-y-6">
-                <DashboardStats />
+                <DashboardStats stats={mockStats} />
                 <QuickActions />
-                <RecentActivity />
+                <RecentActivity activities={mockActivities} />
               </div>
               <div className="space-y-6">
                 <UsageLimits />

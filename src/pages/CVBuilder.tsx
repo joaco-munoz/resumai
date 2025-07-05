@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
@@ -53,7 +54,7 @@ const CVBuilder = () => {
     removeSkill
   } = useCVBuilder(cvData, setCvData);
 
-  const { isImproving, improveWithAI } = useAIImprovement(cvData, setCvData);
+  const { isImproving, improveBulletPoint, improveCVContent } = useAIImprovement();
   
   const { 
     savingProgress, 
@@ -124,7 +125,7 @@ const CVBuilder = () => {
                   <SummaryTab
                     cvData={cvData}
                     handleSummaryChange={handleSummaryChange}
-                    improveWithAI={improveWithAI}
+                    improveWithAI={improveCVContent}
                     isImproving={isImproving}
                     goToPreviousTab={goToPreviousTab}
                     goToNextTab={goToNextTab}
@@ -137,7 +138,7 @@ const CVBuilder = () => {
                     updateExperience={updateExperience}
                     addExperience={addExperience}
                     removeExperience={removeExperience}
-                    improveWithAI={improveWithAI}
+                    improveWithAI={improveBulletPoint}
                     isImproving={isImproving}
                     goToPreviousTab={goToPreviousTab}
                     goToNextTab={goToNextTab}
