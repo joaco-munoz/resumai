@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
@@ -9,12 +8,12 @@ import { supabase } from "@/integrations/supabase/client";
 import { ProfileHeader } from "@/components/profile/ProfileHeader";
 import { PersonalInfoForm } from "@/components/profile/PersonalInfoForm";
 import { AccountStats } from "@/components/profile/AccountStats";
-import { PlanCard } from "@/components/profile/PlanCard";
-import { UsageStats } from "@/components/profile/UsageStats";
-import { ProgressMetrics } from "@/components/profile/ProgressMetrics";
+import { FlowSubscription } from "@/components/profile/FlowSubscription";
+import { useSubscriptionStatus } from "@/hooks/useSubscriptionStatus";
 
 const Profile = () => {
   const { user } = useAuth();
+  const { tier, isPremium, refreshStatus } = useSubscriptionStatus();
   const [profileData, setProfileData] = useState({
     fullName: '',
     email: '',
@@ -30,8 +29,6 @@ const Profile = () => {
   });
 
   const [isSaving, setIsSaving] = useState(false);
-  const [currentPlan, setCurrentPlan] = useState('free');
-  const [isUpgrading, setIsUpgrading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     cvsCreated: 0,
@@ -76,7 +73,6 @@ const Profile = () => {
           bio: data.bio || '',
           avatarUrl: data.avatar_url || ''
         });
-        setCurrentPlan(data.subscription_tier || 'free');
       } else {
         setProfileData(prev => ({
           ...prev,
@@ -102,15 +98,15 @@ const Profile = () => {
         .eq('user_id', user.id);
 
       const { count: applicationsCount } = await supabase
-        .from('job_applications')
+        .from('job_applications_tracking')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', user.id);
 
       const { count: interviewsCount } = await supabase
-        .from('job_applications')
+        .from('job_applications_tracking')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', user.id)
-        .eq('status', 'interview');
+        .eq('status', 'interviewing');
 
       setStats({
         cvsCreated: cvsCount || 0,
@@ -171,17 +167,8 @@ const Profile = () => {
     }
   };
 
-  const handleUpgrade = async () => {
-    setIsUpgrading(true);
-    
-    try {
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      toast.success("Redirigiendo a Mercado Pago...");
-    } catch (error) {
-      toast.error("Error al procesar el pago");
-    } finally {
-      setIsUpgrading(false);
-    }
+  const handlePlanChange = (newPlan: string) => {
+    refreshStatus();
   };
 
   const getInitials = (name: string) => {
@@ -202,17 +189,6 @@ const Profile = () => {
     if (!user?.created_at) return "Enero 2024";
     const date = new Date(user.created_at);
     return date.toLocaleDateString('es-ES', { month: 'long', year: 'numeric' });
-  };
-
-  const usageStats = {
-    cvs: { used: stats.cvsCreated, limit: currentPlan === 'pro' ? 999 : 1 },
-    exports: { used: Math.min(stats.cvsCreated, currentPlan === 'pro' ? 999 : 1), limit: currentPlan === 'pro' ? 999 : 1 },
-    aiImprovements: { used: Math.floor(stats.cvsCreated * 1.5), limit: currentPlan === 'pro' ? 999 : 5 }
-  };
-
-  const getUsagePercentage = (used: number, limit: number) => {
-    if (limit === 999) return 25;
-    return Math.min((used / limit) * 100, 100);
   };
 
   if (loading) {
@@ -273,21 +249,10 @@ const Profile = () => {
               </TabsContent>
 
               <TabsContent value="billing" className="space-y-6">
-                <PlanCard 
-                  currentPlan={currentPlan}
-                  isUpgrading={isUpgrading}
-                  onUpgrade={handleUpgrade}
+                <FlowSubscription 
+                  currentPlan={tier}
+                  onPlanChange={handlePlanChange}
                 />
-
-                {/*<UsageStats 
-                  usageStats={usageStats}
-                  getUsagePercentage={getUsagePercentage}
-                />
-
-                <ProgressMetrics 
-                  stats={stats}
-                  currentPlan={currentPlan}
-                />*/}
               </TabsContent>
             </Tabs>
           </div>

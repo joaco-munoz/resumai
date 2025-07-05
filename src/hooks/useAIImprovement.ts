@@ -1,12 +1,21 @@
+
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { CVData } from '@/types/cv';
+import { useFeatureLimits } from '@/hooks/useFeatureLimits';
 
 export const useAIImprovement = (cvData: CVData, setCvData: (data: CVData | ((prev: CVData) => CVData)) => void) => {
   const [isImproving, setIsImproving] = useState<string | null>(null);
+  const { canUseFeature, incrementUsage } = useFeatureLimits();
 
   const improveWithAI = async (section: string) => {
+    // Verificar si puede usar la feature
+    if (!canUseFeature('ai_improvements')) {
+      toast.error("Has alcanzado el límite de mejoras IA. Actualiza a Pro para uso ilimitado.");
+      return;
+    }
+
     setIsImproving(section);
     
     try {
@@ -15,6 +24,9 @@ export const useAIImprovement = (cvData: CVData, setCvData: (data: CVData | ((pr
       } else if (section.startsWith('experience-')) {
         await improveBulletPoint(section);
       }
+      
+      // Incrementar el uso después de una mejora exitosa
+      await incrementUsage('ai_improvements');
     } catch (error) {
       console.error('Error improving with AI:', error);
       toast.error("Error al mejorar con IA. Verifica tu conexión.");

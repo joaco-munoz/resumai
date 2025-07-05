@@ -1,9 +1,7 @@
+
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
-import { SidebarProvider, SidebarInset, SidebarTrigger } from "@/components/ui/sidebar";
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
-import { Home } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -12,11 +10,14 @@ import { QuickActions } from "@/components/dashboard/QuickActions";
 import { RecentActivity } from "@/components/dashboard/RecentActivity";
 import { OnboardingModal } from "@/components/onboarding/OnboardingModal";
 import { useOnboarding } from "@/hooks/useOnboarding";
+import { useSubscriptionStatus } from "@/hooks/useSubscriptionStatus";
+import { Badge } from "@/components/ui/badge";
+import { Crown } from "lucide-react";
 
 const Dashboard = () => {
-  const navigate = useNavigate();
   const { user } = useAuth();
   const { showOnboarding, isLoading: onboardingLoading, completeOnboarding } = useOnboarding();
+  const { tier, isPremium, isLoading: statusLoading } = useSubscriptionStatus();
   const [stats, setStats] = useState({
     cvsCreated: 0,
     applications: 0,
@@ -61,10 +62,10 @@ const Dashboard = () => {
         cvsCreated: cvsCount || 0,
         applications: applicationsCount || 0,
         interviews: interviewsCount || 0,
-        responseRate: 0 // This will be calculated in the component
+        responseRate: 0
       });
 
-      // Fetch recent activities (last 5 CVs and applications)
+      // Fetch recent activities
       const { data: recentCVs } = await supabase
         .from('cvs')
         .select('id, title, created_at')
@@ -110,7 +111,7 @@ const Dashboard = () => {
     completeOnboarding();
   };
 
-  if (loading || onboardingLoading) {
+  if (loading || onboardingLoading || statusLoading) {
     return (
       <SidebarProvider>
         <div className="min-h-screen flex w-full bg-gray-50">
@@ -137,8 +138,32 @@ const Dashboard = () => {
             <div className="flex items-center gap-4">
               <div className="flex justify-between items-center w-full">
                 <div>
-                  <h1 className="text-3xl font-bold gradient-text">Dashboard</h1>
-                  <p className="text-gray-600 mt-2">Resumen de tu actividad y progreso</p>
+                  <div className="flex items-center gap-3">
+                    <h1 className="text-3xl font-bold gradient-text">Dashboard</h1>
+                    <Badge 
+                      variant={isPremium ? "default" : "secondary"} 
+                      className={`${
+                        isPremium 
+                          ? "bg-gradient-to-r from-brand-500 to-brand-700 text-white" 
+                          : "bg-gray-200 text-gray-700"
+                      }`}
+                    >
+                      {isPremium ? (
+                        <>
+                          <Crown className="h-3 w-3 mr-1" />
+                          Plan Pro
+                        </>
+                      ) : (
+                        "Plan Gratuito"
+                      )}
+                    </Badge>
+                  </div>
+                  <p className="text-gray-600 mt-2">
+                    {isPremium 
+                      ? "Aprovecha todas las funciones premium" 
+                      : "Resumen de tu actividad y progreso"
+                    }
+                  </p>
                 </div>
               </div>
             </div>

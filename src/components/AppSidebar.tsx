@@ -1,11 +1,9 @@
-
 import { NavLink, useLocation } from "react-router-dom";
 import {
   Sidebar,
   SidebarContent,
   SidebarGroup,
   SidebarGroupContent,
-  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -13,13 +11,15 @@ import {
   useSidebar,
   SidebarFooter,
 } from "@/components/ui/sidebar";
-import { FileText, Target, User, CheckCircle, House, FolderOpen, LogOut } from "lucide-react";
+import { FileText, Target, User, CheckCircle, House, FolderOpen, LogOut, Crown } from "lucide-react";
 import Logo from "@/assets/Logo.png";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useSubscriptionStatus } from "@/hooks/useSubscriptionStatus";
 
 const mainMenuItems = [
   { title: "Inicio", url: "/app", icon: House },
@@ -40,6 +40,7 @@ export function AppSidebar() {
   const { state } = useSidebar();
   const location = useLocation();
   const { signOut, user } = useAuth();
+  const { tier, isPremium, isLoading: statusLoading } = useSubscriptionStatus();
   const currentPath = location.pathname;
   const [profile, setProfile] = useState<Profile | null>(null);
   
@@ -102,12 +103,31 @@ export function AppSidebar() {
             <img src={Logo} alt="ResumAI logo" className="h-10 w-10" />
           </div>
           {!isCollapsed && (
-            <span className="font-bold text-lg gradient-text">ResumAI</span>
+            <div className="flex flex-col">
+              <span className="font-bold text-lg gradient-text">ResumAI</span>
+              {!statusLoading && (
+                <Badge 
+                  variant={isPremium ? "default" : "secondary"} 
+                  className={`text-xs mt-1 ${
+                    isPremium 
+                      ? "bg-gradient-to-r from-brand-500 to-brand-700 text-white" 
+                      : "bg-gray-200 text-gray-700"
+                  }`}
+                >
+                  {isPremium ? (
+                    <>
+                      <Crown className="h-3 w-3 mr-1" />
+                      Plan Pro
+                    </>
+                  ) : (
+                    "Plan Gratuito"
+                  )}
+                </Badge>
+              )}
+            </div>
           )}
         </div>
       </div>
-
-      {/*<SidebarTrigger className="m-2 self-start" />*/}
 
       <SidebarContent>
         <SidebarGroup>
@@ -115,7 +135,6 @@ export function AppSidebar() {
             <SidebarMenu>
               {mainMenuItems.map((item) => {
                 const active = isActive(item.url);
-                console.log(`${item.title} is ${active ? 'active' : 'inactive'}`);
                 
                 return (
                   <SidebarMenuItem key={item.title}>
