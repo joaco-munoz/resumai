@@ -425,9 +425,6 @@ export type Database = {
           description: string | null
           failed_at: string | null
           failure_reason: string | null
-          flow_order_number: string | null
-          flow_payment_date: string | null
-          flow_token: string | null
           id: string
           invoice_url: string | null
           payment_method: Database["public"]["Enums"]["payment_method"]
@@ -446,9 +443,6 @@ export type Database = {
           description?: string | null
           failed_at?: string | null
           failure_reason?: string | null
-          flow_order_number?: string | null
-          flow_payment_date?: string | null
-          flow_token?: string | null
           id?: string
           invoice_url?: string | null
           payment_method: Database["public"]["Enums"]["payment_method"]
@@ -467,9 +461,6 @@ export type Database = {
           description?: string | null
           failed_at?: string | null
           failure_reason?: string | null
-          flow_order_number?: string | null
-          flow_payment_date?: string | null
-          flow_token?: string | null
           id?: string
           invoice_url?: string | null
           payment_method?: Database["public"]["Enums"]["payment_method"]
@@ -741,47 +732,6 @@ export type Database = {
           },
         ]
       }
-      user_usage: {
-        Row: {
-          created_at: string
-          feature_type: string
-          id: string
-          period_end: string
-          period_start: string
-          updated_at: string
-          usage_count: number
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          feature_type: string
-          id?: string
-          period_end?: string
-          period_start?: string
-          updated_at?: string
-          usage_count?: number
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          feature_type?: string
-          id?: string
-          period_end?: string
-          period_start?: string
-          updated_at?: string
-          usage_count?: number
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "user_usage_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
     }
     Views: {
       [_ in never]: never
@@ -794,18 +744,6 @@ export type Database = {
       calculate_mrr: {
         Args: Record<PropertyKey, never>
         Returns: number
-      }
-      can_use_feature: {
-        Args: { p_user_id: string; p_feature_type: string }
-        Returns: boolean
-      }
-      get_user_limits: {
-        Args: { user_plan: string }
-        Returns: Json
-      }
-      increment_feature_usage: {
-        Args: { p_user_id: string; p_feature_type: string }
-        Returns: boolean
       }
       update_daily_metrics: {
         Args: Record<PropertyKey, never>

@@ -1,10 +1,10 @@
+
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { CVData } from "@/types/cv";
-import { useFeatureLimits } from "./useFeatureLimits";
 
 const LOCAL_STORAGE_KEY = 'cv-editor-data';
 const LOCAL_STORAGE_DRAFT_KEY = 'cv-editor-draft';
@@ -14,7 +14,6 @@ export const useCVData = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { id: cvId } = useParams();
-  const { canUseFeature, incrementUsage } = useFeatureLimits();
   
   // Obtener el nombre completo del usuario desde su perfil
   const userFullName = user?.user_metadata?.full_name || '';
@@ -194,13 +193,6 @@ export const useCVData = () => {
       return;
     }
 
-    // Verificar límites antes de guardar un nuevo CV
-    const canCreate = await canUseFeature('cv_creation');
-    if (!canCreate && !currentCvId) {
-      toast.error("Has alcanzado tu límite de CVs. Actualiza a Pro para crear CVs ilimitados.");
-      return;
-    }
-
     try {
       const cvTitle = `CV - ${cvData.personalInfo.fullName}`;
       
@@ -263,11 +255,6 @@ export const useCVData = () => {
         return;
       }
       
-      // Incrementar uso solo para CVs nuevos
-      if (!currentCvId) {
-        await incrementUsage('cv_creation');
-      }
-      
       toast.success("CV principal guardado exitosamente");
       navigate("/app/cvs");
     } catch (error) {
@@ -279,13 +266,6 @@ export const useCVData = () => {
   const saveAndAdapt = async () => {
     if (!user) {
       toast.error("Debes estar autenticado para guardar el CV");
-      return;
-    }
-
-    // Verificar límites antes de guardar
-    const canCreate = await canUseFeature('cv_creation');
-    if (!canCreate && !currentCvId) {
-      toast.error("Has alcanzado tu límite de CVs. Actualiza a Pro para crear CVs ilimitados.");
       return;
     }
 
@@ -348,11 +328,6 @@ export const useCVData = () => {
         console.error('Error saving CV:', result.error);
         toast.error(`Error al guardar el CV: ${result.error.message}`);
         return;
-      }
-      
-      // Incrementar uso solo para CVs nuevos
-      if (!currentCvId) {
-        await incrementUsage('cv_creation');
       }
       
       toast.success("CV principal guardado exitosamente");

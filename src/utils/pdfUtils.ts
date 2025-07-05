@@ -1,218 +1,271 @@
-import jsPDF from 'jspdf';
+
+import { jsPDF } from 'jspdf';
+import { formatDateToSpanish } from './dateUtils';
 import { CVData } from '@/types/cv';
-import { supabase } from '@/integrations/supabase/client';
 
-// Function to add text with auto-wrapping
-const addWrappedText = (doc: jsPDF, text: string, x: number, y: number, maxWidth: number = 180, lineHeight: number = 7): number => {
-  const words = text.split(' ');
-  let line = '';
-  let currentY = y;
-
-  for (let i = 0; i < words.length; i++) {
-    const testLine = line + words[i] + ' ';
-    const testWidth = doc.getTextWidth(testLine);
-
-    if (testWidth > maxWidth && i > 0) {
-      doc.text(line, x, currentY);
-      line = words[i] + ' ';
-      currentY += lineHeight;
-    } else {
-      line = testLine;
-    }
-  }
-
-  doc.text(line.trim(), x, currentY);
-  return currentY;
-};
-
-// Function to calculate the remaining height on the current page
-const remainingPageHeight = (doc: jsPDF, currentY: number, pageHeight: number, bottomMargin: number = 10) => {
-  return pageHeight - currentY - bottomMargin;
-};
-
-// Function to add a new page if needed
-const addNewPage = (doc: jsPDF, currentY: number, pageHeight: number, bottomMargin: number = 10) => {
-  if (remainingPageHeight(doc, currentY, pageHeight, bottomMargin) < 20) {
-    doc.addPage();
-    return 20; // Reset Y position to top margin on new page
-  }
-  return currentY;
-};
-
-export const generatePDF = async (cvData: CVData, templateName: string = 'modern'): Promise<void> => {
+export const downloadCVAsPDF = (cvData: CVData, filename: string) => {
   try {
-    // Verificar límites de exportación
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      const { data: canExport, error } = await supabase
-        .rpc('can_use_feature', {
-          p_user_id: user.id,
-          p_feature_type: 'pdf_export'
-        });
-
-      if (error) {
-        console.error('Error checking export limits:', error);
-        throw new Error('Error al verificar límites de exportación');
+    // Create new PDF document - A4 size
+    const pdf = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4'
+    });
+    
+    // Configurar la fuente STIX Two Text para coincidir con el preview
+    // Como jsPDF no tiene nativamente STIX Two Text, la configuración de fuente
+    // debe aproximarse con la mejor alternativa disponible
+    // Se recomienda usar la librería vfs_fonts.js con STIX Two Text si se necesita exactamente
+    pdf.setFont('times', 'normal'); // Usar times como la mejor aproximación por defecto
+    
+    let yPosition = 15;
+    const pageWidth = pdf.internal.pageSize.width;
+    const pageHeight = pdf.internal.pageSize.height;
+    const margin = 12; // Reducido significativamente para que el contenido esté más cerca de los bordes
+    const contentWidth = pageWidth - (margin * 2);
+    
+    // Helper function to check for new page
+    const checkNewPage = (additionalSpace: number = 15) => {
+      if (yPosition + additionalSpace > pageHeight - 15) {
+        pdf.addPage();
+        yPosition = 15;
       }
-
-      if (!canExport) {
-        throw new Error('Has alcanzado tu límite de exportaciones PDF. Actualiza a Pro para exportaciones ilimitadas.');
-      }
-
-      // Incrementar uso después de verificar
-      await supabase.rpc('increment_feature_usage', {
-        p_user_id: user.id,
-        p_feature_type: 'pdf_export'
-      });
-    }
-
-    const pageWidth = 210;
-    const pageHeight = 297;
-    const margin = 10;
-
-    const doc = new jsPDF('p', 'mm', 'a4');
-    let currentY = margin;
-
-    // Personal Information
-    doc.setFontSize(20);
-    doc.setFont('helvetica', 'bold');
-    currentY = addNewPage(doc, currentY, pageHeight);
-    doc.text(cvData.personalInfo.fullName, margin, currentY);
-    currentY += 10;
-
-    doc.setFontSize(12);
-    doc.setFont('helvetica', 'normal');
-    // Note: profession doesn't exist in personalInfo type, removing these lines
-    currentY += 2; // Small spacing adjustment
-
-    doc.setFontSize(10);
-    if (cvData.personalInfo.email) {
-      currentY = addNewPage(doc, currentY, pageHeight);
-      doc.text(`Email: ${cvData.personalInfo.email}`, margin, currentY);
-      currentY += 6;
-    }
-    if (cvData.personalInfo.phone) {
-      currentY = addNewPage(doc, currentY, pageHeight);
-      doc.text(`Teléfono: ${cvData.personalInfo.phone}`, margin, currentY);
-      currentY += 6;
-    }
-    if (cvData.personalInfo.location) {
-      currentY = addNewPage(doc, currentY, pageHeight);
-      doc.text(`Ubicación: ${cvData.personalInfo.location}`, margin, currentY);
-      currentY += 6;
-    }
-    if (cvData.personalInfo.linkedin) {
-      currentY = addNewPage(doc, currentY, pageHeight);
-      doc.text(`LinkedIn: ${cvData.personalInfo.linkedin}`, margin, currentY);
-      currentY += 6;
-    }
+    };
+    
+    // Header - Harvard style (centered) - Matching text-3xl (24px) in preview
+    pdf.setFontSize(20); // Aumentado ligeramente para mayor impacto visual
+    pdf.setFont('times', 'bold');
+    pdf.setTextColor(0, 0, 0);
+    const nameWidth = pdf.getTextWidth(cvData.personalInfo.fullName);
+    const nameX = (pageWidth - nameWidth) / 2;
+    pdf.text(cvData.personalInfo.fullName, nameX, yPosition);
+    yPosition += 5;
+    
+    // Contact info (centered, single line - Harvard style)
+    pdf.setFontSize(9); // Equivalent to text-sm in preview
+    pdf.setFont('times', 'normal');
+    pdf.setTextColor(0, 0, 0);
+    
+    const contactParts = [
+      cvData.personalInfo.location,
+      cvData.personalInfo.linkedin,
+      cvData.personalInfo.phone,
+      cvData.personalInfo.email
+    ].filter(Boolean);
+    
+    // Add website if it exists
     if (cvData.personalInfo.website) {
-      currentY = addNewPage(doc, currentY, pageHeight);
-      doc.text(`Sitio Web: ${cvData.personalInfo.website}`, margin, currentY);
-      currentY += 6;
+      contactParts.push(cvData.personalInfo.website);
     }
-
-    // Summary
-    if (cvData.summary) {
-      currentY = addNewPage(doc, currentY, pageHeight);
-      doc.setFontSize(14);
-      doc.setFont('helvetica', 'bold');
-      doc.text('Resumen', margin, currentY);
-      currentY += 8;
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'normal');
-      currentY = addWrappedText(doc, cvData.summary, margin, currentY, 190, 6) + 10;
+    
+    const contactInfo = contactParts.join(' • ');
+    const contactWidth = pdf.getTextWidth(contactInfo);
+    const contactX = (pageWidth - contactWidth) / 2;
+    pdf.text(contactInfo, contactX, yPosition);
+    yPosition += 4;
+    
+    // Header separator line
+    pdf.setDrawColor(0, 0, 0);
+    pdf.setLineWidth(0.3);
+    pdf.line(margin, yPosition, pageWidth - margin, yPosition);
+    yPosition += 4;
+    
+    // Summary Section (italic paragraph)
+    if (cvData.summary && cvData.summary.trim()) {
+      checkNewPage(20);
+      pdf.setFontSize(9); // Equivalent to text-sm in preview
+      pdf.setFont('times', 'italic');
+      pdf.setTextColor(0, 0, 0);
+      
+      const summaryLines = pdf.splitTextToSize(cvData.summary, contentWidth);
+      summaryLines.forEach((line: string) => {
+        checkNewPage(5);
+        pdf.text(line, margin, yPosition);
+        yPosition += 4;
+      });
+      yPosition += 6;
     }
-
-    // Experience
+    
+    // Experience Section
     if (cvData.experience && cvData.experience.length > 0) {
-      currentY = addNewPage(doc, currentY, pageHeight);
-      doc.setFontSize(14);
-      doc.setFont('helvetica', 'bold');
-      doc.text('Experiencia Laboral', margin, currentY);
-      currentY += 8;
-
-      cvData.experience.forEach(exp => {
-        currentY = addNewPage(doc, currentY, pageHeight);
-        doc.setFontSize(12);
-        doc.setFont('helvetica', 'bold');
-        doc.text(exp.position, margin, currentY);
-        currentY += 7;
-
-        doc.setFontSize(10);
-        doc.setFont('helvetica', 'normal');
-        doc.text(`${exp.company} - ${exp.location}`, margin, currentY);
-        currentY += 6;
-        doc.text(`${exp.startDate} - ${exp.endDate || 'Actualidad'}`, margin, currentY);
-        currentY += 6;
-
-        if (exp.description) {
-          currentY = addWrappedText(doc, exp.description, margin, currentY, 190, 6) + 10;
+      checkNewPage(25);
+      
+      // Section header
+      pdf.setFontSize(10); // Equivalent to text-base in preview
+      pdf.setFont('serif', 'bold');
+      pdf.setTextColor(0, 0, 0);
+      pdf.text('EXPERIENCIA PROFESIONAL', margin, yPosition);
+      yPosition += 2;
+      
+      // Section underline
+      pdf.setDrawColor(0, 0, 0);
+      pdf.setLineWidth(0.3);
+      pdf.line(margin, yPosition, pageWidth - margin, yPosition);
+      yPosition += 4;
+      
+      cvData.experience.forEach((exp: any, index: number) => {
+        checkNewPage(30);
+        
+        // Company name (left, bold) and Location (right, bold)
+        pdf.setFontSize(9); // Equivalent to text-sm in preview
+        pdf.setFont('times', 'bold');
+        pdf.setTextColor(0, 0, 0);
+        pdf.text(exp.company, margin, yPosition);
+        
+        const locationText = exp.location || cvData.personalInfo.location;
+        const locationWidth = pdf.getTextWidth(locationText);
+        pdf.text(locationText, pageWidth - margin - locationWidth, yPosition);
+        yPosition += 4;
+        
+        // Position (left, italic) and dates (right, italic)
+        pdf.setFont('serif', 'italic');
+        pdf.text(exp.position, margin, yPosition);
+        
+        const dateRange = `${formatDateToSpanish(exp.startDate)} - ${exp.current ? 'Presente' : formatDateToSpanish(exp.endDate)}`;
+        const dateWidth = pdf.getTextWidth(dateRange);
+        pdf.text(dateRange, pageWidth - margin - dateWidth, yPosition);
+        yPosition += 5;
+        
+        // Description as bullet points
+        if (exp.description && exp.description.trim()) {
+          pdf.setFont('times', 'normal');
+          const descLines = exp.description.split('\n').filter((line: string) => line.trim());
+          
+          descLines.forEach((line: string) => {
+            const cleanLine = line.trim().replace(/^[•\-\*]\s*/, '');
+            if (!cleanLine) return;
+            
+            checkNewPage(5);
+            pdf.text('•', margin, yPosition);
+            
+            const bulletLines = pdf.splitTextToSize(cleanLine, contentWidth - 8);
+            bulletLines.forEach((bulletLine: string, lineIndex: number) => {
+              if (lineIndex > 0) {
+                checkNewPage(5);
+                yPosition += 4;
+              }
+              pdf.text(bulletLine, margin + 6, yPosition);
+            });
+            yPosition += 4; // Reduced spacing to match preview's mb-1
+          });
+        }
+        
+        // Add spacing after each experience entry except the last
+        if (index < cvData.experience.length - 1) {
+          yPosition += 4;
         }
       });
+      
+      yPosition += 6;
     }
-
-    // Education
+    
+    // Education Section
     if (cvData.education && cvData.education.length > 0) {
-      currentY = addNewPage(doc, currentY, pageHeight);
-      doc.setFontSize(14);
-      doc.setFont('helvetica', 'bold');
-      doc.text('Educación', margin, currentY);
-      currentY += 8;
-
-      cvData.education.forEach(edu => {
-        currentY = addNewPage(doc, currentY, pageHeight);
-        doc.setFontSize(12);
-        doc.setFont('helvetica', 'bold');
-        doc.text(edu.degree, margin, currentY);
-        currentY += 7;
-
-        doc.setFontSize(10);
-        doc.setFont('helvetica', 'normal');
-        doc.text(edu.institution, margin, currentY);
-        currentY += 6;
-        doc.text(`${edu.year || 'Año no especificado'}`, margin, currentY);
-        currentY += 6;
-
-        if (edu.description) {
-          currentY = addWrappedText(doc, edu.description, margin, currentY, 190, 6) + 10;
+      checkNewPage(25);
+      
+      // Section header
+      pdf.setFontSize(10); // Equivalent to text-base in preview
+      pdf.setFont('serif', 'bold');
+      pdf.setTextColor(0, 0, 0);
+      pdf.text('EDUCACIÓN', margin, yPosition);
+      yPosition += 2;
+      
+      // Section underline
+      pdf.setDrawColor(0, 0, 0);
+      pdf.setLineWidth(0.3);
+      pdf.line(margin, yPosition, pageWidth - margin, yPosition);
+      yPosition += 4;
+      
+      cvData.education.forEach((edu: any, index: number) => {
+        checkNewPage(25);
+        
+        // Institution (left, bold uppercase) and Location (right, bold)
+        pdf.setFontSize(9); // Equivalent to text-sm in preview
+        pdf.setFont('serif', 'bold');
+        pdf.text(edu.institution.toUpperCase(), margin, yPosition);
+        
+        const locationText = edu.location || cvData.personalInfo.location;
+        const locationWidth = pdf.getTextWidth(locationText);
+        pdf.text(locationText, pageWidth - margin - locationWidth, yPosition);
+        yPosition += 4;
+        
+        // Degree (left) and year (right, italic)
+        pdf.setFont('times', 'normal');
+        pdf.text(edu.degree, margin, yPosition);
+        
+        pdf.setFont('times', 'italic');
+        const yearWidth = pdf.getTextWidth(edu.year);
+        pdf.text(edu.year, pageWidth - margin - yearWidth, yPosition);
+        yPosition += 4;
+        
+        // Description if exists (italic)
+        if (edu.description && edu.description.trim()) {
+          pdf.setFont('times', 'italic');
+          const eduDescLines = pdf.splitTextToSize(edu.description, contentWidth);
+          
+          eduDescLines.forEach((line: string) => {
+            checkNewPage(5);
+            pdf.text(line, margin, yPosition);
+            yPosition += 4;
+          });
+        }
+        
+        // Add spacing after each education entry except the last
+        if (index < cvData.education.length - 1) {
+          yPosition += 4;
         }
       });
+      
+      yPosition += 6;
     }
-
-    // Skills
+    
+    // Skills Section
     if (cvData.skills && cvData.skills.length > 0) {
-      currentY = addNewPage(doc, currentY, pageHeight);
-      doc.setFontSize(14);
-      doc.setFont('helvetica', 'bold');
-      doc.text('Habilidades', margin, currentY);
-      currentY += 8;
+      checkNewPage(20);
+      
+      // Section header
+      pdf.setFontSize(10); // Equivalent to text-base in preview
+      pdf.setFont('serif', 'bold');
+      pdf.setTextColor(0, 0, 0);
+      pdf.text('SKILLS ADICIONALES', margin, yPosition);
+      yPosition += 2;
+      
+      // Section underline
+      pdf.setDrawColor(0, 0, 0);
+      pdf.setLineWidth(0.3);
+      pdf.line(margin, yPosition, pageWidth - margin, yPosition);
+      yPosition += 4;
+      
+      // Skills as bullet points - improved layout to match preview
+      pdf.setFontSize(9); // Equivalent to text-sm in preview
+      pdf.setFont('times', 'normal');
+      
+      // Implementación de skills distribuidas en columnas para ocupar todo el ancho
+      const columns = 3; // Ajusta este valor si deseas más o menos columnas
+      const columnWidth = (pageWidth - margin * 2) / columns;
+      const lineHeight = 4.5;
 
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'normal');
-      const skillsText = cvData.skills.join(', ');
-      currentY = addWrappedText(doc, skillsText, margin, currentY, 190, 6) + 10;
+      const totalRows = Math.ceil(cvData.skills.length / columns);
+
+      for (let row = 0; row < totalRows; row++) {
+        checkNewPage(lineHeight);
+        for (let col = 0; col < columns; col++) {
+          const index = row * columns + col;
+          if (index >= cvData.skills.length) break;
+
+          const skillText = `• ${cvData.skills[index]}`;
+          const x = margin + col * columnWidth;
+          pdf.text(skillText, x, yPosition);
+        }
+        yPosition += lineHeight;
+      }
     }
-
-    // Check user plan for watermark
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('subscription_tier')
-      .eq('id', user?.id)
-      .single();
-
-    const isPro = profile?.subscription_tier === 'pro';
-
-    // Add watermark only for free users
-    if (!isPro) {
-      doc.setFontSize(10);
-      doc.setTextColor(200, 200, 200);
-      doc.text('Creado con ResumAI - resumai.cl', pageWidth - 20, pageHeight - 10, { align: 'right' });
-    }
-
-    doc.save(`${cvData.personalInfo.fullName}.pdf`);
+    
+    // Save the PDF
+    pdf.save(`${filename}.pdf`);
+    
   } catch (error) {
     console.error('Error generating PDF:', error);
-    throw error;
+    throw new Error('Error al generar el PDF');
   }
 };

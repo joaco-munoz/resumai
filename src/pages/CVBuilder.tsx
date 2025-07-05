@@ -53,7 +53,7 @@ const CVBuilder = () => {
     removeSkill
   } = useCVBuilder(cvData, setCvData);
 
-  const { isImproving, improveBulletPoint, improveCVContent } = useAIImprovement();
+  const { isImproving, improveWithAI } = useAIImprovement(cvData, setCvData);
   
   const { 
     savingProgress, 
@@ -124,7 +124,7 @@ const CVBuilder = () => {
                   <SummaryTab
                     cvData={cvData}
                     handleSummaryChange={handleSummaryChange}
-                    improveWithAI={improveCVContent}
+                    improveWithAI={improveWithAI}
                     isImproving={isImproving}
                     goToPreviousTab={goToPreviousTab}
                     goToNextTab={goToNextTab}
@@ -137,7 +137,7 @@ const CVBuilder = () => {
                     updateExperience={updateExperience}
                     addExperience={addExperience}
                     removeExperience={removeExperience}
-                    improveWithAI={improveBulletPoint}
+                    improveWithAI={improveWithAI}
                     isImproving={isImproving}
                     goToPreviousTab={goToPreviousTab}
                     goToNextTab={goToNextTab}
