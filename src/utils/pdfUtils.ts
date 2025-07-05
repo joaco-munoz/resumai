@@ -1,4 +1,3 @@
-
 import jsPDF from 'jspdf';
 import { CVData } from '@/types/cv';
 import { supabase } from '@/integrations/supabase/client';
@@ -83,11 +82,8 @@ export const generatePDF = async (cvData: CVData, templateName: string = 'modern
 
     doc.setFontSize(12);
     doc.setFont('helvetica', 'normal');
-    if (cvData.personalInfo.profession) {
-      currentY = addNewPage(doc, currentY, pageHeight);
-      doc.text(cvData.personalInfo.profession, margin, currentY);
-      currentY += 8;
-    }
+    // Note: profession doesn't exist in personalInfo type, removing these lines
+    currentY += 2; // Small spacing adjustment
 
     doc.setFontSize(10);
     if (cvData.personalInfo.email) {

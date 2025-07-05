@@ -1,4 +1,3 @@
-
 import { DashboardStats } from "@/components/dashboard/DashboardStats";
 import { QuickActions } from "@/components/dashboard/QuickActions";
 import { RecentActivity } from "@/components/dashboard/RecentActivity";
@@ -8,9 +7,9 @@ import { UsageLimits } from "@/components/UsageLimits";
 
 const Dashboard = () => {
   const mockStats = {
-    totalCVs: 3,
-    totalApplications: 12,
-    interviewsScheduled: 2,
+    cvsCreated: 3,
+    applications: 12,
+    interviews: 2,
     responseRate: 25
   };
 
@@ -20,7 +19,7 @@ const Dashboard = () => {
       type: 'cv_created',
       title: 'Nuevo CV creado',
       description: 'CV para Desarrollador Frontend',
-      timestamp: new Date().toISOString(),
+      date: new Date().toISOString(),
       metadata: {}
     },
     {
@@ -28,7 +27,7 @@ const Dashboard = () => {
       type: 'application_sent',
       title: 'Aplicación enviada',
       description: 'Desarrollador React en TechCorp',
-      timestamp: new Date(Date.now() - 3600000).toISOString(),
+      date: new Date(Date.now() - 3600000).toISOString(),
       metadata: {}
     }
   ];
