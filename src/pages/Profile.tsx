@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
@@ -9,12 +8,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { ProfileHeader } from "@/components/profile/ProfileHeader";
 import { PersonalInfoForm } from "@/components/profile/PersonalInfoForm";
 import { AccountStats } from "@/components/profile/AccountStats";
-import { PlanCard } from "@/components/profile/PlanCard";
+import { FlowSubscription } from "@/components/profile/FlowSubscription";
 import { UsageStats } from "@/components/profile/UsageStats";
 import { ProgressMetrics } from "@/components/profile/ProgressMetrics";
+import { useFeatureLimits } from "@/hooks/useFeatureLimits";
 
 const Profile = () => {
   const { user } = useAuth();
+  const { userPlan, usage, limits } = useFeatureLimits();
+  
   const [profileData, setProfileData] = useState({
     fullName: '',
     email: '',
@@ -184,6 +186,12 @@ const Profile = () => {
     }
   };
 
+  const handlePlanChange = (newPlan: string) => {
+    setCurrentPlan(newPlan);
+    // Refresh feature limits
+    window.location.reload();
+  };
+
   const getInitials = (name: string) => {
     if (!name) return user?.email?.substring(0, 2).toUpperCase() || "U";
     return name
@@ -205,9 +213,9 @@ const Profile = () => {
   };
 
   const usageStats = {
-    cvs: { used: stats.cvsCreated, limit: currentPlan === 'pro' ? 999 : 1 },
-    exports: { used: Math.min(stats.cvsCreated, currentPlan === 'pro' ? 999 : 1), limit: currentPlan === 'pro' ? 999 : 1 },
-    aiImprovements: { used: Math.floor(stats.cvsCreated * 1.5), limit: currentPlan === 'pro' ? 999 : 5 }
+    cvs: { used: usage.cv_creation, limit: limits?.cv_creation || 1 },
+    exports: { used: usage.pdf_export, limit: limits?.pdf_export || 1 },
+    aiImprovements: { used: usage.ai_improvements, limit: limits?.ai_improvements || 5 }
   };
 
   const getUsagePercentage = (used: number, limit: number) => {
@@ -273,21 +281,20 @@ const Profile = () => {
               </TabsContent>
 
               <TabsContent value="billing" className="space-y-6">
-                <PlanCard 
-                  currentPlan={currentPlan}
-                  isUpgrading={isUpgrading}
-                  onUpgrade={handleUpgrade}
+                <FlowSubscription 
+                  currentPlan={userPlan}
+                  onPlanChange={handlePlanChange}
                 />
 
-                {/*<UsageStats 
+                <UsageStats 
                   usageStats={usageStats}
                   getUsagePercentage={getUsagePercentage}
                 />
 
                 <ProgressMetrics 
                   stats={stats}
-                  currentPlan={currentPlan}
-                />*/}
+                  currentPlan={userPlan}
+                />
               </TabsContent>
             </Tabs>
           </div>
