@@ -15,6 +15,7 @@ import { useNavigate } from "react-router-dom";
 import { CVAdaptationModal } from "@/components/CVAdaptationModal";
 import { AIUsageIndicator } from "@/components/AIUsageIndicator";
 import { useFeatureLimits } from "@/hooks/useFeatureLimits";
+import { useAIUsage } from "@/contexts/AIUsageContext";
 
 interface MatchResult {
   score: number;
@@ -40,6 +41,7 @@ const JobMatcher = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const { usage, limits, canUseFeature, incrementUsage, isPro } = useFeatureLimits();
+  const { refreshUsage } = useAIUsage();
 
   // Función para extraer el título del trabajo y la empresa de la descripción
   const extractJobDetails = (description: string): JobDetails => {
@@ -109,6 +111,8 @@ const JobMatcher = () => {
       
       // Incrementar el uso después de un análisis exitoso
       await incrementUsage('job_matcher_advanced');
+      // Actualizar la barra de tokens en tiempo real
+      await refreshUsage();
       
       toast.success("Análisis completado exitosamente");
       
@@ -181,42 +185,32 @@ const JobMatcher = () => {
             <div className="flex items-center gap-4">
               <SidebarTrigger />
               <div className="flex-1">
-                <h1 className="text-2xl font-bold gradient-text">Match de Ofertas</h1>
-                <p className="text-gray-600">Compara tu currículum con una oferta y recibe recomendaciones para maximizar tu compatibilidad</p>
+                <h1 className="text-3xl font-bold gradient-text">Match de Ofertas</h1>
+                <p className="text-gray-600 mt-2">Compara tu currículum con una oferta y recibe recomendaciones para maximizar tu compatibilidad</p>
               </div>
-              {!isPro && (
-                <div className="hidden md:block">
-                  <AIUsageIndicator 
-                    current={usage.job_matcher_advanced}
-                    limit={limits.job_matcher_advanced}
-                    type="job_matcher_advanced"
-                    isPro={isPro}
-                  />
-                </div>
-              )}
             </div>
           </header>
 
           <div className="p-6 max-w-7xl mx-auto space-y-6">
-            {/* Usage Indicator for mobile */}
-            {!isPro && (
-              <div className="md:hidden">
-                <AIUsageIndicator 
-                  current={usage.job_matcher_advanced}
-                  limit={limits.job_matcher_advanced}
-                  type="job_matcher_advanced"
-                  isPro={isPro}
-                />
-              </div>
-            )}
-
             {/* Job Description Section - Full Width */}
             <Card>
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Target className="h-5 w-5 text-brand-500" />
-                  Descripción del Trabajo
-                </CardTitle>
+                <div className="flex justify-between items-center">
+                  <CardTitle className="flex items-center gap-2">
+                    <Target className="h-5 w-5 text-brand-500" />
+                    Descripción del Trabajo
+                  </CardTitle>
+                  {!isPro && (
+                    <div className="w-48">
+                      <AIUsageIndicator 
+                        current={usage.job_matcher_advanced}
+                        limit={limits.job_matcher_advanced}
+                        type="job_matcher_advanced"
+                        isPro={isPro}
+                      />
+                    </div>
+                  )}
+                </div>
                 <CardDescription>
                 Pega aquí la descripción completa del puesto que te interesa (título, requisitos, responsabilidades y otros)
                 </CardDescription>

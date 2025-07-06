@@ -4,10 +4,12 @@ import { toast } from 'sonner';
 import { supabase } from '@/integrations/supabase/client';
 import { CVData } from '@/types/cv';
 import { useFeatureLimits } from '@/hooks/useFeatureLimits';
+import { useAIUsage } from '@/contexts/AIUsageContext';
 
 export const useAIImprovement = (cvData: CVData, setCvData: (data: CVData | ((prev: CVData) => CVData)) => void) => {
   const [isImproving, setIsImproving] = useState<string | null>(null);
   const { canUseFeature, incrementUsage, isPro } = useFeatureLimits();
+  const { refreshUsage } = useAIUsage();
 
   const improveWithAI = async (section: string) => {
     // Verificar si puede usar la feature
@@ -26,7 +28,12 @@ export const useAIImprovement = (cvData: CVData, setCvData: (data: CVData | ((pr
       }
       
       // Incrementar el uso después de una mejora exitosa
-      await incrementUsage('ai_improvements');
+      const success = await incrementUsage('ai_improvements');
+      
+      // Si se incrementó el uso correctamente, actualizar inmediatamente
+      if (success) {
+        await refreshUsage();
+      }
     } catch (error) {
       console.error('Error improving with AI:', error);
       toast.error("Error al mejorar con IA. Verifica tu conexión.");

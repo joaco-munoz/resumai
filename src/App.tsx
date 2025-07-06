@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
+import { AIUsageProvider } from "@/contexts/AIUsageContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import RedirectHandler from "@/components/RedirectHandler";
 import Index from "./pages/Index";
@@ -29,6 +30,7 @@ const App = () => (
       <BrowserRouter>
         <RedirectHandler />
         <AuthProvider>
+          <AIUsageProvider>
           <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/auth" element={<Auth />} />
@@ -74,6 +76,7 @@ const App = () => (
             } />
             <Route path="*" element={<NotFound />} />
           </Routes>
+          </AIUsageProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

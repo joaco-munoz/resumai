@@ -51,7 +51,7 @@ export const CVPreview = ({ cvData }: CVPreviewProps) => {
                       <p className="text-sm text-black italic">{exp.position}</p>
                     </div>
                     <div className="text-right">
-                      <div className="text-sm text-black font-bold">{exp.location || cvData.personalInfo.location}</div>
+                      {exp.location && <div className="text-sm text-black font-bold">{exp.location}</div>}
                       <div className="text-sm text-black italic">
                         {formatDateToSpanish(exp.startDate)} - {exp.current ? 'Presente' : formatDateToSpanish(exp.endDate)}
                       </div>
@@ -85,7 +85,7 @@ export const CVPreview = ({ cvData }: CVPreviewProps) => {
                       {edu.description && <p className="text-sm text-black italic">{edu.description}</p>}
                     </div>
                     <div className="text-right">
-                      <div className="text-sm text-black font-bold">{edu.location || cvData.personalInfo.location}</div>
+                      {edu.location && <div className="text-sm text-black font-bold">{edu.location}</div>}
                       <div className="text-sm text-black italic">{edu.year}</div>
                     </div>
                   </div>

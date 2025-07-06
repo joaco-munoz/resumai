@@ -142,7 +142,7 @@ const Dashboard = () => {
                 <div>
                   <div className="flex items-center gap-3">
                     <h1 className="text-3xl font-bold gradient-text">Dashboard</h1>
-                    <Badge 
+                  {/*<Badge 
                       variant={isPremium ? "default" : "secondary"} 
                       className={`${
                         isPremium 
@@ -159,6 +159,7 @@ const Dashboard = () => {
                         "Plan Gratuito"
                       )}
                     </Badge>
+                    */}
                   </div>
                   <p className="text-gray-600 mt-2">
                     {isPremium 

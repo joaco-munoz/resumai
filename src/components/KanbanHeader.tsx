@@ -14,8 +14,8 @@ export const KanbanHeader = ({ totalApplications, onAddApplication }: KanbanHead
         <div className="flex items-center gap-4">
           <SidebarTrigger />
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Seguimiento Postulaciones</h1>
-            <p className="text-sm text-gray-600 mt-1">
+            <h1 className="text-3xl font-bold gradient-text">Seguimiento Postulaciones</h1>
+            <p className="text-gray-600 mt-1">
               <span className="font-semibold">{totalApplications} postulaciones totales</span>
             </p>
           </div>

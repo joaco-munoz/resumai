@@ -216,8 +216,8 @@ const Profile = () => {
             <div className="flex items-center gap-4">
               <SidebarTrigger />
               <div>
-                <h1 className="text-2xl font-bold gradient-text">Mi Perfil</h1>
-                <p className="text-gray-600">Gestiona tu información personal, suscripción y facturación</p>
+                <h1 className="text-3xl font-bold gradient-text">Mi Perfil</h1>
+                <p className="text-gray-600 mt-2">Gestiona tu información personal, suscripción y facturación</p>
               </div>
             </div>
           </header>

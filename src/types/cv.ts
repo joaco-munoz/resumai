@@ -1,4 +1,15 @@
 
+export interface Experience {
+  id: string;
+  position: string;
+  company: string;
+  location: string;
+  startDate: string;
+  endDate: string;
+  current: boolean;
+  description: string;
+}
+
 export interface CVData {
   personalInfo: {
     fullName: string;
@@ -9,16 +20,7 @@ export interface CVData {
     website: string;
   };
   summary: string;
-  experience: Array<{
-    id: string;
-    position: string;
-    company: string;
-    location: string;
-    startDate: string;
-    endDate: string;
-    current: boolean;
-    description: string;
-  }>;
+  experience: Array<Experience>;
   education: Array<{
     id: string;
     degree: string;

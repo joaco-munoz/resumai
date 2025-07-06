@@ -16,10 +16,10 @@ export const CVBuilderHeader = ({ currentCvId, exportPDF }: CVBuilderHeaderProps
         <div className="flex items-center gap-4">
           <SidebarTrigger />
           <div>
-            <h1 className="text-2xl font-bold gradient-text">
+            <h1 className="text-3xl font-bold gradient-text">
               {currentCvId ? "Editar CV" : "Editor de CV"}
             </h1>
-            <p className="text-gray-600">
+            <p className="text-gray-600 mt-2">
               {currentCvId ? "Modifica tu CV principal" : "Crea tu CV profesional optimizado para ATS"}
             </p>
           </div>

@@ -10,10 +10,12 @@ import AIButton from "@/components/AIButton";
 import { CVData, Experience } from "@/types/cv";
 import { AIUsageIndicator } from "@/components/AIUsageIndicator";
 import { useFeatureLimits } from "@/hooks/useFeatureLimits";
+import { DatePickerEs } from "@/components/ui/date-picker-es";
+import { Checkbox } from "@/components/ui/checkbox";
 
 interface ExperienceTabProps {
   cvData: CVData;
-  updateExperience: (id: string, field: keyof Experience, value: string) => void;
+  updateExperience: (id: string, field: keyof Experience, value: string | boolean) => void;
   addExperience: () => void;
   removeExperience: (id: string) => void;
   improveWithAI: (section: string) => void;
@@ -143,24 +145,41 @@ export const ExperienceTab = ({
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor={`location-${exp.id}`}>Ubicación</Label>
+              <Input
+                id={`location-${exp.id}`}
+                value={exp.location}
+                onChange={(e) => updateExperience(exp.id, 'location', e.target.value)}
+                placeholder="Ej: Ciudad de México, México"
+              />
+            </div>
+
+            <div className="grid grid-cols-3 gap-4">
               <div>
                 <Label htmlFor={`start-${exp.id}`}>Fecha Inicio</Label>
-                <Input
-                  id={`start-${exp.id}`}
+                <DatePickerEs
                   value={exp.startDate}
-                  onChange={(e) => updateExperience(exp.id, 'startDate', e.target.value)}
-                  placeholder="Ej: Enero 2020"
+                  onChange={(value) => updateExperience(exp.id, 'startDate', value)}
+                  placeholder="Seleccionar fecha"
                 />
               </div>
               <div>
                 <Label htmlFor={`end-${exp.id}`}>Fecha Fin</Label>
-                <Input
-                  id={`end-${exp.id}`}
+                <DatePickerEs
                   value={exp.endDate}
-                  onChange={(e) => updateExperience(exp.id, 'endDate', e.target.value)}
-                  placeholder="Ej: Presente"
+                  onChange={(value) => updateExperience(exp.id, 'endDate', value)}
+                  disabled={exp.current}
+                  placeholder="Seleccionar fecha"
                 />
+              </div>
+              <div className="flex items-center space-x-2 pt-6">
+                <Checkbox
+                  id={`current-${exp.id}`}
+                  checked={exp.current}
+                  onCheckedChange={(checked) => updateExperience(exp.id, 'current', checked === true)}
+                />
+                <Label htmlFor={`current-${exp.id}`}>Trabajo actual</Label>
               </div>
             </div>
 

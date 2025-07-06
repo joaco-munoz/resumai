@@ -104,11 +104,11 @@ export function AppSidebar() {
           </div>
           {!isCollapsed && (
             <div className="flex flex-col">
-              <span className="font-bold text-lg gradient-text">ResumAI</span>
+              <span className="font-bold text-2xl gradient-text">ResumAI</span>
               {!statusLoading && (
                 <Badge 
                   variant={isPremium ? "default" : "secondary"} 
-                  className={`text-xs mt-1 ${
+                  className={`text-sm mt-1 ${
                     isPremium 
                       ? "bg-gradient-to-r from-brand-500 to-brand-700 text-white" 
                       : "bg-gray-200 text-gray-700"
