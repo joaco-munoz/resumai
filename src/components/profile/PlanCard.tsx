@@ -1,4 +1,3 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -7,16 +6,19 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { CancelSubscriptionDialog } from "@/components/CancelSubscriptionDialog";
 
 interface PlanCardProps {
   currentPlan: string;
   isUpgrading: boolean;
   onUpgrade: () => void;
+  onPlanChange: (plan: string) => void;
 }
 
-export const PlanCard = ({ currentPlan, isUpgrading, onUpgrade }: PlanCardProps) => {
+export const PlanCard = ({ currentPlan, isUpgrading, onUpgrade, onPlanChange }: PlanCardProps) => {
   const [isCreatingSubscription, setIsCreatingSubscription] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
   const isMobile = useIsMobile();
 
   const handleCreateSubscription = async () => {
@@ -62,16 +64,14 @@ export const PlanCard = ({ currentPlan, isUpgrading, onUpgrade }: PlanCardProps)
   };
 
   const handleCancelSubscription = async () => {
-    if (!confirm("¿Estás seguro de que quieres cancelar tu suscripción Pro?")) {
-      return;
-    }
-
     setIsCancelling(true);
     
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         toast.error("Debes iniciar sesión");
+        setIsCancelling(false);
+        setShowCancelDialog(false);
         return;
       }
 
@@ -84,24 +84,33 @@ export const PlanCard = ({ currentPlan, isUpgrading, onUpgrade }: PlanCardProps)
       if (error) {
         console.error('Error cancelando suscripción:', error);
         toast.error("Error al cancelar la suscripción: " + error.message);
+        setIsCancelling(false);
+        setShowCancelDialog(false);
         return;
       }
 
       if (data?.success) {
         toast.success("Suscripción cancelada exitosamente");
-        window.location.reload();
+        onPlanChange('free');
+        // Esperar un poco antes de recargar para que el usuario vea el mensaje
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500);
+      } else {
+        toast.error("No se pudo cancelar la suscripción");
       }
     } catch (error: any) {
       console.error('Error inesperado:', error);
       toast.error("Error inesperado al cancelar la suscripción");
     } finally {
       setIsCancelling(false);
+      setShowCancelDialog(false);
     }
   };
 
   return (
     <>
-      {/* Current Plan */}
+      {/* Plan Card */}
       <Card className={`${currentPlan === 'pro' ? 'border-2 border-brand-500' : ''} bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700`}>
         <CardHeader>
           <div className={`flex ${isMobile ? 'flex-col space-y-4' : 'items-center justify-between'}`}>
@@ -156,22 +165,13 @@ export const PlanCard = ({ currentPlan, isUpgrading, onUpgrade }: PlanCardProps)
             ) : (
               <div className={`${isMobile ? 'w-full' : 'text-right'}`}>
                 <Button 
-                  onClick={handleCancelSubscription}
+                  onClick={() => setShowCancelDialog(true)}
                   disabled={isCancelling}
                   variant="outline"
                   className={`border-red-500 text-red-600 hover:bg-red-50 ${isMobile ? 'w-full' : ''}`}
                 >
-                  {isCancelling ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Cancelando...
-                    </>
-                  ) : (
-                    <>
-                      <AlertTriangle className="h-4 w-4 mr-2" />
-                      Cancelar Suscripción
-                    </>
-                  )}
+                  <AlertTriangle className="h-4 w-4 mr-2" />
+                  Cancelar Suscripción
                 </Button>
               </div>
             )}
@@ -220,7 +220,7 @@ export const PlanCard = ({ currentPlan, isUpgrading, onUpgrade }: PlanCardProps)
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckCircle className="h-4 w-4 text-success-500 shrink-0" />
-                    <span className="text-gray-700 dark:text-gray-300">Análisis ATS básico para pasar filtros</span>
+                    <span className="text-gray-700 dark:text-gray-300">3 análisis de ofertas al mes</span>
                   </li>
                 </ul>
               </div>
@@ -243,7 +243,7 @@ export const PlanCard = ({ currentPlan, isUpgrading, onUpgrade }: PlanCardProps)
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckCircle className="h-4 w-4 text-success-500 shrink-0" />
-                    <span className="text-gray-700 dark:text-gray-300">Job Matcher avanzado con recomendaciones precisas</span>
+                    <span className="text-gray-700 dark:text-gray-300">Job Matcher ilimitado con recomendaciones precisas</span>
                   </li>
                   <li className="flex items-center gap-2">
                     <CheckCircle className="h-4 w-4 text-success-500 shrink-0" />
@@ -276,6 +276,14 @@ export const PlanCard = ({ currentPlan, isUpgrading, onUpgrade }: PlanCardProps)
           </CardContent>
         </Card>
       )}
+
+      {/* Cancel Subscription Dialog */}
+      <CancelSubscriptionDialog
+        isOpen={showCancelDialog}
+        onClose={() => setShowCancelDialog(false)}
+        onConfirm={handleCancelSubscription}
+        isLoading={isCancelling}
+      />
     </>
   );
 };

@@ -7,7 +7,7 @@ import { useFeatureLimits } from '@/hooks/useFeatureLimits';
 
 export const useAIImprovement = (cvData: CVData, setCvData: (data: CVData | ((prev: CVData) => CVData)) => void) => {
   const [isImproving, setIsImproving] = useState<string | null>(null);
-  const { canUseFeature, incrementUsage } = useFeatureLimits();
+  const { canUseFeature, incrementUsage, isPro } = useFeatureLimits();
 
   const improveWithAI = async (section: string) => {
     // Verificar si puede usar la feature
@@ -109,6 +109,7 @@ export const useAIImprovement = (cvData: CVData, setCvData: (data: CVData | ((pr
 
   return {
     isImproving,
-    improveWithAI
+    improveWithAI,
+    isPro
   };
 };

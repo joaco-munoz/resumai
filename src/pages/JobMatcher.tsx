@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
@@ -12,6 +13,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { CVAdaptationModal } from "@/components/CVAdaptationModal";
+import { AIUsageIndicator } from "@/components/AIUsageIndicator";
+import { useFeatureLimits } from "@/hooks/useFeatureLimits";
 
 interface MatchResult {
   score: number;
@@ -36,6 +39,7 @@ const JobMatcher = () => {
   const [showAdaptationModal, setShowAdaptationModal] = useState(false);
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { usage, limits, canUseFeature, incrementUsage, isPro } = useFeatureLimits();
 
   // Función para extraer el título del trabajo y la empresa de la descripción
   const extractJobDetails = (description: string): JobDetails => {
@@ -69,6 +73,12 @@ const JobMatcher = () => {
       return;
     }
 
+    // Verificar si puede usar la feature
+    if (!canUseFeature('job_matcher_advanced')) {
+      toast.error("Has alcanzado el límite de análisis de ofertas. Actualiza a Pro para uso ilimitado.");
+      return;
+    }
+
     setIsAnalyzing(true);
     
     try {
@@ -96,6 +106,9 @@ const JobMatcher = () => {
       // Extraer detalles del trabajo
       const details = extractJobDetails(jobDescription);
       setJobDetails(details);
+      
+      // Incrementar el uso después de un análisis exitoso
+      await incrementUsage('job_matcher_advanced');
       
       toast.success("Análisis completado exitosamente");
       
@@ -167,14 +180,36 @@ const JobMatcher = () => {
           <header className="bg-white border-b px-6 py-4">
             <div className="flex items-center gap-4">
               <SidebarTrigger />
-              <div>
+              <div className="flex-1">
                 <h1 className="text-2xl font-bold gradient-text">Match de Ofertas</h1>
                 <p className="text-gray-600">Compara tu currículum con una oferta y recibe recomendaciones para maximizar tu compatibilidad</p>
               </div>
+              {!isPro && (
+                <div className="hidden md:block">
+                  <AIUsageIndicator 
+                    current={usage.job_matcher_advanced}
+                    limit={limits.job_matcher_advanced}
+                    type="job_matcher_advanced"
+                    isPro={isPro}
+                  />
+                </div>
+              )}
             </div>
           </header>
 
           <div className="p-6 max-w-7xl mx-auto space-y-6">
+            {/* Usage Indicator for mobile */}
+            {!isPro && (
+              <div className="md:hidden">
+                <AIUsageIndicator 
+                  current={usage.job_matcher_advanced}
+                  limit={limits.job_matcher_advanced}
+                  type="job_matcher_advanced"
+                  isPro={isPro}
+                />
+              </div>
+            )}
+
             {/* Job Description Section - Full Width */}
             <Card>
               <CardHeader>
@@ -222,7 +257,7 @@ Ejemplo:
                 
                 <Button 
                   onClick={analyzeMatch}
-                  disabled={isAnalyzing || !jobDescription.trim()}
+                  disabled={isAnalyzing || !jobDescription.trim() || !canUseFeature('job_matcher_advanced')}
                   className="bg-gradient-to-r from-brand-500 to-brand-700"
                   size="lg"
                 >

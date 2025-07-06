@@ -2,13 +2,14 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAdmin } from '@/hooks/useAdmin';
 import { toast } from 'sonner';
 
 interface FeatureLimits {
   cv_creation: number;
   pdf_export: number;
   ai_improvements: number;
-  job_matcher_advanced: boolean;
+  job_matcher_advanced: number;
   unlimited_features: boolean;
 }
 
@@ -16,21 +17,24 @@ interface UsageStats {
   cv_creation: number;
   pdf_export: number;
   ai_improvements: number;
+  job_matcher_advanced: number;
 }
 
 export const useFeatureLimits = () => {
   const { user } = useAuth();
+  const { isAdmin } = useAdmin();
   const [limits, setLimits] = useState<FeatureLimits>({
     cv_creation: 1,
     pdf_export: 1,
     ai_improvements: 5,
-    job_matcher_advanced: false,
+    job_matcher_advanced: 3,
     unlimited_features: false
   });
   const [usage, setUsage] = useState<UsageStats>({
     cv_creation: 0,
     pdf_export: 0,
-    ai_improvements: 0
+    ai_improvements: 0,
+    job_matcher_advanced: 0
   });
   const [isPro, setIsPro] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -39,7 +43,7 @@ export const useFeatureLimits = () => {
     if (user) {
       checkSubscriptionAndUsage();
     }
-  }, [user]);
+  }, [user, isAdmin]);
 
   const checkSubscriptionAndUsage = async () => {
     if (!user) return;
@@ -57,9 +61,9 @@ export const useFeatureLimits = () => {
         return;
       }
 
-      const isUserPro = profile?.is_premium === true && 
+      const isUserPro = isAdmin || (profile?.is_premium === true && 
         profile?.subscription_tier === 'pro' && 
-        (!profile?.premium_expires_at || new Date(profile.premium_expires_at) > new Date());
+        (!profile?.premium_expires_at || new Date(profile.premium_expires_at) > new Date()));
 
       setIsPro(isUserPro);
 
@@ -69,7 +73,7 @@ export const useFeatureLimits = () => {
           cv_creation: 999,
           pdf_export: 999,
           ai_improvements: 999,
-          job_matcher_advanced: true,
+          job_matcher_advanced: 999,
           unlimited_features: true
         });
       } else {
@@ -77,7 +81,7 @@ export const useFeatureLimits = () => {
           cv_creation: 1,
           pdf_export: 1,
           ai_improvements: 5,
-          job_matcher_advanced: false,
+          job_matcher_advanced: 3,
           unlimited_features: false
         });
       }
@@ -94,7 +98,12 @@ export const useFeatureLimits = () => {
         const currentUsage = usageData.reduce((acc, item) => {
           acc[item.feature_type as keyof UsageStats] = item.usage_count;
           return acc;
-        }, { cv_creation: 0, pdf_export: 0, ai_improvements: 0 } as UsageStats);
+        }, { 
+          cv_creation: 0, 
+          pdf_export: 0, 
+          ai_improvements: 0, 
+          job_matcher_advanced: 0 
+        } as UsageStats);
 
         setUsage(currentUsage);
       }
@@ -106,7 +115,7 @@ export const useFeatureLimits = () => {
   };
 
   const canUseFeature = (featureType: keyof UsageStats): boolean => {
-    if (isPro) return true;
+    if (isPro || isAdmin) return true;
     return usage[featureType] < limits[featureType];
   };
 
@@ -114,7 +123,14 @@ export const useFeatureLimits = () => {
     if (!user) return false;
 
     if (!canUseFeature(featureType)) {
-      toast.error(`Has alcanzado el límite de ${featureType}. Actualiza a Pro para uso ilimitado.`);
+      const featureNames = {
+        cv_creation: 'creación de CVs',
+        pdf_export: 'exportaciones PDF',
+        ai_improvements: 'mejoras con IA',
+        job_matcher_advanced: 'análisis de ofertas'
+      };
+      
+      toast.error(`Has alcanzado el límite de ${featureNames[featureType]}. Actualiza a Pro para uso ilimitado.`);
       return false;
     }
 

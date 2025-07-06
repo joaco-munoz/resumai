@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import AIButton from "@/components/AIButton";
 import { CVData } from "@/types/cv";
+import { AIUsageIndicator } from "@/components/AIUsageIndicator";
+import { useFeatureLimits } from "@/hooks/useFeatureLimits";
 
 interface SummaryTabProps {
   cvData: CVData;
@@ -13,6 +15,7 @@ interface SummaryTabProps {
   isImproving: string | null;
   goToPreviousTab: () => void;
   goToNextTab: () => void;
+  isPro: boolean;
 }
 
 const MAX_CHARACTERS = 750;
@@ -23,8 +26,10 @@ export const SummaryTab = ({
   improveWithAI, 
   isImproving, 
   goToPreviousTab, 
-  goToNextTab 
+  goToNextTab,
+  isPro
 }: SummaryTabProps) => {
+  const { usage, limits, canUseFeature } = useFeatureLimits();
   const currentLength = cvData.summary.length;
   const isAtLimit = currentLength >= MAX_CHARACTERS;
 
@@ -34,22 +39,43 @@ export const SummaryTab = ({
     }
   };
 
+  const handleAIImprovement = () => {
+    if (!canUseFeature('ai_improvements')) {
+      return;
+    }
+    improveWithAI('summary');
+  };
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center justify-between">
-          <span>Resumen Profesional</span>
-          <AIButton
-            onClick={() => improveWithAI('summary')}
-            isLoading={isImproving === 'summary'}
-            disabled={!cvData.summary.trim()}
-          >
-            Optimizar Resumen
-          </AIButton>
-        </CardTitle>
-        <CardDescription>
-        Tu Resumen Profesional es tu carta de presentación en 2-3 líneas: escribe tu experiencia y logros con tus propias palabras, y ResumAI los perfeccionará al instante.
-        </CardDescription>
+        <div className="flex items-center justify-between">
+          <div className="flex-1">
+            <CardTitle className="flex items-center justify-between">
+              <span>Resumen Profesional</span>
+              <AIButton
+                onClick={handleAIImprovement}
+                isLoading={isImproving === 'summary'}
+                disabled={!cvData.summary.trim() || !canUseFeature('ai_improvements')}
+              >
+                Optimizar Resumen
+              </AIButton>
+            </CardTitle>
+            <CardDescription>
+              Tu Resumen Profesional es tu carta de presentación en 2-3 líneas: escribe tu experiencia y logros con tus propias palabras, y ResumAI los perfeccionará al instante.
+            </CardDescription>
+          </div>
+        </div>
+        {!isPro && (
+          <div className="mt-4">
+            <AIUsageIndicator 
+              current={usage.ai_improvements}
+              limit={limits.ai_improvements}
+              type="ai_improvements"
+              isPro={isPro}
+            />
+          </div>
+        )}
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="space-y-2">

@@ -78,5 +78,59 @@ export const useSubscriptionStatus = () => {
     fetchSubscriptionStatus();
   }, [user, isAdmin]);
 
-  return { tier, isPremium, isLoading };
+  const refreshStatus = async () => {
+    setIsLoading(true);
+    if (!user) {
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      const { data: profile, error } = await supabase
+        .from('profiles')
+        .select('subscription_tier, is_premium, premium_expires_at')
+        .eq('id', user.id)
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error fetching subscription status:', error);
+        return;
+      }
+
+      if (profile) {
+        const currentTier = profile.subscription_tier || 'free';
+        const currentIsPremium = profile.is_premium || false;
+        
+        if (currentIsPremium && profile.premium_expires_at) {
+          const expiresAt = new Date(profile.premium_expires_at);
+          const now = new Date();
+          
+          if (now > expiresAt) {
+            await supabase
+              .from('profiles')
+              .update({ 
+                is_premium: false, 
+                subscription_tier: 'free' 
+              })
+              .eq('id', user.id);
+            
+            setTier('free');
+            setIsPremium(false);
+          } else {
+            setTier(currentTier);
+            setIsPremium(currentIsPremium);
+          }
+        } else {
+          setTier(currentTier);
+          setIsPremium(currentIsPremium);
+        }
+      }
+    } catch (error) {
+      console.error('Error refreshing subscription status:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return { tier, isPremium, isLoading, refreshStatus };
 };
