@@ -1,3 +1,4 @@
+
 import { Instagram, Linkedin } from "lucide-react";
 import Logo from "@/assets/Logo - copia.png";
 
@@ -11,11 +12,11 @@ export const Footer = () => {
             <span className="font-bold text-xl">ResumAI</span>
           </div>
 
-          <div className="flex items-center gap-6">
-            <a href="https://www.instagram.com" target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-white transition-colors">
+          <div className="flex items-center justify-center gap-6">
+            <a href="https://www.instagram.com" target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-white transition-colors flex items-center justify-center">
               <Instagram className="h-6 w-6" />
             </a>
-            <a href="https://www.linkedin.com" target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-white transition-colors">
+            <a href="https://www.linkedin.com" target="_blank" rel="noopener noreferrer" className="text-slate-400 hover:text-white transition-colors flex items-center justify-center">
               <Linkedin className="h-6 w-6" />
             </a>
           </div>

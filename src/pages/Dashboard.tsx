@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
@@ -13,6 +12,8 @@ import { useOnboarding } from "@/hooks/useOnboarding";
 import { useSubscriptionStatus } from "@/hooks/useSubscriptionStatus";
 import { Badge } from "@/components/ui/badge";
 import { Crown } from "lucide-react";
+import { NPSModal } from "@/components/NPSModal";
+import { useNPS } from "@/hooks/useNPS";
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -26,6 +27,7 @@ const Dashboard = () => {
   });
   const [recentActivities, setRecentActivities] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const { shouldShowNPS, dismissNPS } = useNPS();
 
   useEffect(() => {
     if (user) {
@@ -133,7 +135,7 @@ const Dashboard = () => {
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-gray-50">
         <AppSidebar />
-        <SidebarInset>
+        <main className="flex-1">
           <header className="bg-white border-b px-6 py-4">
             <div className="flex items-center gap-4">
               <div className="flex justify-between items-center w-full">
@@ -179,13 +181,18 @@ const Dashboard = () => {
               </div>
             </div>
           </div>
-        </SidebarInset>
+        </main>
       </div>
 
       {/* Onboarding Modal */}
       <OnboardingModal 
         isOpen={showOnboarding} 
         onClose={handleOnboardingClose}
+      />
+
+      <NPSModal 
+        isOpen={shouldShowNPS} 
+        onClose={dismissNPS} 
       />
     </SidebarProvider>
   );
