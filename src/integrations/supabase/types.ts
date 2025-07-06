@@ -9,6 +9,33 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      admin_users: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          email: string
+          id: string
+          is_active: boolean | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          email: string
+          id?: string
+          is_active?: boolean | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          email?: string
+          id?: string
+          is_active?: boolean | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       business_metrics: {
         Row: {
           active_users: number | null
@@ -18,12 +45,17 @@ export type Database = {
           churned_users: number | null
           conversion_rate: number | null
           created_at: string
+          daily_active_users: number | null
+          daily_signups: number | null
           date: string
+          free_users: number | null
           id: string
           mrr: number | null
           new_signups: number | null
+          pro_users: number | null
           total_cvs_created: number | null
           total_jobs_matched: number | null
+          total_payments_today: number | null
           total_revenue: number | null
           total_users: number | null
         }
@@ -35,12 +67,17 @@ export type Database = {
           churned_users?: number | null
           conversion_rate?: number | null
           created_at?: string
+          daily_active_users?: number | null
+          daily_signups?: number | null
           date: string
+          free_users?: number | null
           id?: string
           mrr?: number | null
           new_signups?: number | null
+          pro_users?: number | null
           total_cvs_created?: number | null
           total_jobs_matched?: number | null
+          total_payments_today?: number | null
           total_revenue?: number | null
           total_users?: number | null
         }
@@ -52,12 +89,17 @@ export type Database = {
           churned_users?: number | null
           conversion_rate?: number | null
           created_at?: string
+          daily_active_users?: number | null
+          daily_signups?: number | null
           date?: string
+          free_users?: number | null
           id?: string
           mrr?: number | null
           new_signups?: number | null
+          pro_users?: number | null
           total_cvs_created?: number | null
           total_jobs_matched?: number | null
+          total_payments_today?: number | null
           total_revenue?: number | null
           total_users?: number | null
         }
@@ -833,6 +875,20 @@ export type Database = {
       increment_feature_usage: {
         Args: { p_user_id: string; p_feature_type: string }
         Returns: boolean
+      }
+      is_admin: {
+        Args: { user_id?: string }
+        Returns: boolean
+      }
+      log_user_activity: {
+        Args: {
+          p_user_id: string
+          p_action: string
+          p_resource_type?: string
+          p_resource_id?: string
+          p_metadata?: Json
+        }
+        Returns: undefined
       }
       update_daily_metrics: {
         Args: Record<PropertyKey, never>

@@ -10,6 +10,7 @@ import RedirectHandler from "@/components/RedirectHandler";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
+import AdminDashboard from "./pages/AdminDashboard";
 import CVBuilder from "./pages/CVBuilder";
 import CVsList from "./pages/CVsList";
 import JobMatcher from "./pages/JobMatcher";
@@ -34,6 +35,11 @@ const App = () => (
             <Route path="/app" element={
               <ProtectedRoute>
                 <Dashboard />
+              </ProtectedRoute>
+            } />
+            <Route path="/app/admin" element={
+              <ProtectedRoute>
+                <AdminDashboard />
               </ProtectedRoute>
             } />
             <Route path="/app/kanban" element={
