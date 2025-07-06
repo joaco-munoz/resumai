@@ -70,7 +70,9 @@ export const PersonalInfoTab = ({
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="linkedin">LinkedIn</Label>
+            <div className="flex items-center gap-1 mb-2">
+              <Label htmlFor="linkedin">LinkedIn</Label>
+            </div>
             <Input
               id="linkedin"
               value={cvData.personalInfo.linkedin}

@@ -277,6 +277,78 @@ export const PlanCard = ({ currentPlan, isUpgrading, onUpgrade, onPlanChange }: 
         </Card>
       )}
 
+      {/* Plan Features Information Section */}
+      <Card className="mt-6 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
+        <CardHeader>
+          <CardTitle className="text-base sm:text-lg">¿Qué incluye cada plan?</CardTitle>
+          <CardDescription className="text-sm">
+            Información detallada sobre las características de cada plan
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8">
+            {/* Free Plan Features */}
+            <div className="space-y-4 p-4 bg-gray-50 dark:bg-gray-800/50 rounded-lg border border-gray-200 dark:border-gray-700">
+              <div className="flex items-center gap-2">
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100">Plan Gratuito</h3>
+              </div>
+              <div className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">$0<span className="text-sm font-normal text-gray-500 dark:text-gray-400">/mes</span></div>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Perfecto para empezar</p>
+              <ul className="space-y-2 text-sm">
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-success-500 shrink-0" />
+                  <span className="text-gray-700 dark:text-gray-300">1 CV optimizado con IA</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-success-500 shrink-0" />
+                  <span className="text-gray-700 dark:text-gray-300">1 exportación PDF sin marca de agua</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-success-500 shrink-0" />
+                  <span className="text-gray-700 dark:text-gray-300">5 mejoras inteligentes al mes</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-success-500 shrink-0" />
+                  <span className="text-gray-700 dark:text-gray-300">Análisis ATS básico para pasar filtros</span>
+                </li>
+              </ul>
+            </div>
+
+            {/* Pro Plan Features */}
+            <div className="space-y-4 p-4 bg-gradient-to-br from-brand-50 to-purple-50 dark:from-brand-900/20 dark:to-purple-900/20 rounded-lg border border-brand-200 dark:border-brand-700">
+              <div className="flex items-center gap-2">
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100">Plan Pro</h3>
+                <Badge className="bg-brand-100 text-brand-700 dark:bg-brand-800 dark:text-brand-200">Popular</Badge>
+              </div>
+              <div className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">$6.990<span className="text-sm font-normal text-gray-500 dark:text-gray-400"> CLP/mes</span></div>
+              <p className="text-sm text-gray-600 dark:text-gray-400">CVs sin límites, inscríbete hoy</p>
+              <ul className="space-y-2 text-sm">
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-success-500 shrink-0" />
+                  <span className="text-gray-700 dark:text-gray-300">CVs ilimitados con IA</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-success-500 shrink-0" />
+                  <span className="text-gray-700 dark:text-gray-300">Exportaciones ilimitadas en PDF y Word</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-success-500 shrink-0" />
+                  <span className="text-gray-700 dark:text-gray-300">Job Matcher avanzado con recomendaciones precisas</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-success-500 shrink-0" />
+                  <span className="text-gray-700 dark:text-gray-300">Mejoras IA ilimitadas</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4 text-success-500 shrink-0" />
+                  <span className="text-gray-700 dark:text-gray-300">Acceso a novedades antes que nadie</span>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Cancel Subscription Dialog */}
       <CancelSubscriptionDialog
         isOpen={showCancelDialog}

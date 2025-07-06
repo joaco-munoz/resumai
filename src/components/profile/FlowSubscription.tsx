@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Crown, CreditCard, Loader2, AlertTriangle } from "lucide-react";
+import { Crown, CreditCard, Loader2, AlertTriangle, CircleCheck, Zap } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -185,6 +185,88 @@ export const FlowSubscription = ({ currentPlan, onPlanChange }: FlowSubscription
           </CardContent>
         )}
       </Card>
+
+      {/* Plan Features Information Section */}
+      <div className="mt-6 grid md:grid-cols-2 gap-8">
+        {/* Free Plan */}
+        <Card className="border border-blue-500 shadow-md bg-blue-600 rounded-xl">
+          <CardHeader className="text-center pb-2">
+            <CardTitle className="text-xl font-semibold text-white">Gratis</CardTitle>
+            <div className="text-3xl font-bold text-white mt-4">$0</div>
+            <CardDescription className="text-blue-100 text-base mt-1">Perfecto para empezar</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4 pt-2">
+            <div className="flex items-center gap-3">
+              <div className="w-5 h-5 flex-shrink-0 rounded-full border border-white flex items-center justify-center bg-blue-700">
+                <div className="w-2.5 h-2.5 rounded-full bg-white"></div>
+              </div>
+              <span className="text-white text-sm md:text-base font-medium">1 CV optimizado con IA</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="w-5 h-5 flex-shrink-0 rounded-full border border-white flex items-center justify-center bg-blue-700">
+                <div className="w-2.5 h-2.5 rounded-full bg-white"></div>
+              </div>
+              <span className="text-white text-sm md:text-base font-medium">1 exportación PDF sin marca de agua</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="w-5 h-5 flex-shrink-0 rounded-full border border-white flex items-center justify-center bg-blue-700">
+                <div className="w-2.5 h-2.5 rounded-full bg-white"></div>
+              </div>
+              <span className="text-white text-sm md:text-base font-medium">5 mejoras inteligentes al mes</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="w-5 h-5 flex-shrink-0 rounded-full border border-white flex items-center justify-center bg-blue-700">
+                <div className="w-2.5 h-2.5 rounded-full bg-white"></div>
+              </div>
+              <span className="text-white text-sm md:text-base font-medium">Análisis ATS básico para pasar filtros</span>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Pro Plan */}
+        <Card className="border border-blue-500 shadow-md bg-blue-600 rounded-xl relative overflow-hidden">
+          <div className="absolute top-0 right-0 bg-blue-800 text-white px-4 py-1 text-sm">
+            Popular
+          </div>
+          <CardHeader className="text-center pb-2">
+            <CardTitle className="text-xl font-semibold text-white">Pro</CardTitle>
+            <div className="text-3xl font-bold text-white mt-4">$6.990<span className="text-lg font-normal text-blue-100"> CLP/mes</span></div>
+            <CardDescription className="text-blue-100 text-base mt-1">CVs sin límites, inscríbete hoy</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4 pt-2">
+            <div className="flex items-center gap-3">
+              <div className="w-5 h-5 flex-shrink-0 rounded-full border border-white flex items-center justify-center bg-blue-700">
+                <div className="w-2.5 h-2.5 rounded-full bg-white"></div>
+              </div>
+              <span className="text-white text-sm md:text-base font-medium">CVs ilimitados con IA</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="w-5 h-5 flex-shrink-0 rounded-full border border-white flex items-center justify-center bg-blue-700">
+                <div className="w-2.5 h-2.5 rounded-full bg-white"></div>
+              </div>
+              <span className="text-white text-sm md:text-base font-medium">Exportaciones ilimitadas en PDF y Word</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="w-5 h-5 flex-shrink-0 rounded-full border border-white flex items-center justify-center bg-blue-700">
+                <div className="w-2.5 h-2.5 rounded-full bg-white"></div>
+              </div>
+              <span className="text-white text-sm md:text-base font-medium">Job Matcher avanzado con recomendaciones precisas</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="w-5 h-5 flex-shrink-0 rounded-full border border-white flex items-center justify-center bg-blue-700">
+                <div className="w-2.5 h-2.5 rounded-full bg-white"></div>
+              </div>
+              <span className="text-white text-sm md:text-base font-medium">Mejoras IA ilimitadas</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="w-5 h-5 flex-shrink-0 rounded-full border border-white flex items-center justify-center bg-blue-700">
+                <div className="w-2.5 h-2.5 rounded-full bg-white"></div>
+              </div>
+              <span className="text-white text-sm md:text-base font-medium">Acceso a novedades antes que nadie</span>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </>
   );
 };
