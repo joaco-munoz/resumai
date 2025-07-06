@@ -82,12 +82,12 @@ export const PersonalInfoTab = ({
           <div className="space-y-2">
             <div className="flex items-center gap-1 mb-2">
               <Label htmlFor="website">Sitio web (opcional)</Label>
-              <TooltipProvider>
+              <TooltipProvider delayDuration={0}>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <HelpCircle className="h-4 w-4 text-gray-400 cursor-help" />
+                    <HelpCircle className="h-4 w-4 text-gray-400 cursor-help hover:text-gray-600 transition-colors" />
                   </TooltipTrigger>
-                  <TooltipContent className="max-w-xs">
+                  <TooltipContent side="right" sideOffset={5} className="max-w-xs bg-gray-900 text-white p-3 rounded-md shadow-lg">
                     <p>Recomendado para profesionales con portafolio web, diseñadores, desarrolladores y creativos.</p>
                   </TooltipContent>
                 </Tooltip>
