@@ -309,10 +309,10 @@ export default function CVsList() {
               {/* Header */}
               <div className="flex items-center justify-between mb-6 sm:mb-8">
                 <div className="min-w-0 flex-1">
-                  <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100 truncate">
+                  <h1 className="font-bold text-3xl gradient-text">
                     Mis Currículums
                   </h1>
-                  <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 mt-2">
+                  <p className="text-gray-600 mt-2">
                     Gestiona tu Currículum Principal y los currículums adaptados por Match de Ofertas
                   </p>
                 </div>
