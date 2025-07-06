@@ -5,8 +5,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Trash2, ChevronUp, ChevronDown, GripVertical } from "lucide-react";
+import { Trash2, ChevronUp, ChevronDown, GripVertical, HelpCircle } from "lucide-react";
 import { CVData } from "@/types/cv";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface DraggableEducationItemProps {
   edu: CVData['education'][0];
@@ -110,7 +116,19 @@ export const DraggableEducationItem = ({
               </div>
               
               <div className="space-y-2">
-                <Label>Descripción (opcional)</Label>
+                <div className="flex items-center gap-1 mb-2.5">
+                  <Label>Descripción (opcional)</Label>
+                  <TooltipProvider delayDuration={0}>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <HelpCircle className="h-4 w-4 text-gray-400 cursor-help hover:text-gray-600 transition-colors" />
+                      </TooltipTrigger>
+                      <TooltipContent side="right" sideOffset={5} className="max-w-xs bg-gray-900 text-white p-3 rounded-md shadow-lg">
+                        <p>Añade información relevante sobre tu formación como especializaciones, honores académicos o proyectos destacados. Mantén la descripción breve y enfocada en logros académicos significativos.</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </div>
                 <Textarea
                   value={edu.description}
                   onChange={(e) => updateEducation(edu.id, 'description', e.target.value)}
