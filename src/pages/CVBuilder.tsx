@@ -31,9 +31,13 @@ import { EducationTab } from "@/components/cv-builder/EducationTab";
 import { SkillsTab } from "@/components/cv-builder/SkillsTab";
 import { CVPreview } from "@/components/cv-builder/CVPreview";
 import { SaveAnimationOverlay } from "@/components/SaveAnimationOverlay";
+import { downloadCVAsPDF } from "@/utils/pdfUtils";
+import { downloadCVAsWord } from "@/utils/wordUtils";
 
 const CVBuilder = () => {
   const { cvData, setCvData, isLoading, currentCvId, saveCV, saveAndAdapt } = useCVData();
+  const { user } = useAuth();
+  const [downloadCount, setDownloadCount] = useState(0);
   
   const {
     activeTab,
@@ -63,10 +67,85 @@ const CVBuilder = () => {
   } = useCVSaving();
 
   const navigate = useNavigate();
-  const { user } = useAuth();
 
-  const exportPDF = () => {
-    toast.success("CV exportado como PDF");
+  useEffect(() => {
+    const fetchDownloadCount = async () => {
+      if (!user?.id) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('user_usage')
+          .select('usage_count')
+          .eq('user_id', user.id)
+          .eq('feature_type', 'pdf_export')
+          .eq('period_start', new Date().toISOString().split('T')[0])
+          .single();
+
+        if (data && !error) {
+          setDownloadCount(data.usage_count || 0);
+        }
+      } catch (error) {
+        console.error('Error fetching download count:', error);
+      }
+    };
+
+    fetchDownloadCount();
+  }, [user?.id]);
+
+  const exportPDF = async () => {
+    if (!cvData) return;
+    
+    try {
+      const shouldAddWatermark = downloadCount > 0; // Add watermark after first download
+      const filename = cvData.personalInfo.fullName || 'mi-cv';
+      downloadCVAsPDF(cvData, filename, shouldAddWatermark);
+      
+      // Increment usage count
+      if (user?.id) {
+        await supabase.rpc('increment_feature_usage', {
+          p_user_id: user.id,
+          p_feature_type: 'pdf_export'
+        });
+        setDownloadCount(prev => prev + 1);
+      }
+      
+      if (shouldAddWatermark) {
+        toast.info("CV exportado con marca de agua. Upgrade a Pro para exportaciones sin marca de agua.");
+      } else {
+        toast.success("CV exportado como PDF exitosamente!");
+      }
+    } catch (error) {
+      toast.error("Error al exportar el PDF");
+      console.error('Error exporting PDF:', error);
+    }
+  };
+
+  const exportWord = async () => {
+    if (!cvData) return;
+    
+    try {
+      const shouldAddWatermark = downloadCount > 0; // Add watermark after first download
+      const filename = cvData.personalInfo.fullName || 'mi-cv';
+      downloadCVAsWord(cvData, filename, shouldAddWatermark);
+      
+      // Increment usage count
+      if (user?.id) {
+        await supabase.rpc('increment_feature_usage', {
+          p_user_id: user.id,
+          p_feature_type: 'pdf_export'
+        });
+        setDownloadCount(prev => prev + 1);
+      }
+      
+      if (shouldAddWatermark) {
+        toast.info("CV exportado con marca de agua. Upgrade a Pro para exportaciones sin marca de agua.");
+      } else {
+        toast.success("CV exportado como Word exitosamente!");
+      }
+    } catch (error) {
+      toast.error("Error al exportar el documento Word");
+      console.error('Error exporting Word:', error);
+    }
   };
 
   const handleSaveCV = async () => {
@@ -100,7 +179,12 @@ const CVBuilder = () => {
       <div className="min-h-screen flex w-full bg-gray-50">
         <AppSidebar />
         <main className="flex-1">
-          <CVBuilderHeader currentCvId={currentCvId} exportPDF={exportPDF} />
+          <CVBuilderHeader 
+            currentCvId={currentCvId} 
+            exportPDF={exportPDF}
+            exportWord={exportWord}
+            downloadCount={downloadCount}
+          />
 
           <div className="flex h-[calc(100vh-80px)]">
             {/* Editor Panel */}

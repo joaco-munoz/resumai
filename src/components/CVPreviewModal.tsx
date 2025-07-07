@@ -4,6 +4,12 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 import { formatDateToSpanish } from "@/utils/dateUtils";
+import { downloadCVAsPDF } from "@/utils/pdfUtils";
+import { downloadCVAsWord } from "@/utils/wordUtils";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
+import { useState, useEffect } from "react";
+import { toast } from "sonner";
 
 interface CVData {
   personalInfo: {
@@ -46,6 +52,93 @@ interface CVPreviewModalProps {
 }
 
 export const CVPreviewModal = ({ isOpen, onClose, cvData, cvTitle, onDownloadPDF, onDownloadWord }: CVPreviewModalProps) => {
+  const { user } = useAuth();
+  const [downloadCount, setDownloadCount] = useState(0);
+
+  useEffect(() => {
+    const fetchDownloadCount = async () => {
+      if (!user?.id) return;
+      
+      try {
+        const { data, error } = await supabase
+          .from('user_usage')
+          .select('usage_count')
+          .eq('user_id', user.id)
+          .eq('feature_type', 'pdf_export')
+          .eq('period_start', new Date().toISOString().split('T')[0])
+          .single();
+
+        if (data && !error) {
+          setDownloadCount(data.usage_count || 0);
+        }
+      } catch (error) {
+        console.error('Error fetching download count:', error);
+      }
+    };
+
+    if (isOpen) {
+      fetchDownloadCount();
+    }
+  }, [isOpen, user?.id]);
+
+  const handleDownloadPDF = async () => {
+    if (!cvData) return;
+    
+    try {
+      const shouldAddWatermark = downloadCount > 0; // Add watermark after first download
+      downloadCVAsPDF(cvData, cvTitle, shouldAddWatermark);
+      
+      // Increment usage count
+      if (user?.id) {
+        await supabase.rpc('increment_feature_usage', {
+          p_user_id: user.id,
+          p_feature_type: 'pdf_export'
+        });
+        setDownloadCount(prev => prev + 1);
+      }
+      
+      onDownloadPDF();
+      
+      if (shouldAddWatermark) {
+        toast.info("CV descargado con marca de agua. Upgrade a Pro para descargas sin marca de agua.");
+      } else {
+        toast.success("CV descargado exitosamente!");
+      }
+    } catch (error) {
+      toast.error("Error al descargar el PDF");
+      console.error('Error downloading PDF:', error);
+    }
+  };
+
+  const handleDownloadWord = async () => {
+    if (!cvData) return;
+    
+    try {
+      const shouldAddWatermark = downloadCount > 0; // Add watermark after first download
+      downloadCVAsWord(cvData, cvTitle, shouldAddWatermark);
+      
+      // Increment usage count
+      if (user?.id) {
+        await supabase.rpc('increment_feature_usage', {
+          p_user_id: user.id,
+          p_feature_type: 'pdf_export'
+        });
+        setDownloadCount(prev => prev + 1);
+      }
+      
+      onDownloadWord();
+      
+      if (shouldAddWatermark) {
+        toast.info("CV descargado con marca de agua. Upgrade a Pro para descargas sin marca de agua.");
+      } else {
+        toast.success("CV descargado exitosamente!");
+      }
+    } catch (error) {
+      toast.error("Error al descargar el documento Word");
+      console.error('Error downloading Word:', error);
+    }
+  };
+
   if (!cvData) return null;
 
   return (
@@ -55,13 +148,13 @@ export const CVPreviewModal = ({ isOpen, onClose, cvData, cvTitle, onDownloadPDF
           <div className="flex items-center justify-between">
             <DialogTitle>{cvTitle}</DialogTitle>
             <div className="flex gap-2">
-              <Button onClick={onDownloadPDF} size="sm" variant="outline">
+              <Button onClick={handleDownloadPDF} size="sm" variant="outline">
                 <Download className="h-4 w-4 mr-2" />
-                PDF
+                PDF {downloadCount > 0 && "(con marca de agua)"}
               </Button>
-              <Button onClick={onDownloadWord} size="sm" variant="outline">
+              <Button onClick={handleDownloadWord} size="sm" variant="outline">
                 <Download className="h-4 w-4 mr-2" />
-                Word
+                Word {downloadCount > 0 && "(con marca de agua)"}
               </Button>
             </div>
           </div>

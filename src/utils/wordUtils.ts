@@ -5,7 +5,7 @@ import { formatDateToSpanish } from './dateUtils';
 
 import { CVData } from '@/types/cv';
 
-export const downloadCVAsWord = (cvData: CVData, filename: string) => {
+export const downloadCVAsWord = (cvData: CVData, filename: string, shouldAddWatermark: boolean = false) => {
   try {
     // Create new Word document with STIX Two Text font to match preview
     const doc = new Document({
@@ -22,6 +22,46 @@ export const downloadCVAsWord = (cvData: CVData, filename: string) => {
               }
             }
           },
+          headers: shouldAddWatermark ? {
+            default: new Document({
+              sections: [{
+                children: [
+                  new Paragraph({
+                    alignment: AlignmentType.CENTER,
+                    children: [
+                      new TextRun({
+                        text: "RESUMAI.DEV",
+                        color: "D3D3D3",
+                        size: 100,
+                        font: "STIX Two Text",
+                        bold: true,
+                      })
+                    ]
+                  })
+                ]
+              }]
+            }).sections[0].headers?.default
+          } : undefined,
+          footers: shouldAddWatermark ? {
+            default: new Document({
+              sections: [{
+                children: [
+                  new Paragraph({
+                    alignment: AlignmentType.CENTER,
+                    children: [
+                      new TextRun({
+                        text: "Creado con ResumeAI.dev - Plan Gratuito",
+                        color: "999999",
+                        size: 16,
+                        font: "STIX Two Text",
+                        italics: true,
+                      })
+                    ]
+                  })
+                ]
+              }]
+            }).sections[0].footers?.default
+          } : undefined,
           children: [
             // Header - Name
             new Paragraph({
@@ -273,6 +313,23 @@ export const downloadCVAsWord = (cvData: CVData, filename: string) => {
                   }),
                 ]).flat(),
               }),
+            ] : []),
+
+            // Add watermark paragraph if needed
+            ...(shouldAddWatermark ? [
+              new Paragraph({
+                alignment: AlignmentType.CENTER,
+                spacing: { before: 400 },
+                children: [
+                  new TextRun({
+                    text: "RESUMAI.DEV",
+                    color: "D3D3D3",
+                    size: 120,
+                    font: "STIX Two Text",
+                    bold: true,
+                  })
+                ]
+              })
             ] : []),
           ],
         },

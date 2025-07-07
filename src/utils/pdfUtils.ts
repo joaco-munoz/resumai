@@ -3,7 +3,7 @@ import { jsPDF } from 'jspdf';
 import { formatDateToSpanish } from './dateUtils';
 import { CVData } from '@/types/cv';
 
-export const downloadCVAsPDF = (cvData: CVData, filename: string) => {
+export const downloadCVAsPDF = (cvData: CVData, filename: string, shouldAddWatermark: boolean = false) => {
   try {
     // Create new PDF document - A4 size
     const pdf = new jsPDF({
@@ -29,8 +29,18 @@ export const downloadCVAsPDF = (cvData: CVData, filename: string) => {
       if (yPosition + additionalSpace > pageHeight - 15) {
         pdf.addPage();
         yPosition = 15;
+        
+        // Add watermark to new page if needed
+        if (shouldAddWatermark) {
+          addWatermarkToPDF(pdf, pageWidth, pageHeight);
+        }
       }
     };
+    
+    // Add watermark to first page if needed
+    if (shouldAddWatermark) {
+      addWatermarkToPDF(pdf, pageWidth, pageHeight);
+    }
     
     // Header - Harvard style (centered) - Matching text-3xl (24px) in preview
     pdf.setFontSize(20); // Aumentado ligeramente para mayor impacto visual
@@ -268,4 +278,37 @@ export const downloadCVAsPDF = (cvData: CVData, filename: string) => {
     console.error('Error generating PDF:', error);
     throw new Error('Error al generar el PDF');
   }
+};
+
+// Function to add watermark to PDF
+const addWatermarkToPDF = (pdf: jsPDF, pageWidth: number, pageHeight: number) => {
+  // Save current state
+  const currentFontSize = pdf.internal.getFontSize();
+  const currentTextColor = pdf.internal.getTextColor();
+  
+  // Set watermark properties
+  pdf.setFontSize(60);
+  pdf.setTextColor(200, 200, 200, 0.3); // Light gray with transparency
+  pdf.setFont('times', 'bold');
+  
+  // Calculate center position
+  const centerX = pageWidth / 2;
+  const centerY = pageHeight / 2;
+  
+  // Add rotated watermark text
+  pdf.text('RESUMAI.DEV', centerX, centerY, {
+    angle: 45,
+    align: 'center'
+  });
+  
+  // Add smaller watermark at the bottom
+  pdf.setFontSize(12);
+  pdf.setTextColor(150, 150, 150);
+  pdf.text('Creado con ResumeAI.dev - Plan Gratuito', centerX, pageHeight - 15, {
+    align: 'center'
+  });
+  
+  // Restore original state
+  pdf.setFontSize(currentFontSize);
+  pdf.setTextColor(currentTextColor);
 };
