@@ -11,7 +11,7 @@ import {
   useSidebar,
   SidebarFooter,
 } from "@/components/ui/sidebar";
-import { FileText, Target, User, CheckCircle, House, FolderOpen, LogOut, Crown } from "lucide-react";
+import { FileText, Target, User, CheckCircle, House, FolderOpen, LogOut, Crown, LayoutDashboard } from "lucide-react";
 import Logo from "@/assets/Favicon.png";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,7 @@ import { Badge } from "@/components/ui/badge";
 import { useEffect, useState, memo, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSubscriptionStatus } from "@/hooks/useSubscriptionStatus";
+import { useAdmin } from "@/hooks/useAdmin";
 
 const mainMenuItems = [
   { title: "Inicio", url: "/app", icon: House },
@@ -136,6 +137,7 @@ export function AppSidebar() {
   const location = useLocation();
   const { signOut, user } = useAuth();
   const { tier, isPremium, isLoading: statusLoading } = useSubscriptionStatus();
+  const { isAdmin, isLoading: adminLoading } = useAdmin();
   const currentPath = location.pathname;
   const [profile, setProfile] = useState<Profile | null>(null);
   
@@ -248,6 +250,24 @@ export function AppSidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               {menuItems}
+              
+              {/* Enlace al panel de administrador (solo visible para administradores) */}
+              {isAdmin && !adminLoading && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild>
+                    <NavLink 
+                      to="/app/admin" 
+                      className={isActiveMemo("/app/admin")
+                        ? "bg-blue-500 text-white font-medium" 
+                        : "text-gray-700"
+                      }
+                    >
+                      <LayoutDashboard className="h-4 w-4" />
+                      {!isCollapsed && <span>Panel Admin</span>}
+                    </NavLink>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
