@@ -489,6 +489,7 @@ export const CVAdaptationPreviewModal = ({
                       }
                       setActiveTab('experience');
                     }}
+                    isPro={false}
                   />
                 </TabsContent>
 
@@ -508,6 +509,7 @@ export const CVAdaptationPreviewModal = ({
                       setActiveTab('education');
                     }}
                     setCvData={setCvData}
+                    isPro={false}
                   />
                 </TabsContent>
 

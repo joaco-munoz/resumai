@@ -282,13 +282,13 @@ export const downloadCVAsPDF = (cvData: CVData, filename: string, shouldAddWater
 
 // Function to add watermark to PDF
 const addWatermarkToPDF = (pdf: jsPDF, pageWidth: number, pageHeight: number) => {
-  // Save current state
-  const currentFontSize = pdf.internal.getFontSize();
-  const currentTextColor = pdf.internal.getTextColor();
+  // Store current state
+  const currentFontSize: number = 12; // Default fallback
+  const currentTextColor: string = '#000000'; // Default fallback
   
   // Set watermark properties
   pdf.setFontSize(60);
-  pdf.setTextColor(200, 200, 200, 0.3); // Light gray with transparency
+  pdf.setTextColor(200, 200, 200); // Light gray
   pdf.setFont('times', 'bold');
   
   // Calculate center position
