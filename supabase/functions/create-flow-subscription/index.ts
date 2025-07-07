@@ -84,7 +84,7 @@ serve(async (req) => {
       email: user.email || "",
       paymentMethod: 9, // Todos los métodos de pago
       urlConfirmation: `${Deno.env.get("SUPABASE_URL")}/functions/v1/flow-webhook`,
-      urlReturn: `${(Deno.env.get("APP_BASE_URL") || Deno.env.get("SUPABASE_URL"))}/?redirect=profile`,
+      urlReturn: `${(Deno.env.get("APP_BASE_URL") || Deno.env.get("SUPABASE_URL"))}/payment-success`,
       merchantId: flowApiKey, // Usar API key como merchant ID
       timeout: 300 // 5 minutos
     };

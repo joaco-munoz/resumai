@@ -18,6 +18,7 @@ import JobMatcher from "./pages/JobMatcher";
 import Profile from "./pages/Profile";
 import Billing from "./pages/Billing";
 import Kanban from "./pages/Kanban";
+import PaymentSuccess from "./pages/PaymentSuccess";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -74,6 +75,7 @@ const App = () => (
                 <Billing />
               </ProtectedRoute>
             } />
+            <Route path="/payment-success" element={<PaymentSuccess />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
           </AIUsageProvider>
