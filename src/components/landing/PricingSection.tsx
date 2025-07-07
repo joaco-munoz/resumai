@@ -28,20 +28,17 @@ export const PricingSection = forwardRef<HTMLDivElement, PricingSectionProps>(({
             <CardContent className="space-y-4">
               <div className="flex items-center gap-3">
                 <CheckCircle className="h-5 w-5 text-cyan-400" />
-                <span className="text-slate-300 text-base">1 CV optimizado con IA</span>
+                <span className="text-slate-300 text-base">5 mejoras inteligentes al mes a tu CV  </span>
+              </div>
+              <div className="flex items-center gap-3">
+                <CheckCircle className="h-5 w-5 text-cyan-400" />
+                <span className="text-slate-300 text-base">3 match de ofertas laborales al mes con adaptación incluida</span>
               </div>
               <div className="flex items-center gap-3">
                 <CheckCircle className="h-5 w-5 text-cyan-400" />
                 <span className="text-slate-300 text-base">1 exportación PDF sin marca de agua</span>
               </div>
-              <div className="flex items-center gap-3">
-                <CheckCircle className="h-5 w-5 text-cyan-400" />
-                <span className="text-slate-300 text-base">5 mejoras inteligentes al mes</span>
-              </div>
-              <div className="flex items-center gap-3">
-                <CheckCircle className="h-5 w-5 text-cyan-400" />
-                <span className="text-slate-300 text-base">Análisis ATS básico para pasar filtros</span>
-              </div>
+
             </CardContent>
           </Card>
 

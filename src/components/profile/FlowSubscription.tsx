@@ -205,25 +205,19 @@ export const FlowSubscription = ({ currentPlan, onPlanChange }: FlowSubscription
               <div className="w-5 h-5 flex-shrink-0 rounded-full border border-white flex items-center justify-center bg-blue-700">
                 <div className="w-2.5 h-2.5 rounded-full bg-white"></div>
               </div>
-              <span className="text-white text-sm md:text-base font-medium">1 CV optimizado con IA</span>
+              <span className="text-white text-sm md:text-base font-medium">5 mejoras inteligentes al mes a tu CV</span>
+            </div>
+            <div className="flex items-center gap-3">
+              <div className="w-5 h-5 flex-shrink-0 rounded-full border border-white flex items-center justify-center bg-blue-700">
+                <div className="w-2.5 h-2.5 rounded-full bg-white"></div>
+              </div>
+              <span className="text-white text-sm md:text-base font-medium">3 match de ofertas laborales al mes con adaptación incluida</span>
             </div>
             <div className="flex items-center gap-3">
               <div className="w-5 h-5 flex-shrink-0 rounded-full border border-white flex items-center justify-center bg-blue-700">
                 <div className="w-2.5 h-2.5 rounded-full bg-white"></div>
               </div>
               <span className="text-white text-sm md:text-base font-medium">1 exportación PDF sin marca de agua</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="w-5 h-5 flex-shrink-0 rounded-full border border-white flex items-center justify-center bg-blue-700">
-                <div className="w-2.5 h-2.5 rounded-full bg-white"></div>
-              </div>
-              <span className="text-white text-sm md:text-base font-medium">5 mejoras inteligentes al mes</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="w-5 h-5 flex-shrink-0 rounded-full border border-white flex items-center justify-center bg-blue-700">
-                <div className="w-2.5 h-2.5 rounded-full bg-white"></div>
-              </div>
-              <span className="text-white text-sm md:text-base font-medium">Análisis ATS básico para pasar filtros</span>
             </div>
           </CardContent>
         </Card>
