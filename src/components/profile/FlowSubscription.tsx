@@ -7,6 +7,7 @@ import { Crown, CreditCard, Loader2, AlertTriangle, CircleCheck, Zap } from "luc
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { CancelSubscriptionDialog } from "@/components/CancelSubscriptionDialog";
 
 interface FlowSubscriptionProps {
   currentPlan: string;
@@ -16,6 +17,7 @@ interface FlowSubscriptionProps {
 export const FlowSubscription = ({ currentPlan, onPlanChange }: FlowSubscriptionProps) => {
   const [isCreatingSubscription, setIsCreatingSubscription] = useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
   const isMobile = useIsMobile();
 
   const handleCreateSubscription = async () => {
@@ -61,11 +63,9 @@ export const FlowSubscription = ({ currentPlan, onPlanChange }: FlowSubscription
   };
 
   const handleCancelSubscription = async () => {
-    if (!confirm("¿Estás seguro de que quieres cancelar tu suscripción Pro?")) {
-      return;
-    }
-
+    // Usamos el diálogo personalizado en lugar del confirm() nativo
     setIsCancelling(true);
+    setShowCancelDialog(false); // Cerramos el diálogo después de confirmar
     
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -154,8 +154,8 @@ export const FlowSubscription = ({ currentPlan, onPlanChange }: FlowSubscription
               </div>
             ) : (
               <div className={`${isMobile ? 'w-full' : 'text-right'}`}>
-                <Button 
-                  onClick={handleCancelSubscription}
+                <Button
+                  onClick={() => setShowCancelDialog(true)}
                   disabled={isCancelling}
                   variant="outline"
                   className={`border-red-500 text-red-600 hover:bg-red-50 ${isMobile ? 'w-full' : ''}`}
@@ -267,6 +267,14 @@ export const FlowSubscription = ({ currentPlan, onPlanChange }: FlowSubscription
           </CardContent>
         </Card>
       </div>
+
+      {/* Diálogo personalizado de cancelación de suscripción */}
+      <CancelSubscriptionDialog
+        isOpen={showCancelDialog}
+        onClose={() => setShowCancelDialog(false)}
+        onConfirm={handleCancelSubscription}
+        isLoading={isCancelling}
+      />
     </>
   );
 };
