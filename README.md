@@ -1,22 +1,20 @@
-# Welcome to your Lovable project
+# Bienvenido a ResumAI
 
-## Project info
+## Información del proyecto
 
-**URL**: https://lovable.dev/projects/5f9f1023-434b-4937-a98a-37e8c53c6b19
+ResumAI es una aplicación para la gestión y mejora de currículums vitae.
 
 ## How can I edit this code?
 
 There are several ways of editing your application.
 
-**Use Lovable**
+**Uso de ResumAI**
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/5f9f1023-434b-4937-a98a-37e8c53c6b19) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
+Acceda a la aplicación para comenzar a gestionar sus currículums.
 
 **Use your preferred IDE**
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+Si desea trabajar localmente utilizando su propio IDE, puede clonar este repositorio y enviar cambios.
 
 The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
 
@@ -60,14 +58,10 @@ This project is built with:
 - shadcn-ui
 - Tailwind CSS
 
-## How can I deploy this project?
+## Cómo desplegar este proyecto
 
-Simply open [Lovable](https://lovable.dev/projects/5f9f1023-434b-4937-a98a-37e8c53c6b19) and click on Share -> Publish.
+Siga las instrucciones para construir y desplegar la aplicación en su servidor preferido.
 
-## Can I connect a custom domain to my Lovable project?
+## Dominios personalizados
 
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+Puede conectar un dominio personalizado configurando correctamente los registros DNS y la configuración de su proveedor de hosting.
