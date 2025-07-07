@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { CancelSubscriptionDialog } from "@/components/CancelSubscriptionDialog";
+import { useSubscriptionStatus } from "@/hooks/useSubscriptionStatus";
 
 interface FlowSubscriptionProps {
   currentPlan: string;
@@ -19,6 +20,7 @@ export const FlowSubscription = ({ currentPlan, onPlanChange }: FlowSubscription
   const [isCancelling, setIsCancelling] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const isMobile = useIsMobile();
+  const { refreshStatus } = useSubscriptionStatus();
 
   const handleCreateSubscription = async () => {
     setIsCreatingSubscription(true);
@@ -89,6 +91,9 @@ export const FlowSubscription = ({ currentPlan, onPlanChange }: FlowSubscription
       if (data?.success) {
         toast.success("Suscripción cancelada exitosamente");
         onPlanChange('free');
+        
+        // Actualizar inmediatamente el estado de la suscripción en el sidebar
+        await refreshStatus();
       }
     } catch (error: any) {
       console.error('Error inesperado:', error);
