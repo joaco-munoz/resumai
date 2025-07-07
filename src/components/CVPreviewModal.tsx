@@ -1,4 +1,3 @@
-
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -55,27 +54,28 @@ export const CVPreviewModal = ({ isOpen, onClose, cvData, cvTitle, onDownloadPDF
   const { user } = useAuth();
   const [downloadCount, setDownloadCount] = useState(0);
 
-  useEffect(() => {
-    const fetchDownloadCount = async () => {
-      if (!user?.id) return;
-      
-      try {
-        const { data, error } = await supabase
-          .from('user_usage')
-          .select('usage_count')
-          .eq('user_id', user.id)
-          .eq('feature_type', 'pdf_export')
-          .eq('period_start', new Date().toISOString().split('T')[0])
-          .single();
+  // Fetch total download count (both PDF and Word combined)
+  const fetchDownloadCount = async () => {
+    if (!user?.id) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('user_usage')
+        .select('usage_count')
+        .eq('user_id', user.id)
+        .eq('feature_type', 'pdf_export')
+        .eq('period_start', new Date().toISOString().split('T')[0])
+        .single();
 
-        if (data && !error) {
-          setDownloadCount(data.usage_count || 0);
-        }
-      } catch (error) {
-        console.error('Error fetching download count:', error);
+      if (data && !error) {
+        setDownloadCount(data.usage_count || 0);
       }
-    };
+    } catch (error) {
+      console.error('Error fetching download count:', error);
+    }
+  };
 
+  useEffect(() => {
     if (isOpen) {
       fetchDownloadCount();
     }
@@ -85,7 +85,10 @@ export const CVPreviewModal = ({ isOpen, onClose, cvData, cvTitle, onDownloadPDF
     if (!cvData) return;
     
     try {
-      const shouldAddWatermark = downloadCount > 0; // Add watermark after first download
+      // Check current count before download
+      await fetchDownloadCount();
+      const shouldAddWatermark = downloadCount >= 1; // Add watermark from second download (index 1)
+      
       downloadCVAsPDF(cvData, cvTitle, shouldAddWatermark);
       
       // Increment usage count
@@ -114,7 +117,10 @@ export const CVPreviewModal = ({ isOpen, onClose, cvData, cvTitle, onDownloadPDF
     if (!cvData) return;
     
     try {
-      const shouldAddWatermark = downloadCount > 0; // Add watermark after first download
+      // Check current count before download
+      await fetchDownloadCount();
+      const shouldAddWatermark = downloadCount >= 1; // Add watermark from second download (index 1)
+      
       downloadCVAsWord(cvData, cvTitle, shouldAddWatermark);
       
       // Increment usage count
@@ -150,11 +156,11 @@ export const CVPreviewModal = ({ isOpen, onClose, cvData, cvTitle, onDownloadPDF
             <div className="flex gap-2">
               <Button onClick={handleDownloadPDF} size="sm" variant="outline">
                 <Download className="h-4 w-4 mr-2" />
-                PDF {downloadCount > 0 && "(con marca de agua)"}
+                PDF {downloadCount >= 1 && "(con marca de agua)"}
               </Button>
               <Button onClick={handleDownloadWord} size="sm" variant="outline">
                 <Download className="h-4 w-4 mr-2" />
-                Word {downloadCount > 0 && "(con marca de agua)"}
+                Word {downloadCount >= 1 && "(con marca de agua)"}
               </Button>
             </div>
           </div>

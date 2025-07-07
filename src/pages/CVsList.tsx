@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
@@ -72,6 +73,39 @@ export default function CVsList() {
     cv.title.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  // Helper function to get current download count
+  const getCurrentDownloadCount = async (): Promise<number> => {
+    if (!user?.id) return 0;
+    
+    try {
+      const { data, error } = await supabase
+        .from('user_usage')
+        .select('usage_count')
+        .eq('user_id', user.id)
+        .eq('feature_type', 'pdf_export')
+        .eq('period_start', new Date().toISOString().split('T')[0])
+        .single();
+
+      if (data && !error) {
+        return data.usage_count || 0;
+      }
+      return 0;
+    } catch (error) {
+      console.error('Error fetching download count:', error);
+      return 0;
+    }
+  };
+
+  // Helper function to increment download count
+  const incrementDownloadCount = async () => {
+    if (user?.id) {
+      await supabase.rpc('increment_feature_usage', {
+        p_user_id: user.id,
+        p_feature_type: 'pdf_export'
+      });
+    }
+  };
+
   // Event handlers
   function handleViewCV(cv: CV) {
     if (isJobReport(cv)) {
@@ -107,22 +141,44 @@ export default function CVsList() {
     }
   }
 
-  function handleDownloadCV(cv: CV, format: 'pdf' | 'word' = 'pdf') {
+  async function handleDownloadCV(cv: CV, format: 'pdf' | 'word' = 'pdf') {
     if (isJobReport(cv)) {
       toast.error("Los informes no se pueden descargar");
       return;
     }
     
-    if (cv.content) {
+    if (!cv.content) {
+      toast.error("No se pudo descargar el CV");
+      return;
+    }
+
+    try {
+      // Get current download count before downloading
+      const currentCount = await getCurrentDownloadCount();
+      const shouldAddWatermark = currentCount >= 1; // Add watermark from second download
+      
       if (format === 'pdf') {
-        downloadCVAsPDF(cv.content, cv.title);
+        downloadCVAsPDF(cv.content, cv.title, shouldAddWatermark);
         toast.success("CV descargado como PDF exitosamente");
       } else if (format === 'word') {
-        downloadCVAsWord(cv.content, cv.title);
+        downloadCVAsWord(cv.content, cv.title, shouldAddWatermark);
         toast.success("CV descargado como Word exitosamente");
       }
-    } else {
-      toast.error("No se pudo descargar el CV");
+      
+      // Increment the download count after successful download
+      await incrementDownloadCount();
+      
+      // Show watermark message if applicable
+      if (shouldAddWatermark) {
+        toast.info("CV descargado con marca de agua. Upgrade a Pro para descargas sin marca de agua.");
+      }
+    } catch (error) {
+      if (format === 'pdf') {
+        toast.error("Error al descargar el PDF");
+      } else {
+        toast.error("Error al descargar el documento Word");
+      }
+      console.error('Error downloading CV:', error);
     }
   }
 
