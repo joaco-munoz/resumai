@@ -42,12 +42,6 @@ export const PricingSection = forwardRef<HTMLDivElement, PricingSectionProps>(({
                 <CheckCircle className="h-5 w-5 text-cyan-400" />
                 <span className="text-slate-300 text-base">Análisis ATS básico para pasar filtros</span>
               </div>
-              <Button 
-                className="w-full mt-6 bg-slate-700 hover:bg-slate-600 text-white border border-slate-600 text-base" 
-                onClick={onSignUpNavigation}
-              >
-                Empezar Gratis
-              </Button>
             </CardContent>
           </Card>
 
@@ -82,13 +76,6 @@ export const PricingSection = forwardRef<HTMLDivElement, PricingSectionProps>(({
                 <CheckCircle className="h-5 w-5 text-cyan-400" />
                 <span className="text-slate-300 text-base">Acceso a novedades antes que nadie</span>
               </div>
-              <Button 
-                className="w-full mt-6 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white text-base" 
-                onClick={onSignUpNavigation}
-              >
-                <Zap className="h-4 w-4 mr-2" />
-                Empezar Pro
-              </Button>
             </CardContent>
           </Card>
         </div>
