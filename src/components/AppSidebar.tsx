@@ -12,7 +12,7 @@ import {
   SidebarFooter,
 } from "@/components/ui/sidebar";
 import { FileText, Target, User, CheckCircle, House, FolderOpen, LogOut, Crown } from "lucide-react";
-import Logo from "@/assets/Logo.png";
+import Logo from "@/assets/Favicon.png";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -45,9 +45,7 @@ const SidebarHeader = memo(({ isCollapsed, isPremium, statusLoading }: {
   return (
     <div className="p-4 pb-5 border-b">
       <div className="flex items-center gap-2">
-        <div className="w-8 h-8 bg-gradient-to-br from-brand-500 to-brand-700 rounded-lg flex items-center justify-center">
-          <img src={Logo} alt="ResumAI logo" className="h-10 w-10" />
-        </div>
+        <img src={Logo} alt="ResumAI logo" className="h-10 w-10" />
         {!isCollapsed && (
           <div className="flex flex-col">
             <span className="font-bold text-2xl gradient-text">ResumAI</span>
