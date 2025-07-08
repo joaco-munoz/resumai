@@ -6,20 +6,23 @@ import { useAdmin } from '@/hooks/useAdmin';
 
 export const useSubscriptionStatus = () => {
   const { user } = useAuth();
-  const { isAdmin } = useAdmin();
+  const { isAdmin, isLoading: adminLoading } = useAdmin();
   const [tier, setTier] = useState<string>('free');
   const [isPremium, setIsPremium] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchSubscriptionStatus = async () => {
-      if (!user) {
-        setIsLoading(false);
+      if (!user || adminLoading) {
+        if (!adminLoading) {
+          setIsLoading(false);
+        }
         return;
       }
 
       // Si es admin, siempre es premium
       if (isAdmin) {
+        console.log('User is admin, setting as premium');
         setTier('pro');
         setIsPremium(true);
         setIsLoading(false);
@@ -76,11 +79,19 @@ export const useSubscriptionStatus = () => {
     };
 
     fetchSubscriptionStatus();
-  }, [user, isAdmin]);
+  }, [user, isAdmin, adminLoading]);
 
   const refreshStatus = async () => {
     setIsLoading(true);
     if (!user) {
+      setIsLoading(false);
+      return;
+    }
+
+    // Si es admin, siempre es premium
+    if (isAdmin) {
+      setTier('pro');
+      setIsPremium(true);
       setIsLoading(false);
       return;
     }
