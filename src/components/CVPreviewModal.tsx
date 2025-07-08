@@ -5,10 +5,8 @@ import { Download } from "lucide-react";
 import { formatDateToSpanish } from "@/utils/dateUtils";
 import { downloadCVAsPDF } from "@/utils/pdfUtils";
 import { downloadCVAsWord } from "@/utils/wordUtils";
-import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
-import { useState, useEffect } from "react";
-import { toast } from "sonner";
+import { useDownloadManager } from "@/hooks/useDownloadManager";
+import { useEffect, useState } from "react";
 
 interface CVData {
   personalInfo: {
@@ -51,98 +49,25 @@ interface CVPreviewModalProps {
 }
 
 export const CVPreviewModal = ({ isOpen, onClose, cvData, cvTitle, onDownloadPDF, onDownloadWord }: CVPreviewModalProps) => {
-  const { user } = useAuth();
-  const [downloadCount, setDownloadCount] = useState(0);
-
-  // Fetch total download count (both PDF and Word combined)
-  const fetchDownloadCount = async () => {
-    if (!user?.id) return;
-    
-    try {
-      const { data, error } = await supabase
-        .from('user_usage')
-        .select('usage_count')
-        .eq('user_id', user.id)
-        .eq('feature_type', 'pdf_export')
-        .eq('period_start', new Date().toISOString().split('T')[0])
-        .single();
-
-      if (data && !error) {
-        setDownloadCount(data.usage_count || 0);
-      }
-    } catch (error) {
-      console.error('Error fetching download count:', error);
-    }
-  };
+  const { downloadCount, downloadCV, fetchDownloadCount, willNextDownloadHaveWatermark } = useDownloadManager();
+  const [showWatermarkWarning, setShowWatermarkWarning] = useState(false);
 
   useEffect(() => {
     if (isOpen) {
-      fetchDownloadCount();
+      fetchDownloadCount().then(() => {
+        willNextDownloadHaveWatermark().then(setShowWatermarkWarning);
+      });
     }
-  }, [isOpen, user?.id]);
+  }, [isOpen, fetchDownloadCount, willNextDownloadHaveWatermark]);
 
   const handleDownloadPDF = async () => {
-    if (!cvData) return;
-    
-    try {
-      // Check current count before download
-      await fetchDownloadCount();
-      const shouldAddWatermark = downloadCount >= 1; // Add watermark from second download (index 1)
-      
-      downloadCVAsPDF(cvData, cvTitle, shouldAddWatermark);
-      
-      // Increment usage count
-      if (user?.id) {
-        await supabase.rpc('increment_feature_usage', {
-          p_user_id: user.id,
-          p_feature_type: 'pdf_export'
-        });
-        setDownloadCount(prev => prev + 1);
-      }
-      
-      onDownloadPDF();
-      
-      if (shouldAddWatermark) {
-        toast.info("CV descargado con marca de agua. Upgrade a Pro para descargas sin marca de agua.");
-      } else {
-        toast.success("CV descargado exitosamente!");
-      }
-    } catch (error) {
-      toast.error("Error al descargar el PDF");
-      console.error('Error downloading PDF:', error);
-    }
+    await downloadCV({ cvData, filename: cvTitle, format: 'pdf' });
+    onDownloadPDF();
   };
 
   const handleDownloadWord = async () => {
-    if (!cvData) return;
-    
-    try {
-      // Check current count before download
-      await fetchDownloadCount();
-      const shouldAddWatermark = downloadCount >= 1; // Add watermark from second download (index 1)
-      
-      downloadCVAsWord(cvData, cvTitle, shouldAddWatermark);
-      
-      // Increment usage count
-      if (user?.id) {
-        await supabase.rpc('increment_feature_usage', {
-          p_user_id: user.id,
-          p_feature_type: 'pdf_export'
-        });
-        setDownloadCount(prev => prev + 1);
-      }
-      
-      onDownloadWord();
-      
-      if (shouldAddWatermark) {
-        toast.info("CV descargado con marca de agua. Upgrade a Pro para descargas sin marca de agua.");
-      } else {
-        toast.success("CV descargado exitosamente!");
-      }
-    } catch (error) {
-      toast.error("Error al descargar el documento Word");
-      console.error('Error downloading Word:', error);
-    }
+    await downloadCV({ cvData, filename: cvTitle, format: 'word' });
+    onDownloadWord();
   };
 
   if (!cvData) return null;
@@ -156,11 +81,11 @@ export const CVPreviewModal = ({ isOpen, onClose, cvData, cvTitle, onDownloadPDF
             <div className="flex gap-2">
               <Button onClick={handleDownloadPDF} size="sm" variant="outline">
                 <Download className="h-4 w-4 mr-2" />
-                PDF {downloadCount >= 1 && "(con marca de agua)"}
+                PDF {showWatermarkWarning && "(con marca de agua)"}
               </Button>
               <Button onClick={handleDownloadWord} size="sm" variant="outline">
                 <Download className="h-4 w-4 mr-2" />
-                Word {downloadCount >= 1 && "(con marca de agua)"}
+                Word {showWatermarkWarning && "(con marca de agua)"}
               </Button>
             </div>
           </div>
