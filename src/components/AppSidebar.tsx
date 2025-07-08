@@ -11,7 +11,7 @@ import {
   useSidebar,
   SidebarFooter,
 } from "@/components/ui/sidebar";
-import { FileText, Target, User, CheckCircle, House, FolderOpen, LogOut, Crown, LayoutDashboard } from "lucide-react";
+import { FileText, Target, User, CheckCircle, House, FolderOpen, LogOut, Crown, LayoutDashboard, Menu } from "lucide-react";
 import Logo from "@/assets/Favicon.png";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -21,6 +21,7 @@ import { useEffect, useState, memo, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSubscriptionStatus } from "@/hooks/useSubscriptionStatus";
 import { useAdmin } from "@/hooks/useAdmin";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 const mainMenuItems = [
   { title: "Inicio", url: "/app", icon: House },
@@ -38,38 +39,53 @@ interface Profile {
 }
 
 // Componente memorizado para el encabezado del sidebar
-const SidebarHeader = memo(({ isCollapsed, isPremium, statusLoading }: { 
+const SidebarHeader = memo(({ isCollapsed, isPremium, statusLoading, isMobile, toggleSidebar }: { 
   isCollapsed: boolean;
   isPremium: boolean;
   statusLoading: boolean;
+  isMobile: boolean;
+  toggleSidebar: () => void;
 }) => {
   return (
     <div className="p-4 pb-5 border-b">
-      <div className="flex items-center gap-2">
-        <img src={Logo} alt="ResumAI logo" className="h-10 w-10" />
-        {!isCollapsed && (
-          <div className="flex flex-col">
-            <span className="font-bold text-2xl gradient-text">ResumAI</span>
-            {!statusLoading && (
-              <Badge 
-                variant={isPremium ? "default" : "secondary"} 
-                className={`text-sm mt-1 ${
-                  isPremium 
-                    ? "bg-gradient-to-r from-brand-500 to-brand-700 text-white" 
-                    : "bg-gray-200 text-gray-700"
-                }`}
-              >
-                {isPremium ? (
-                  <>
-                    <Crown className="h-3 w-3 mr-1" />
-                    Plan Pro
-                  </>
-                ) : (
-                  "Plan Gratuito"
-                )}
-              </Badge>
-            )}
-          </div>
+      <div className="flex items-center justify-between w-full">
+        <div className="flex items-center gap-2">
+          <img src={Logo} alt="ResumAI logo" className="h-10 w-10" />
+          {!isCollapsed && (
+            <div className="flex flex-col">
+              <span className="font-bold text-2xl gradient-text">ResumAI</span>
+              {!statusLoading && (
+                <Badge 
+                  variant={isPremium ? "default" : "secondary"} 
+                  className={`text-sm mt-1 ${
+                    isPremium 
+                      ? "bg-gradient-to-r from-brand-500 to-brand-700 text-white" 
+                      : "bg-gray-200 text-gray-700"
+                  }`}
+                >
+                  {isPremium ? (
+                    <>
+                      <Crown className="h-3 w-3 mr-1" />
+                      Plan Pro
+                    </>
+                  ) : (
+                    "Plan Gratuito"
+                  )}
+                </Badge>
+              )}
+            </div>
+          )}
+        </div>
+        {isMobile && (
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={toggleSidebar} 
+            className="p-1"
+            aria-label="Toggle menu"
+          >
+            <Menu className="h-5 w-5" />
+          </Button>
         )}
       </div>
     </div>
@@ -77,23 +93,24 @@ const SidebarHeader = memo(({ isCollapsed, isPremium, statusLoading }: {
 });
 
 // Componente memorizado para los elementos de menú
-const MenuItem = memo(({ item, isActive, isCollapsed }: {
+const MenuItem = memo(({ item, isActive, isCollapsed, isMobile }: {
   item: typeof mainMenuItems[0];
   isActive: boolean;
   isCollapsed: boolean;
+  isMobile: boolean;
 }) => {
   return (
     <SidebarMenuItem key={item.title}>
       <SidebarMenuButton asChild>
         <NavLink 
           to={item.url} 
-          className={isActive 
+          className={`${isActive 
             ? "bg-blue-500 text-white font-medium" 
             : "text-gray-700"
-          }
+          } ${isMobile ? "py-3" : ""} touch-manipulation`}
         >
-          <item.icon className="h-4 w-4" />
-          {!isCollapsed && <span>{item.title}</span>}
+          <item.icon className={`${isMobile ? "h-5 w-5" : "h-4 w-4"}`} />
+          {!isCollapsed && <span className={isMobile ? "text-base ml-3" : "ml-2"}>{item.title}</span>}
         </NavLink>
       </SidebarMenuButton>
     </SidebarMenuItem>
@@ -133,15 +150,27 @@ const UserProfile = memo(({ profile, user, getDisplayName, getInitials, isCollap
 });
 
 export function AppSidebar() {
-  const { state } = useSidebar();
+  const sidebar = useSidebar();
   const location = useLocation();
   const { signOut, user } = useAuth();
   const { tier, isPremium, isLoading: statusLoading } = useSubscriptionStatus();
   const { isAdmin, isLoading: adminLoading } = useAdmin();
   const currentPath = location.pathname;
   const [profile, setProfile] = useState<Profile | null>(null);
+  const isMobile = useIsMobile();
   
-  const isCollapsed = state === "collapsed";
+  const isCollapsed = sidebar.state === "collapsed";
+  
+  // Auto-collapse sidebar on mobile when navigating
+  useEffect(() => {
+    if (isMobile && !isCollapsed) {
+      sidebar.setOpen(false);
+    }
+  }, [location.pathname, isMobile, sidebar]);
+  
+  const toggleSidebar = () => {
+    sidebar.toggleSidebar();
+  };
 
   useEffect(() => {
     if (user) {
@@ -229,20 +258,23 @@ export function AppSidebar() {
         key={item.url}
         item={item} 
         isActive={isActiveMemo(item.url)} 
-        isCollapsed={isCollapsed} 
+        isCollapsed={isCollapsed}
+        isMobile={isMobile}
       />
     ));
-  }, [mainMenuItems, isActiveMemo, isCollapsed]);
+  }, [mainMenuItems, isActiveMemo, isCollapsed, isMobile]);
 
   return (
     <Sidebar
-      className={isCollapsed ? "w-14" : "w-64"}
+      className={`${isCollapsed ? (isMobile ? "w-16" : "w-14") : (isMobile ? "w-72" : "w-64")} transition-all duration-300 ease-in-out`}
     >
       {/* Usar el componente memorizado para el encabezado */}
       <SidebarHeader 
         isCollapsed={isCollapsed} 
         isPremium={isPremium} 
-        statusLoading={statusLoading} 
+        statusLoading={statusLoading}
+        isMobile={isMobile}
+        toggleSidebar={toggleSidebar}
       />
 
       <SidebarContent>
@@ -288,13 +320,13 @@ export function AppSidebar() {
             <SidebarMenuButton asChild>
               <NavLink 
                 to={profileItem.url} 
-                className={isActiveMemo(profileItem.url)
+                className={`${isActiveMemo(profileItem.url)
                   ? "bg-blue-500 text-white font-medium" 
                   : "text-gray-700"
-                }
+                } ${isMobile ? "py-3" : ""} touch-manipulation`}
               >
-                <profileItem.icon className="h-4 w-4" />
-                {!isCollapsed && <span>{profileItem.title}</span>}
+                <profileItem.icon className={`${isMobile ? "h-5 w-5" : "h-4 w-4"}`} />
+                {!isCollapsed && <span className={isMobile ? "text-base ml-3" : "ml-2"}>{profileItem.title}</span>}
               </NavLink>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -303,10 +335,10 @@ export function AppSidebar() {
               <Button
                 variant="ghost"
                 onClick={signOut}
-                className="w-full justify-start h-10 px-2 text-gray-700 hover:bg-gray-100"
+                className={`w-full justify-start ${isMobile ? "h-12 py-3" : "h-10"} px-2 text-gray-700 hover:bg-gray-100 touch-manipulation`}
               >
-                <LogOut className="h-4 w-4" />
-                {!isCollapsed && <span>Cerrar Sesión</span>}
+                <LogOut className={`${isMobile ? "h-5 w-5" : "h-4 w-4"}`} />
+                {!isCollapsed && <span className={isMobile ? "text-base ml-3" : "ml-2"}>Cerrar Sesión</span>}
               </Button>
             </SidebarMenuButton>
           </SidebarMenuItem>

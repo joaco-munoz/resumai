@@ -70,8 +70,8 @@ export const GeneralCVSection = ({
   onAddToTracking
 }: GeneralCVSectionProps) => {
   return (
-    <Card className="mb-6 sm:mb-8 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
-      <CardHeader>
+    <Card className="mb-6 sm:mb-8 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow-sm">
+      <CardHeader className="pb-3 sm:pb-6">
         <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
           <User className="h-5 w-5 text-blue-600 dark:text-blue-400" />
           Currículum Principal
@@ -117,16 +117,20 @@ export const GeneralCVSection = ({
             />
           </div>
         ) : (
-          <div className="text-center py-8 sm:py-12">
-            <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-base sm:text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
+          <div className="text-center py-6 sm:py-12 px-3 sm:px-6">
+            <FileText className="h-14 w-14 text-gray-400 mx-auto mb-5" />
+            <h3 className="text-lg sm:text-xl font-medium text-gray-900 dark:text-gray-100 mb-3">
               No tienes un CV Principal
             </h3>
-            <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 mb-4">
+            <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 mb-5 max-w-md mx-auto">
               Crea tu primer CV para que aparezca aquí como tu CV Principal
             </p>
-            <Button onClick={onCreateCV} size={isMobile ? "default" : "lg"}>
-              <Plus className="h-4 w-4 mr-2" />
+            <Button 
+              onClick={onCreateCV} 
+              size={isMobile ? "default" : "lg"}
+              className="h-12 px-5 text-base font-medium"
+            >
+              <Plus className="h-5 w-5 mr-2" />
               Crear CV Principal
             </Button>
           </div>

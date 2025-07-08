@@ -360,15 +360,15 @@ export default function CVsList() {
       <div className="min-h-screen flex w-full">
         <AppSidebar />
         <SidebarInset>
-          <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 sm:p-6">
+          <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-3 sm:p-6 overflow-x-hidden">
             <div className="max-w-7xl mx-auto">
               {/* Header */}
-              <div className="flex items-center justify-between mb-6 sm:mb-8">
-                <div className="min-w-0 flex-1">
-                  <h1 className="font-bold text-3xl gradient-text">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-8">
+                <div className="min-w-0 flex-1 mb-4 sm:mb-0">
+                  <h1 className="font-bold text-2xl sm:text-3xl gradient-text">
                     Mis Currículums
                   </h1>
-                  <p className="text-gray-600 mt-2">
+                  <p className="text-gray-600 mt-2 text-sm sm:text-base">
                     Gestiona tu Currículum Principal y los currículums adaptados por Match de Ofertas
                   </p>
                 </div>

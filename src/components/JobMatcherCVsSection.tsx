@@ -77,8 +77,8 @@ export const JobMatcherCVsSection = ({
   onAddToTracking
 }: JobMatcherCVsSectionProps) => {
   return (
-    <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
-      <CardHeader>
+    <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow-sm">
+      <CardHeader className="pb-3 sm:pb-6">
         <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
           <Target className="h-5 w-5 text-green-600 dark:text-green-400" />
           Currículums del Match de Ofertas
@@ -90,32 +90,36 @@ export const JobMatcherCVsSection = ({
       <CardContent>
         {/* Search for Job Matcher CVs */}
         <div className="mb-4 sm:mb-6">
-          <div className="relative max-w-full sm:max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+          <div className="relative w-full">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
             <Input
-              placeholder="Buscar currículums del Match de Ofertas..."
+              placeholder="Buscar currículums..."
               value={searchTerm}
               onChange={(e) => onSearchChange(e.target.value)}
-              className="pl-10 bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600"
+              className="pl-10 bg-white dark:bg-gray-700 border-gray-300 dark:border-gray-600 h-12 text-base w-full"
             />
           </div>
         </div>
 
         {filteredJobMatcherCVs.length === 0 ? (
-          <div className="text-center py-8 sm:py-12">
-            <Target className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-base sm:text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">
+          <div className="text-center py-6 sm:py-12 px-3 sm:px-6">
+            <Target className="h-14 w-14 text-gray-400 mx-auto mb-5" />
+            <h3 className="text-lg sm:text-xl font-medium text-gray-900 dark:text-gray-100 mb-3">
               {jobMatcherCVs.length === 0 ? "No tienes currículums del Match de Ofertas" : "No se encontraron currículums"}
             </h3>
-            <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 mb-4">
+            <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 mb-5 max-w-md mx-auto">
               {jobMatcherCVs.length === 0 
                 ? "Los currículums adaptados e informes desde Match de Ofertas aparecerán aquí" 
                 : "Intenta con otro término de búsqueda"
               }
             </p>
             {jobMatcherCVs.length === 0 && (
-              <Button onClick={onGoToJobMatcher} size={isMobile ? "default" : "lg"}>
-                <Target className="h-4 w-4 mr-2" />
+              <Button 
+                onClick={onGoToJobMatcher} 
+                size={isMobile ? "default" : "lg"}
+                className="h-12 px-5 text-base font-medium"
+              >
+                <Target className="h-5 w-5 mr-2" />
                 Ir a Job Matcher
               </Button>
             )}
@@ -165,9 +169,9 @@ export const JobMatcherCVsSection = ({
 
         {/* Pagination Info */}
         {filteredJobMatcherCVs.length > 0 && (
-          <div className="flex items-center justify-between mt-4 sm:mt-6 pt-4 border-t">
-            <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
-              Mostrando 1 a {filteredJobMatcherCVs.length} de {filteredJobMatcherCVs.length} elementos de Match de Ofertas
+          <div className="flex items-center justify-center sm:justify-between mt-5 sm:mt-6 pt-4 border-t">
+            <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400">
+              Mostrando 1 a {filteredJobMatcherCVs.length} de {filteredJobMatcherCVs.length} elementos
             </p>
           </div>
         )}
