@@ -1,26 +1,12 @@
 
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Download } from "lucide-react";
-import { useDownloadManager } from "@/hooks/useDownloadManager";
-import { useEffect, useState } from "react";
 
 interface CVBuilderHeaderProps {
   currentCvId: string | null;
-  exportPDF: () => void;
-  exportWord: () => void;
 }
 
-export const CVBuilderHeader = ({ currentCvId, exportPDF, exportWord }: CVBuilderHeaderProps) => {
-  const { downloadCount, fetchDownloadCount, willNextDownloadHaveWatermark } = useDownloadManager();
-  const [showWatermarkWarning, setShowWatermarkWarning] = useState(false);
-
-  useEffect(() => {
-    fetchDownloadCount().then(() => {
-      willNextDownloadHaveWatermark().then(setShowWatermarkWarning);
-    });
-  }, [fetchDownloadCount, willNextDownloadHaveWatermark]);
+export const CVBuilderHeader = ({ currentCvId }: CVBuilderHeaderProps) => {
 
   return (
     <header className="bg-white border-b px-6 py-4">
@@ -36,16 +22,7 @@ export const CVBuilderHeader = ({ currentCvId, exportPDF, exportWord }: CVBuilde
             </p>
           </div>
         </div>
-        <div className="flex gap-2">
-          <Button onClick={exportPDF} variant="outline" size="sm">
-            <Download className="h-4 w-4 mr-2" />
-            PDF {showWatermarkWarning && "(con marca de agua)"}
-          </Button>
-          <Button onClick={exportWord} variant="outline" size="sm">
-            <Download className="h-4 w-4 mr-2" />
-            Word {showWatermarkWarning && "(con marca de agua)"}
-          </Button>
-        </div>
+        {/* Botones de descarga eliminados */}
       </div>
     </header>
   );

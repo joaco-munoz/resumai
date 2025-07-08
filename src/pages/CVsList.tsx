@@ -381,16 +381,6 @@ export default function CVsList() {
           onClose={() => setPreviewCV(null)}
           cvData={previewCV?.content || null}
           cvTitle={previewCV?.title || ""}
-          onDownloadPDF={() => {
-            if (previewCV) {
-              handleDownloadCV(previewCV, 'pdf');
-            }
-          }}
-          onDownloadWord={() => {
-            if (previewCV) {
-              handleDownloadCV(previewCV, 'word');
-            }
-          }}
         />
 
         <JobReportModal

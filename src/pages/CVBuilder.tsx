@@ -31,12 +31,12 @@ import { EducationTab } from "@/components/cv-builder/EducationTab";
 import { SkillsTab } from "@/components/cv-builder/SkillsTab";
 import { CVPreview } from "@/components/cv-builder/CVPreview";
 import { SaveAnimationOverlay } from "@/components/SaveAnimationOverlay";
-import { useDownloadManager } from "@/hooks/useDownloadManager";
+// Ya no necesitamos importar useDownloadManager
 
 const CVBuilder = () => {
   const { cvData, setCvData, isLoading, currentCvId, saveCV, saveAndAdapt } = useCVData();
   const { user } = useAuth();
-  const { downloadCV } = useDownloadManager();
+  // Ya no necesitamos useDownloadManager
   
   const {
     activeTab,
@@ -67,17 +67,7 @@ const CVBuilder = () => {
 
   const navigate = useNavigate();
 
-  const exportPDF = async () => {
-    if (!cvData) return;
-    const filename = cvData.personalInfo.fullName || 'mi-cv';
-    await downloadCV({ cvData, filename, format: 'pdf' });
-  };
-
-  const exportWord = async () => {
-    if (!cvData) return;
-    const filename = cvData.personalInfo.fullName || 'mi-cv';
-    await downloadCV({ cvData, filename, format: 'word' });
-  };
+  // Funciones de exportación eliminadas
 
   const handleSaveCV = async () => {
     await handleSaveWithAnimation(saveCV);
@@ -111,9 +101,7 @@ const CVBuilder = () => {
         <AppSidebar />
         <main className="flex-1">
           <CVBuilderHeader 
-            currentCvId={currentCvId} 
-            exportPDF={exportPDF}
-            exportWord={exportWord}
+            currentCvId={currentCvId}
           />
 
           <div className="flex h-[calc(100vh-80px)]">

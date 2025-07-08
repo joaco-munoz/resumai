@@ -1,12 +1,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Download } from "lucide-react";
 import { formatDateToSpanish } from "@/utils/dateUtils";
-import { downloadCVAsPDF } from "@/utils/pdfUtils";
-import { downloadCVAsWord } from "@/utils/wordUtils";
-import { useDownloadManager } from "@/hooks/useDownloadManager";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 
 interface CVData {
   personalInfo: {
@@ -44,31 +39,11 @@ interface CVPreviewModalProps {
   onClose: () => void;
   cvData: CVData | null;
   cvTitle: string;
-  onDownloadPDF: () => void;
-  onDownloadWord: () => void;
 }
 
-export const CVPreviewModal = ({ isOpen, onClose, cvData, cvTitle, onDownloadPDF, onDownloadWord }: CVPreviewModalProps) => {
-  const { downloadCount, downloadCV, fetchDownloadCount, willNextDownloadHaveWatermark } = useDownloadManager();
-  const [showWatermarkWarning, setShowWatermarkWarning] = useState(false);
+export const CVPreviewModal = ({ isOpen, onClose, cvData, cvTitle }: CVPreviewModalProps) => {
 
-  useEffect(() => {
-    if (isOpen) {
-      fetchDownloadCount().then(() => {
-        willNextDownloadHaveWatermark().then(setShowWatermarkWarning);
-      });
-    }
-  }, [isOpen, fetchDownloadCount, willNextDownloadHaveWatermark]);
-
-  const handleDownloadPDF = async () => {
-    await downloadCV({ cvData, filename: cvTitle, format: 'pdf' });
-    onDownloadPDF();
-  };
-
-  const handleDownloadWord = async () => {
-    await downloadCV({ cvData, filename: cvTitle, format: 'word' });
-    onDownloadWord();
-  };
+  // Funcionalidad de descarga eliminada
 
   if (!cvData) return null;
 
@@ -78,16 +53,6 @@ export const CVPreviewModal = ({ isOpen, onClose, cvData, cvTitle, onDownloadPDF
         <DialogHeader>
           <div className="flex items-center justify-between">
             <DialogTitle>{cvTitle}</DialogTitle>
-            <div className="flex gap-2">
-              <Button onClick={handleDownloadPDF} size="sm" variant="outline">
-                <Download className="h-4 w-4 mr-2" />
-                PDF {showWatermarkWarning && "(con marca de agua)"}
-              </Button>
-              <Button onClick={handleDownloadWord} size="sm" variant="outline">
-                <Download className="h-4 w-4 mr-2" />
-                Word {showWatermarkWarning && "(con marca de agua)"}
-              </Button>
-            </div>
           </div>
         </DialogHeader>
         
