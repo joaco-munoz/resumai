@@ -91,7 +91,9 @@ export default function CVsList() {
     console.log('General CV:', generalCV);
     
     if (isJobReport(cv)) {
-      setAdaptationCV(cv);
+      // CV adaptation functionality temporarily disabled
+      // setAdaptationCV(cv);
+      toast.info("La funcionalidad de adaptación de CV está temporalmente deshabilitada");
     } else if (cv.cv_source === 'job_matcher') {
       if (!generalCV || !generalCV.content) {
         toast.error("No se encontró el CV principal para editar");
@@ -105,7 +107,9 @@ export default function CVsList() {
         return;
       }
       
-      setEditingJobMatcherCV(cv);
+      // CV adaptation functionality temporarily disabled
+      // setEditingJobMatcherCV(cv);
+      toast.info("La funcionalidad de adaptación de CV está temporalmente deshabilitada");
     } else {
       navigate(`/app/cv/${cv.id}`);
     }
@@ -390,11 +394,15 @@ export default function CVsList() {
           reportTitle={jobReportCV?.title || ""}
           reportId={jobReportCV?.id}
           onApply={() => {
+            // CV adaptation functionality temporarily disabled
+            toast.info("La funcionalidad de adaptación de CV está temporalmente deshabilitada");
             setJobReportCV(null);
-            loadCVs(); // Reload CVs after adaptation
+            // loadCVs(); // Reload CVs after adaptation
           }}
         />
 
+        {/* CV Adaptation Modal - Temporarily disabled */}
+        {/*
         <CVAdaptationModal
           isOpen={!!adaptationCV}
           onClose={() => setAdaptationCV(null)}
@@ -405,7 +413,10 @@ export default function CVsList() {
             loadCVs();
           }}
         />
+        */}
 
+        {/* CV Adaptation Preview Modal - Temporarily disabled */}
+        {/*
         {editingJobMatcherCV && generalCV && (
           <CVAdaptationPreviewModal
             isOpen={!!editingJobMatcherCV}
@@ -418,6 +429,7 @@ export default function CVsList() {
             onSave={handleSaveEditedCV}
           />
         )}
+        */}
 
         <DeleteConfirmDialog
           isOpen={!!deleteCV}

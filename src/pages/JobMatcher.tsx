@@ -16,6 +16,7 @@ import { CVAdaptationModal } from "@/components/CVAdaptationModal";
 import { AIUsageIndicator } from "@/components/AIUsageIndicator";
 import { useFeatureLimits } from "@/hooks/useFeatureLimits";
 import { useAIUsage } from "@/contexts/AIUsageContext";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
 interface MatchResult {
   score: number;
@@ -124,7 +125,11 @@ const JobMatcher = () => {
     }
   };
 
-  const handleNoApply = async () => {
+  // Estado para controlar la visibilidad del modal de confirmación
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+
+  // Función para guardar el informe
+  const saveReport = async () => {
     if (!matchResult || !user) return;
     
     try {
@@ -160,8 +165,25 @@ const JobMatcher = () => {
     }
   };
 
-  const handleApply = () => {
-    setShowAdaptationModal(true);
+  // Función para abrir el modal de confirmación
+  const handleNoSave = () => {
+    setShowConfirmDialog(true);
+  };
+
+  // Función para cerrar el modal y descartar el informe
+  const handleConfirmNoSave = () => {
+    setShowConfirmDialog(false);
+    navigate("/app/dashboard"); // Redirige a Dashboard
+  };
+
+  // Función para cerrar el modal y volver al informe
+  const handleCancelNoSave = () => {
+    setShowConfirmDialog(false);
+  };
+
+  // Función para guardar el informe
+  const handleSaveReport = () => {
+    saveReport();
   };
 
   const getScoreColor = (score: number) => {
@@ -419,17 +441,17 @@ Ejemplo:
                 {/* Action Buttons */}
                 <div className="flex gap-4 pt-6">
                   <Button 
-                    onClick={handleNoApply}
+                    onClick={handleNoSave}
                     variant="outline"
                     className="flex-1 bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
                   >
-                    No Aplicar
+                    No guardar informe
                   </Button>
                   <Button 
-                    onClick={handleApply}
+                    onClick={handleSaveReport}
                     className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
                   >
-                    Aplicar
+                    Guardar informe
                   </Button>
                 </div>
               </div>
@@ -437,7 +459,8 @@ Ejemplo:
           </div>
         </main>
 
-        {/* CV Adaptation Modal */}
+        {/* CV Adaptation Modal - Temporarily disabled */}
+        {/*
         <CVAdaptationModal
           isOpen={showAdaptationModal}
           onClose={() => setShowAdaptationModal(false)}
@@ -448,6 +471,34 @@ Ejemplo:
             navigate("/app/cvs");
           }}
         />
+        */}
+        
+        {/* Modal de confirmación para no guardar */}
+        <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>¿Seguro que quieres borrar el informe?</DialogTitle>
+              <DialogDescription>
+                Si borras el informe tendrás que hacer el análisis de nuevo para verlo.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter className="flex gap-2">
+              <Button 
+                variant="outline" 
+                onClick={handleCancelNoSave}
+                className="flex-1"
+              >
+                Atrás
+              </Button>
+              <Button 
+                onClick={handleConfirmNoSave}
+                className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+              >
+                Borrar
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </SidebarProvider>
   );

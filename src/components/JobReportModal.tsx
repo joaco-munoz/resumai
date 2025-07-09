@@ -63,8 +63,10 @@ export const JobReportModal = ({
     return "bg-red-100 border-red-200";
   };
 
+  // Función comentada para deshabilitar la adaptación de CV
   const handleApply = () => {
-    setShowAdaptationModal(true);
+    // setShowAdaptationModal(true); // Comentado para deshabilitar adaptación
+    onApply(); // Mantiene la funcionalidad de guardar el informe
   };
 
   const handleAdaptationSave = () => {
@@ -212,25 +214,38 @@ export const JobReportModal = ({
 
           {/* Action Buttons */}
           <div className="flex gap-4 pt-6 border-t">
-            <Button 
-              onClick={handleNoApply}
-              variant="outline"
-              className="flex-1 bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
-            >
-              No Aplicar
-            </Button>
-            <Button 
-              onClick={handleApply}
-              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
-            >
-              Aplicar
-            </Button>
+            {/* Si el informe ya está guardado (tiene ID), solo mostrar botón de cerrar */}
+            {reportId ? (
+              <Button 
+                onClick={handleNoApply}
+                className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                Cerrar
+              </Button>
+            ) : (
+              <>
+                <Button 
+                  onClick={handleNoApply}
+                  variant="outline"
+                  className="flex-1 bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
+                >
+                  No guardar informe
+                </Button>
+                <Button 
+                  onClick={handleApply}
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  Guardar informe
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </DialogContent>
     </Dialog>
 
-    {/* Modal de Adaptación de CV */}
+    {/* Modal de Adaptación de CV - Temporalmente deshabilitado */}
+    {/*
     <CVAdaptationModal
       isOpen={showAdaptationModal}
       onClose={() => setShowAdaptationModal(false)}
@@ -239,6 +254,7 @@ export const JobReportModal = ({
       existingReportId={reportId}
       onSave={handleAdaptationSave}
     />
+    */}
   </>
   );
 };
