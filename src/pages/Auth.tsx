@@ -7,6 +7,7 @@ import { Sparkles, Mail, Github, ArrowLeft, Rocket, Search, BadgeCheck, FileText
 import Logo from "@/assets/Logo - copia.png";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
+import { useEmailCheck } from "@/hooks/useEmailCheck";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Checkbox } from "@/components/ui/checkbox";
 import ExistingEmailModal from "@/components/ExistingEmailModal";
@@ -23,6 +24,7 @@ const Auth = () => {
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [showExistingEmailModal, setShowExistingEmailModal] = useState(false);
   const { signUp, signIn, signInWithGoogle } = useAuth();
+  const { checkEmailExists } = useEmailCheck();
   const navigate = useNavigate();
 
   const [currentTipIndex, setCurrentTipIndex] = useState(0);
@@ -79,12 +81,20 @@ const Auth = () => {
           return;
         }
         
+        // Primero verificar si el email ya existe
+        const emailExists = await checkEmailExists(email);
+        
+        if (emailExists) {
+          setShowExistingEmailModal(true);
+          setLoading(false);
+          return;
+        }
+
+        // Si no existe, proceder con el registro normal
         const { error } = await signUp(email, password, name);
         
         if (error) {
-          if (error.message.includes("User already registered")) {
-            setShowExistingEmailModal(true);
-          } else if (error.message.includes("Password should be at least")) {
+          if (error.message.includes("Password should be at least")) {
             toast.error("La contraseña debe tener al menos 6 caracteres");
           } else if (error.message.includes("Invalid email")) {
             toast.error("Por favor ingresa un email válido");
