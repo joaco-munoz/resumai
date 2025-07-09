@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Checkbox } from "@/components/ui/checkbox";
+import ExistingEmailModal from "@/components/ExistingEmailModal";
 
 const Auth = () => {
   const [searchParams] = useSearchParams();
@@ -20,10 +21,10 @@ const Auth = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [showExistingEmailModal, setShowExistingEmailModal] = useState(false);
   const { signUp, signIn, signInWithGoogle } = useAuth();
   const navigate = useNavigate();
 
-  // Rotating tips state
   const [currentTipIndex, setCurrentTipIndex] = useState(0);
   const [fadeClass, setFadeClass] = useState("opacity-100");
 
@@ -82,7 +83,7 @@ const Auth = () => {
         
         if (error) {
           if (error.message.includes("User already registered")) {
-            toast.error("Este email ya está registrado. Intenta iniciar sesión.");
+            setShowExistingEmailModal(true);
           } else if (error.message.includes("Password should be at least")) {
             toast.error("La contraseña debe tener al menos 6 caracteres");
           } else if (error.message.includes("Invalid email")) {
@@ -106,7 +107,6 @@ const Auth = () => {
             toast.error("Error al iniciar sesión: " + error.message);
           }
         } else {
-  
           navigate("/app");
         }
       }
@@ -136,167 +136,173 @@ const Auth = () => {
     }
   };
 
+  const handleExistingEmailSignIn = () => {
+    setShowExistingEmailModal(false);
+    setIsSignUp(false);
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 flex">
-      {/* Left side - Auth Form */}
-      <div className="flex-1 flex items-center justify-center p-8">
-        <div className="w-full max-w-md">
-          {/* Back to home link */}
-          <Link 
-            to="/" 
-            className="inline-flex items-center gap-2 text-slate-400 hover:text-white mb-8 transition-colors"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Volver al inicio
-          </Link>
-
-          {/* Logo */}
-          <div className="flex items-center justify-center mb-8">
-            <img src={Logo} alt="ResumAI logo" className="w-16 h-16" />
-          </div>
-
-          {/* Title */}
-          <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-white mb-2">
-              {isSignUp ? "Crea tu cuenta" : "Bienvenida/o de vuelta"}
-            </h1>
-            <p className="text-slate-400">
-              {isSignUp 
-                ? "Regístrate gratis y comienza en minutos" 
-                : "Accede a tu cuenta de ResumAI"
-              }
-            </p>
-          </div>
-
-          {/* Social Auth Buttons */}
-          <div className="space-y-3 mb-6">
-            <Button 
-              variant="outline" 
-              className="w-full bg-slate-800/50 border-slate-700 text-white hover:bg-slate-700/50 hover:border-slate-600 h-12"
-              onClick={handleGoogleAuth}
-              disabled={loading}
+    <>
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 flex">
+        {/* Left side - Auth Form */}
+        <div className="flex-1 flex items-center justify-center p-8">
+          <div className="w-full max-w-md">
+            {/* Back to home link */}
+            <Link 
+              to="/" 
+              className="inline-flex items-center gap-2 text-slate-400 hover:text-white mb-8 transition-colors"
             >
-              <img
-                src="https://developers.google.com/static/identity/images/g-logo.png"
-                srcSet="https://developers.google.com/static/identity/images/g-logo.png 1x, https://developers.google.com/static/identity/images/g-logo-2x.png 2x"
-                alt="Google G"
-                className="h-5 w-5 mr-3 rounded-full"
-              />
-              Continuar con Google
-            </Button>
-          </div>
+              <ArrowLeft className="h-4 w-4" />
+              Volver al inicio
+            </Link>
 
-          {/* Divider */}
-          <div className="relative mb-6">
-            <Separator className="bg-slate-700" />
-            <div className="absolute inset-0 flex items-center justify-center">
-              <span className="bg-slate-900 px-3 text-sm text-slate-400 uppercase tracking-wider">
-                O
-              </span>
+            {/* Logo */}
+            <div className="flex items-center justify-center mb-8">
+              <img src={Logo} alt="ResumAI logo" className="w-16 h-16" />
             </div>
-          </div>
 
-          {/* Email Form */}
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {isSignUp && (
+            {/* Title */}
+            <div className="text-center mb-8">
+              <h1 className="text-3xl font-bold text-white mb-2">
+                {isSignUp ? "Crea tu cuenta" : "Bienvenida/o de vuelta"}
+              </h1>
+              <p className="text-slate-400">
+                {isSignUp 
+                  ? "Regístrate gratis y comienza en minutos" 
+                  : "Accede a tu cuenta de ResumAI"
+                }
+              </p>
+            </div>
+
+            {/* Social Auth Buttons */}
+            <div className="space-y-3 mb-6">
+              <Button 
+                variant="outline" 
+                className="w-full bg-slate-800/50 border-slate-700 text-white hover:bg-slate-700/50 hover:border-slate-600 h-12"
+                onClick={handleGoogleAuth}
+                disabled={loading}
+              >
+                <img
+                  src="https://developers.google.com/static/identity/images/g-logo.png"
+                  srcSet="https://developers.google.com/static/identity/images/g-logo.png 1x, https://developers.google.com/static/identity/images/g-logo-2x.png 2x"
+                  alt="Google G"
+                  className="h-5 w-5 mr-3 rounded-full"
+                />
+                Continuar con Google
+              </Button>
+            </div>
+
+            {/* Divider */}
+            <div className="relative mb-6">
+              <Separator className="bg-slate-700" />
+              <div className="absolute inset-0 flex items-center justify-center">
+                <span className="bg-slate-900 px-3 text-sm text-slate-400 uppercase tracking-wider">
+                  O
+                </span>
+              </div>
+            </div>
+
+            {/* Email Form */}
+            <form onSubmit={handleSubmit} className="space-y-4">
+              {isSignUp && (
+                <div className="space-y-2">
+                  <Label htmlFor="name" className="text-sm font-medium text-slate-300">
+                    Nombre completo
+                  </Label>
+                  <Input
+                    id="name"
+                    type="text"
+                    placeholder="Nombre y Apellido"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500 focus:border-blue-500 focus:ring-blue-500 h-12"
+                    required
+                  />
+                </div>
+              )}
+
               <div className="space-y-2">
-                <Label htmlFor="name" className="text-sm font-medium text-slate-300">
-                  Nombre completo
+                <Label htmlFor="email" className="text-sm font-medium text-slate-300">
+                  Email
                 </Label>
                 <Input
-                  id="name"
-                  type="text"
-                  placeholder="Nombre y Apellido"
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
+                  id="email"
+                  type="email"
+                  placeholder="Email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                   className="bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500 focus:border-blue-500 focus:ring-blue-500 h-12"
                   required
                 />
               </div>
-            )}
 
-            <div className="space-y-2">
-              <Label htmlFor="email" className="text-sm font-medium text-slate-300">
-                Email
-              </Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="Email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500 focus:border-blue-500 focus:ring-blue-500 h-12"
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="password" className="text-sm font-medium text-slate-300">
-                Contraseña
-              </Label>
-              <div className="relative">
-                <Input
-                  id="password"
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Contraseña"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500 focus:border-blue-500 focus:ring-blue-500 h-12 pr-10"
-                  required
-                  minLength={6}
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-white focus:outline-none"
-                  aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-5 w-5" />
-                  ) : (
-                    <Eye className="h-5 w-5" />
-                  )}
-                </button>
-              </div>
-            </div>
-
-            {isSignUp && (
-              <div className="flex items-center space-x-2">
-                <Checkbox 
-                  id="terms" 
-                  checked={agreedToTerms}
-                  onCheckedChange={(checked) => setAgreedToTerms(checked as boolean)}
-                  className="border-slate-600 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
-                />
-                <Label htmlFor="terms" className="text-sm text-slate-400">
-                  Acepto los{" "}
-                  <a href="#" className="text-blue-400 hover:text-blue-300 underline">
-                    Términos de Servicio
-                  </a>{" "}
-                  y la{" "}
-                  <a href="#" className="text-blue-400 hover:text-blue-300 underline">
-                    Política de Privacidad
-                  </a>
+              <div className="space-y-2">
+                <Label htmlFor="password" className="text-sm font-medium text-slate-300">
+                  Contraseña
                 </Label>
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="Contraseña"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="bg-slate-800/50 border-slate-700 text-white placeholder:text-slate-500 focus:border-blue-500 focus:ring-blue-500 h-12 pr-10"
+                    required
+                    minLength={6}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-white focus:outline-none"
+                    aria-label={showPassword ? "Ocultar contraseña" : "Mostrar contraseña"}
+                  >
+                    {showPassword ? (
+                      <EyeOff className="h-5 w-5" />
+                    ) : (
+                      <Eye className="h-5 w-5" />
+                    )}
+                  </button>
+                </div>
               </div>
-            )}
 
-            <Button 
-              type="submit" 
-              className="w-full bg-white text-slate-900 hover:bg-slate-100 font-semibold h-12 mt-6"
-              disabled={loading}
-            >
-              {loading 
-                ? (isSignUp ? "Creando cuenta..." : "Ingresando...") 
-                : (isSignUp ? "Crea tu cuenta" : "Ingresar")
-              }
-            </Button>
-          </form>
+              {isSignUp && (
+                <div className="flex items-center space-x-2">
+                  <Checkbox 
+                    id="terms" 
+                    checked={agreedToTerms}
+                    onCheckedChange={(checked) => setAgreedToTerms(checked as boolean)}
+                    className="border-slate-600 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+                  />
+                  <Label htmlFor="terms" className="text-sm text-slate-400">
+                    Acepto los{" "}
+                    <a href="#" className="text-blue-400 hover:text-blue-300 underline">
+                      Términos de Servicio
+                    </a>{" "}
+                    y la{" "}
+                    <a href="#" className="text-blue-400 hover:text-blue-300 underline">
+                      Política de Privacidad
+                    </a>
+                  </Label>
+                </div>
+              )}
 
-          {/* Switch between sign up / sign in */}
-          <div className="text-center mt-6">
-            <p className="text-sm text-slate-400">
-              {isSignUp ? "Ya tienes una cuenta?" : "No tienes una cuenta?"}{" "}
+              <Button 
+                type="submit" 
+                className="w-full bg-white text-slate-900 hover:bg-slate-100 font-semibold h-12 mt-6"
+                disabled={loading}
+              >
+                {loading 
+                  ? (isSignUp ? "Creando cuenta..." : "Ingresando...") 
+                  : (isSignUp ? "Crea tu cuenta" : "Ingresar")
+                }
+              </Button>
+            </form>
+
+            {/* Switch between sign up / sign in */}
+            <div className="text-center mt-6">
+              <p className="text-sm text-slate-400">
+                {isSignUp ? "Ya tienes una cuenta?" : "No tienes una cuenta?"}{" "}
               <button 
                 onClick={() => setIsSignUp(!isSignUp)}
                 className="text-blue-400 hover:text-blue-300 underline font-medium"
@@ -308,37 +314,45 @@ const Auth = () => {
         </div>
       </div>
 
-      {/* Right side - Gradient with Rotating Tips */}
-      <div className="flex-1 bg-gradient-to-br from-blue-800 via-blue-600 to-sky-500 relative overflow-hidden flex items-center justify-center">
-        <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
-        
-        {/* Rotating Tips */}
-        <div className="relative z-10 text-center px-8 max-w-md">
-          <div className="mb-6">
-            <CurrentIcon className="h-16 w-16 text-white/80 mx-auto mb-4" />
-          </div>
+        {/* Right side - Gradient with Rotating Tips */}
+        <div className="flex-1 bg-gradient-to-br from-blue-800 via-blue-600 to-sky-500 relative overflow-hidden flex items-center justify-center">
+          <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
           
-          <h2 
-            className={`text-3xl font-bold text-white mb-4 transition-opacity duration-300 ${fadeClass}`}
-          >
-            {tips[currentTipIndex].text}
-          </h2>
-          
-          <div className="flex justify-center space-x-2 mt-6">
-            {tips.map((_, index) => (
-              <div
-                key={index}
-                className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                  index === currentTipIndex 
-                    ? 'bg-white' 
-                    : 'bg-white/40'
-                }`}
-              />
-            ))}
+          {/* Rotating Tips */}
+          <div className="relative z-10 text-center px-8 max-w-md">
+            <div className="mb-6">
+              <CurrentIcon className="h-16 w-16 text-white/80 mx-auto mb-4" />
+            </div>
+            
+            <h2 
+              className={`text-3xl font-bold text-white mb-4 transition-opacity duration-300 ${fadeClass}`}
+            >
+              {tips[currentTipIndex].text}
+            </h2>
+            
+            <div className="flex justify-center space-x-2 mt-6">
+              {tips.map((_, index) => (
+                <div
+                  key={index}
+                  className={`w-2 h-2 rounded-full transition-all duration-300 ${
+                    index === currentTipIndex 
+                      ? 'bg-white' 
+                      : 'bg-white/40'
+                  }`}
+                />
+              ))}
+            </div>
           </div>
         </div>
       </div>
-    </div>
+
+      <ExistingEmailModal
+        open={showExistingEmailModal}
+        onOpenChange={setShowExistingEmailModal}
+        onSignIn={handleExistingEmailSignIn}
+        email={email}
+      />
+    </>
   );
 };
 

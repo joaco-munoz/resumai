@@ -879,7 +879,7 @@ export type Database = {
       }
       increment_feature_usage: {
         Args: { p_user_id: string; p_feature_type: string }
-        Returns: boolean
+        Returns: undefined
       }
       is_admin: {
         Args: { user_id?: string }
