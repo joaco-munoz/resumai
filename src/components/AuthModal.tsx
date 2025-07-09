@@ -28,22 +28,28 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('🚀 Starting signup process for:', email);
     setLoading(true);
     
     try {
       // Primero verificar si el email ya existe
+      console.log('🔍 Checking if email exists before signup...');
       const emailExists = await checkEmailExists(email);
+      console.log('📋 Email check completed. Exists:', emailExists);
       
       if (emailExists) {
+        console.log('⚠️ Email already exists, showing modal');
         setShowExistingEmailModal(true);
         setLoading(false);
         return;
       }
 
+      console.log('✅ Email is new, proceeding with signup');
       // Si no existe, proceder con el registro normal
       const { error } = await signUp(email, password, name);
       
       if (error) {
+        console.error('❌ Signup error:', error);
         if (error.message.includes("Password should be at least")) {
           toast.error("La contraseña debe tener al menos 6 caracteres");
         } else if (error.message.includes("Invalid email")) {
@@ -52,6 +58,7 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
           toast.error("Error al crear la cuenta: " + error.message);
         }
       } else {
+        console.log('🎉 Signup successful');
         toast.success("¡Cuenta creada exitosamente! Revisa tu email para confirmar tu cuenta.");
         onOpenChange(false);
         setEmail("");
@@ -59,8 +66,8 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
         setName("");
       }
     } catch (error: any) {
+      console.error('💥 Unexpected signup error:', error);
       toast.error("Error inesperado al crear la cuenta");
-      console.error("SignUp error:", error);
     } finally {
       setLoading(false);
     }
@@ -113,6 +120,7 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
   };
 
   const switchToSignIn = () => {
+    console.log('🔄 Switching to sign in tab');
     setActiveTab("signin");
   };
 
@@ -121,6 +129,7 @@ const AuthModal = ({ open, onOpenChange }: AuthModalProps) => {
   };
 
   const handleExistingEmailSignIn = () => {
+    console.log('👤 User chose to sign in from existing email modal');
     setShowExistingEmailModal(false);
     setActiveTab("signin");
   };

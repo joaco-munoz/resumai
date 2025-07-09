@@ -71,6 +71,7 @@ const Auth = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('🚀 Starting auth process. IsSignUp:', isSignUp, 'Email:', email);
     setLoading(true);
     
     try {
@@ -82,18 +83,23 @@ const Auth = () => {
         }
         
         // Primero verificar si el email ya existe
+        console.log('🔍 Checking if email exists before signup...');
         const emailExists = await checkEmailExists(email);
+        console.log('📋 Email check completed. Exists:', emailExists);
         
         if (emailExists) {
+          console.log('⚠️ Email already exists, showing modal');
           setShowExistingEmailModal(true);
           setLoading(false);
           return;
         }
 
+        console.log('✅ Email is new, proceeding with signup');
         // Si no existe, proceder con el registro normal
         const { error } = await signUp(email, password, name);
         
         if (error) {
+          console.error('❌ Signup error:', error);
           if (error.message.includes("Password should be at least")) {
             toast.error("La contraseña debe tener al menos 6 caracteres");
           } else if (error.message.includes("Invalid email")) {
@@ -102,13 +108,16 @@ const Auth = () => {
             toast.error("Error al crear la cuenta: " + error.message);
           }
         } else {
+          console.log('🎉 Signup successful');
           toast.success("¡Cuenta creada exitosamente! Revisa tu email para confirmar tu cuenta.");
           navigate("/app");
         }
       } else {
+        console.log('👤 Proceeding with sign in');
         const { error } = await signIn(email, password);
         
         if (error) {
+          console.error('❌ Signin error:', error);
           if (error.message.includes("Invalid login credentials")) {
             toast.error("Email o contraseña incorrectos");
           } else if (error.message.includes("Email not confirmed")) {
@@ -117,12 +126,13 @@ const Auth = () => {
             toast.error("Error al iniciar sesión: " + error.message);
           }
         } else {
+          console.log('🎉 Signin successful');
           navigate("/app");
         }
       }
     } catch (error: any) {
+      console.error('💥 Unexpected auth error:', error);
       toast.error("Error inesperado");
-      console.error("Auth error:", error);
     } finally {
       setLoading(false);
     }
@@ -147,6 +157,7 @@ const Auth = () => {
   };
 
   const handleExistingEmailSignIn = () => {
+    console.log('👤 User chose to sign in from existing email modal');
     setShowExistingEmailModal(false);
     setIsSignUp(false);
   };

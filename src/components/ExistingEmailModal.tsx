@@ -5,7 +5,6 @@ import {
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
-  AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
@@ -18,6 +17,8 @@ interface ExistingEmailModalProps {
 }
 
 const ExistingEmailModal = ({ open, onOpenChange, onSignIn, email }: ExistingEmailModalProps) => {
+  console.log('🔔 ExistingEmailModal rendered. Open:', open, 'Email:', email);
+  
   return (
     <AlertDialog open={open} onOpenChange={onOpenChange}>
       <AlertDialogContent className="bg-slate-900 border-slate-800 text-white">
@@ -29,13 +30,19 @@ const ExistingEmailModal = ({ open, onOpenChange, onSignIn, email }: ExistingEma
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel 
-            onClick={() => onOpenChange(false)}
+            onClick={() => {
+              console.log('👈 User clicked Back button');
+              onOpenChange(false);
+            }}
             className="bg-slate-800 border-slate-700 text-white hover:bg-slate-700"
           >
             Atrás
           </AlertDialogCancel>
           <AlertDialogAction 
-            onClick={onSignIn}
+            onClick={() => {
+              console.log('🚪 User clicked Sign In button');
+              onSignIn();
+            }}
             className="bg-white text-slate-900 hover:bg-slate-100"
           >
             Iniciar sesión
