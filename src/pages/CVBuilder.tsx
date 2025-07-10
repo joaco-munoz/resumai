@@ -32,7 +32,7 @@ import { CVPreview } from "@/components/cv-builder/CVPreview";
 import { SaveAnimationOverlay } from "@/components/SaveAnimationOverlay";
 
 const CVBuilder = () => {
-  const { cvData, setCvData, isLoading, currentCvId } = useCVData();
+  const { cvData, setCvData, isLoading, currentCvId, existingCvTitle } = useCVData();
   const { user } = useAuth();
   
   const {
@@ -76,13 +76,17 @@ const CVBuilder = () => {
 
     try {
       let result;
+      let finalCvName = cvName;
 
       if (currentCvId) {
+        // For existing CVs, use the existing title instead of the provided name
+        finalCvName = existingCvTitle || cvName;
+        
         // Update existing CV
         result = await supabase
           .from('cvs')
           .update({
-            title: cvName,
+            title: finalCvName,
             content: cvData as any,
             status: 'draft',
             template_name: 'modern',
@@ -96,7 +100,7 @@ const CVBuilder = () => {
           .from('cvs')
           .insert({
             user_id: user.id,
-            title: cvName,
+            title: finalCvName,
             content: cvData as any,
             status: 'draft',
             template_name: 'modern',
@@ -111,7 +115,7 @@ const CVBuilder = () => {
         return;
       }
       
-      toast.success("CV guardado exitosamente");
+      toast.success(currentCvId ? "CV actualizado exitosamente" : "CV guardado exitosamente");
       
       // Always redirect to CVs list after saving
       navigate("/app/cvs");
@@ -129,13 +133,18 @@ const CVBuilder = () => {
 
     try {
       let result;
+      let finalCvName = cvName;
+      let savedCvId = currentCvId;
 
       if (currentCvId) {
+        // For existing CVs, use the existing title instead of the provided name
+        finalCvName = existingCvTitle || cvName;
+        
         // Update existing CV
         result = await supabase
           .from('cvs')
           .update({
-            title: cvName,
+            title: finalCvName,
             content: cvData as any,
             status: 'draft',
             template_name: 'modern',
@@ -149,13 +158,17 @@ const CVBuilder = () => {
           .from('cvs')
           .insert({
             user_id: user.id,
-            title: cvName,
+            title: finalCvName,
             content: cvData as any,
             status: 'draft',
             template_name: 'modern',
             cv_source: 'editor'
           })
           .select();
+          
+        if (result.data && result.data[0]) {
+          savedCvId = result.data[0].id;
+        }
       }
 
       if (result.error) {
@@ -164,10 +177,10 @@ const CVBuilder = () => {
         return;
       }
       
-      toast.success("CV guardado exitosamente");
+      toast.success(currentCvId ? "CV actualizado exitosamente" : "CV guardado exitosamente");
       
-      // Redirect to Job Matcher
-      navigate("/app/match");
+      // Redirect to Job Matcher with the CV ID as URL parameter so it gets selected
+      navigate(`/app/match?cvId=${savedCvId}`);
     } catch (error) {
       console.error('Error saving CV:', error);
       toast.error("Error al guardar el CV");

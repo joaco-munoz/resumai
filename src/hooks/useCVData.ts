@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -47,6 +46,7 @@ export const useCVData = () => {
 
   const [isLoading, setIsLoading] = useState(false);
   const [currentCvId, setCurrentCvId] = useState<string | null>(null);
+  const [existingCvTitle, setExistingCvTitle] = useState<string | null>(null);
 
   // Save data to localStorage whenever cvData changes
   useEffect(() => {
@@ -84,6 +84,7 @@ export const useCVData = () => {
       }
       // Reset currentCvId for new CVs
       setCurrentCvId(null);
+      setExistingCvTitle(null);
       setIsLoading(false);
     }
   }, [cvId, user]);
@@ -110,6 +111,7 @@ export const useCVData = () => {
       if (data && data.content) {
         console.log('CV loaded successfully:', data);
         setCurrentCvId(data.id);
+        setExistingCvTitle(data.title);
         
         // Check if we have unsaved local changes for this CV
         const localData = localStorage.getItem(`${LOCAL_STORAGE_KEY}-${id}`);
@@ -139,6 +141,7 @@ export const useCVData = () => {
     cvData,
     setCvData,
     isLoading,
-    currentCvId
+    currentCvId,
+    existingCvTitle
   };
 };
