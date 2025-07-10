@@ -31,12 +31,10 @@ import { EducationTab } from "@/components/cv-builder/EducationTab";
 import { SkillsTab } from "@/components/cv-builder/SkillsTab";
 import { CVPreview } from "@/components/cv-builder/CVPreview";
 import { SaveAnimationOverlay } from "@/components/SaveAnimationOverlay";
-// Ya no necesitamos importar useDownloadManager
 
 const CVBuilder = () => {
-  const { cvData, setCvData, isLoading, currentCvId, saveCV, saveAndAdapt } = useCVData();
+  const { cvData, setCvData, isLoading, currentCvId, saveCV: originalSaveCV, saveAndAdapt } = useCVData();
   const { user } = useAuth();
-  // Ya no necesitamos useDownloadManager
   
   const {
     activeTab,
@@ -67,14 +65,69 @@ const CVBuilder = () => {
 
   const navigate = useNavigate();
 
-  // Funciones de exportación eliminadas
+  // New save functions that accept CV name
+  const saveCV = async (cvName: string) => {
+    if (!user) {
+      toast.error("Debes estar autenticado para guardar el CV");
+      return;
+    }
 
-  const handleSaveCV = async () => {
-    await handleSaveWithAnimation(saveCV);
+    try {
+      let result;
+
+      if (currentCvId) {
+        // Update existing CV
+        result = await supabase
+          .from('cvs')
+          .update({
+            title: cvName,
+            content: cvData as any,
+            status: 'draft',
+            template_name: 'modern',
+            last_updated: new Date().toISOString()
+          })
+          .eq('id', currentCvId)
+          .select();
+      } else {
+        // Create new CV
+        result = await supabase
+          .from('cvs')
+          .insert({
+            user_id: user.id,
+            title: cvName,
+            content: cvData as any,
+            status: 'draft',
+            template_name: 'modern',
+            cv_source: 'editor'
+          })
+          .select();
+
+        if (result.data && result.data[0]) {
+          navigate(`/app/cv/${result.data[0].id}`, { replace: true });
+        }
+      }
+
+      if (result.error) {
+        console.error('Error saving CV:', result.error);
+        toast.error(`Error al guardar el CV: ${result.error.message}`);
+        return;
+      }
+      
+      toast.success("CV guardado exitosamente");
+    } catch (error) {
+      console.error('Error saving CV:', error);
+      toast.error("Error al guardar el CV");
+    }
   };
 
-  const handleSaveAndAdapt = async () => {
-    await handleSaveWithAnimation(saveAndAdapt);
+  const saveAndRedirectToJobMatcher = async (cvName: string) => {
+    try {
+      await saveCV(cvName);
+      navigate("/app/match");
+    } catch (error) {
+      console.error('Error saving CV and redirecting:', error);
+      toast.error("Error al guardar el CV");
+    }
   };
 
   const progress = showSaveAnimation ? savingProgress : getProgress();
@@ -168,8 +221,8 @@ const CVBuilder = () => {
                     addSkill={addSkill}
                     removeSkill={removeSkill}
                     goToPreviousTab={goToPreviousTab}
-                    saveCV={handleSaveCV}
-                    saveAndAdapt={handleSaveAndAdapt}
+                    saveCV={saveCV}
+                    saveAndRedirectToJobMatcher={saveAndRedirectToJobMatcher}
                   />
                 </TabsContent>
               </Tabs>

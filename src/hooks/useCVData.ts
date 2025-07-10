@@ -135,92 +135,10 @@ export const useCVData = () => {
     }
   };
 
-  const saveCV = async () => {
-    if (!user) {
-      toast.error("Debes estar autenticado para guardar el CV");
-      return;
-    }
-
-    try {
-      const cvTitle = `CV - ${cvData.personalInfo.fullName}`;
-      
-      let result;
-
-      if (currentCvId) {
-        // Update existing CV
-        result = await supabase
-          .from('cvs')
-          .update({
-            title: cvTitle,
-            content: cvData as any,
-            status: 'draft',
-            template_name: 'modern',
-            last_updated: new Date().toISOString()
-          })
-          .eq('id', currentCvId)
-          .select();
-        
-        // Clear localStorage after successful save
-        localStorage.removeItem(`${LOCAL_STORAGE_KEY}-${currentCvId}`);
-      } else {
-        // Create new CV
-        result = await supabase
-          .from('cvs')
-          .insert({
-            user_id: user.id,
-            title: cvTitle,
-            content: cvData as any,
-            status: 'draft',
-            template_name: 'modern',
-            cv_source: 'editor'
-          })
-          .select();
-
-        if (result.data && result.data[0]) {
-          setCurrentCvId(result.data[0].id);
-          // Clear localStorage after successful save
-          localStorage.removeItem(LOCAL_STORAGE_DRAFT_KEY);
-          navigate(`/app/cv/${result.data[0].id}`, { replace: true });
-        }
-      }
-
-      if (result.error) {
-        console.error('Error saving CV:', result.error);
-        toast.error(`Error al guardar el CV: ${result.error.message}`);
-        return;
-      }
-      
-      toast.success("CV guardado exitosamente");
-    } catch (error) {
-      console.error('Error saving CV:', error);
-      toast.error("Error al guardar el CV");
-    }
-  };
-
-  const saveAndAdapt = async () => {
-    if (!user) {
-      toast.error("Debes estar autenticado para guardar el CV");
-      return;
-    }
-
-    try {
-      // First save the CV
-      await saveCV();
-      
-      // Then navigate to JobMatcher
-      navigate("/app/match");
-    } catch (error) {
-      console.error('Error saving CV and redirecting:', error);
-      toast.error("Error al guardar el CV");
-    }
-  };
-
   return {
     cvData,
     setCvData,
     isLoading,
-    currentCvId,
-    saveCV,
-    saveAndAdapt
+    currentCvId
   };
 };
