@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
@@ -33,7 +32,7 @@ import { CVPreview } from "@/components/cv-builder/CVPreview";
 import { SaveAnimationOverlay } from "@/components/SaveAnimationOverlay";
 
 const CVBuilder = () => {
-  const { cvData, setCvData, isLoading, currentCvId, saveCV: originalSaveCV, saveAndAdapt } = useCVData();
+  const { cvData, setCvData, isLoading, currentCvId } = useCVData();
   const { user } = useAuth();
   
   const {
