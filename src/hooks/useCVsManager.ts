@@ -16,8 +16,8 @@ interface CV {
 }
 
 export const useCVsManager = () => {
-  const [generalCV, setGeneralCV] = useState<CV | null>(null);
-  const [jobMatcherCVs, setJobMatcherCVs] = useState<CV[]>([]);
+  const [userCVs, setUserCVs] = useState<CV[]>([]);
+  const [jobMatcherReports, setJobMatcherReports] = useState<CV[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuth();
 
@@ -41,11 +41,10 @@ export const useCVsManager = () => {
       
       // Separate CVs by source
       const editorCVs = data?.filter(cv => cv.cv_source === 'editor') || [];
-      const matcherCVs = data?.filter(cv => cv.cv_source === 'job_matcher') || [];
+      const matcherReports = data?.filter(cv => cv.cv_source === 'job_matcher') || [];
       
-      // Set the most recent editor CV as general CV
-      setGeneralCV(editorCVs.length > 0 ? editorCVs[0] : null);
-      setJobMatcherCVs(matcherCVs);
+      setUserCVs(editorCVs);
+      setJobMatcherReports(matcherReports);
       
     } catch (error) {
       console.error('Error loading CVs:', error);
@@ -111,7 +110,6 @@ export const useCVsManager = () => {
     console.log('Updating CV logo for CV:', cv.id, 'with logo:', logoUrl);
     
     try {
-      // Create the updated content object
       const updatedContent = { 
         ...(cv.content || {}), 
         companyLogo: logoUrl 
@@ -136,7 +134,6 @@ export const useCVsManager = () => {
       console.log('Company logo saved successfully');
       toast.success("Logo de empresa guardado exitosamente");
       
-      // Reload CVs to reflect the changes
       await loadCVs();
       return true;
     } catch (err) {
@@ -153,8 +150,8 @@ export const useCVsManager = () => {
   }, [user]);
 
   return {
-    generalCV,
-    jobMatcherCVs,
+    userCVs,
+    jobMatcherReports,
     loading,
     loadCVs,
     deleteCV,

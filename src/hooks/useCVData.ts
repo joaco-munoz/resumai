@@ -8,7 +8,6 @@ import { CVData } from "@/types/cv";
 
 const LOCAL_STORAGE_KEY = 'cv-editor-data';
 const LOCAL_STORAGE_DRAFT_KEY = 'cv-editor-draft';
-const LOCAL_STORAGE_TAB_KEY = 'cv-editor-active-tab';
 
 export const useCVData = () => {
   const navigate = useNavigate();
@@ -20,7 +19,7 @@ export const useCVData = () => {
   
   const [cvData, setCvData] = useState<CVData>({
     personalInfo: {
-      fullName: userFullName, // Usar solo el nombre del usuario desde su perfil
+      fullName: userFullName,
       email: '',
       phone: '',
       location: '',
@@ -83,8 +82,9 @@ export const useCVData = () => {
           console.error('Error parsing draft CV from localStorage', err);
         }
       }
-      // Only load last CV if we don't have a draft and we're creating a new CV
-      loadLastCV();
+      // Reset currentCvId for new CVs
+      setCurrentCvId(null);
+      setIsLoading(false);
     }
   }, [cvId, user]);
 
@@ -135,58 +135,6 @@ export const useCVData = () => {
     }
   };
 
-  const loadLastCV = async () => {
-    setIsLoading(true);
-    try {
-      console.log('Loading last saved CV for user:', user?.id);
-      
-      const { data, error } = await supabase
-        .from('cvs')
-        .select('*')
-        .eq('user_id', user?.id)
-        .eq('cv_source', 'editor')
-        .order('last_updated', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      if (error) {
-        console.error('Error loading last CV:', error);
-        toast.error(`Error al cargar el último CV: ${error.message}`);
-        return;
-      }
-
-      if (data && data.content) {
-        console.log('Last CV loaded successfully:', data);
-        
-        // Check if we have local data for this CV
-        const localData = localStorage.getItem(`${LOCAL_STORAGE_KEY}-${data.id}`);
-        if (localData) {
-          try {
-            const parsedData = JSON.parse(localData);
-            setCvData(parsedData);
-            console.log('CV loaded from localStorage:', parsedData);
-          } catch (error) {
-            console.error('Error parsing localStorage data:', error);
-            setCvData(data.content as unknown as CVData);
-          }
-        } else {
-          setCvData(data.content as unknown as CVData);
-        }
-        
-        setCurrentCvId(data.id);
-        navigate(`/app/cv/${data.id}`, { replace: true });
-      } else {
-        console.log('No CVs found, keeping default data');
-        setCurrentCvId(null);
-      }
-    } catch (error) {
-      console.error('Error loading last CV:', error);
-      toast.error("Error al cargar el último CV");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const saveCV = async () => {
     if (!user) {
       toast.error("Debes estar autenticado para guardar el CV");
@@ -196,22 +144,10 @@ export const useCVData = () => {
     try {
       const cvTitle = `CV - ${cvData.personalInfo.fullName}`;
       
-      // Always update or create a CV with cv_source = 'editor' (General CV)
-      const { data: existingCV, error: searchError } = await supabase
-        .from('cvs')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('cv_source', 'editor')
-        .maybeSingle();
-
-      if (searchError) {
-        console.error('Error searching for existing CV:', searchError);
-      }
-
       let result;
 
-      if (existingCV) {
-        // Update existing general CV
+      if (currentCvId) {
+        // Update existing CV
         result = await supabase
           .from('cvs')
           .update({
@@ -221,14 +157,13 @@ export const useCVData = () => {
             template_name: 'modern',
             last_updated: new Date().toISOString()
           })
-          .eq('id', existingCV.id)
+          .eq('id', currentCvId)
           .select();
         
-        setCurrentCvId(existingCV.id);
         // Clear localStorage after successful save
-        localStorage.removeItem(`${LOCAL_STORAGE_KEY}-${existingCV.id}`);
+        localStorage.removeItem(`${LOCAL_STORAGE_KEY}-${currentCvId}`);
       } else {
-        // Create new general CV
+        // Create new CV
         result = await supabase
           .from('cvs')
           .insert({
@@ -244,7 +179,7 @@ export const useCVData = () => {
         if (result.data && result.data[0]) {
           setCurrentCvId(result.data[0].id);
           // Clear localStorage after successful save
-          localStorage.removeItem(`${LOCAL_STORAGE_KEY}-${result.data[0].id}`);
+          localStorage.removeItem(LOCAL_STORAGE_DRAFT_KEY);
           navigate(`/app/cv/${result.data[0].id}`, { replace: true });
         }
       }
@@ -255,8 +190,7 @@ export const useCVData = () => {
         return;
       }
       
-      toast.success("CV principal guardado exitosamente");
-      navigate("/app/cvs");
+      toast.success("CV guardado exitosamente");
     } catch (error) {
       console.error('Error saving CV:', error);
       toast.error("Error al guardar el CV");
@@ -270,70 +204,13 @@ export const useCVData = () => {
     }
 
     try {
-      const cvTitle = `CV - ${cvData.personalInfo.fullName}`;
+      // First save the CV
+      await saveCV();
       
-      // First save as general CV (same logic as saveCV)
-      const { data: existingCV, error: searchError } = await supabase
-        .from('cvs')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('cv_source', 'editor')
-        .maybeSingle();
-
-      if (searchError) {
-        console.error('Error searching for existing CV:', searchError);
-      }
-
-      let result;
-
-      if (existingCV) {
-        // Update existing general CV
-        result = await supabase
-          .from('cvs')
-          .update({
-            title: cvTitle,
-            content: cvData as any,
-            status: 'draft',
-            template_name: 'modern',
-            last_updated: new Date().toISOString()
-          })
-          .eq('id', existingCV.id)
-          .select();
-        
-        setCurrentCvId(existingCV.id);
-        // Clear localStorage after successful save
-        localStorage.removeItem(`${LOCAL_STORAGE_KEY}-${existingCV.id}`);
-      } else {
-        // Create new general CV
-        result = await supabase
-          .from('cvs')
-          .insert({
-            user_id: user.id,
-            title: cvTitle,
-            content: cvData as any,
-            status: 'draft',
-            template_name: 'modern',
-            cv_source: 'editor'
-          })
-          .select();
-
-        if (result.data && result.data[0]) {
-          setCurrentCvId(result.data[0].id);
-          // Clear localStorage after successful save
-          localStorage.removeItem(`${LOCAL_STORAGE_KEY}-${result.data[0].id}`);
-        }
-      }
-
-      if (result.error) {
-        console.error('Error saving CV:', result.error);
-        toast.error(`Error al guardar el CV: ${result.error.message}`);
-        return;
-      }
-      
-      toast.success("CV principal guardado exitosamente");
+      // Then navigate to JobMatcher
       navigate("/app/match");
     } catch (error) {
-      console.error('Error saving CV:', error);
+      console.error('Error saving CV and redirecting:', error);
       toast.error("Error al guardar el CV");
     }
   };

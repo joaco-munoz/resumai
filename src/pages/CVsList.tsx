@@ -9,13 +9,11 @@ import { DeleteConfirmDialog } from "@/components/DeleteConfirmDialog";
 import { downloadCVAsPDF } from "@/utils/pdfUtils";
 import { downloadCVAsWord } from "@/utils/wordUtils";
 import { JobReportModal } from "@/components/JobReportModal";
-import { CVAdaptationModal } from "@/components/CVAdaptationModal";
-import { CVAdaptationPreviewModal } from "@/components/CVAdaptationPreviewModal";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useCVsManager } from "@/hooks/useCVsManager";
 import { useCompanyLogos } from "@/hooks/useCompanyLogos";
-import { GeneralCVSection } from "@/components/GeneralCVSection";
-import { JobMatcherCVsSection } from "@/components/JobMatcherCVsSection";
+import { UserCVsSection } from "@/components/UserCVsSection";
+import { JobMatcherReportsSection } from "@/components/JobMatcherReportsSection";
 import { isJobReport, extractJobTitle, extractCompanyName } from "@/utils/cvUtils";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -33,13 +31,12 @@ interface CV {
 }
 
 export default function CVsList() {
-  const [searchTerm, setSearchTerm] = useState("");
+  const [userCVsSearchTerm, setUserCVsSearchTerm] = useState("");
+  const [jobMatcherSearchTerm, setJobMatcherSearchTerm] = useState("");
   const [previewCV, setPreviewCV] = useState<CV | null>(null);
   const [deleteCV, setDeleteCV] = useState<CV | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [jobReportCV, setJobReportCV] = useState<CV | null>(null);
-  const [adaptationCV, setAdaptationCV] = useState<CV | null>(null);
-  const [editingJobMatcherCV, setEditingJobMatcherCV] = useState<CV | null>(null);
   const [renamingCVId, setRenamingCVId] = useState<string | null>(null);
   const [renamingTitle, setRenamingTitle] = useState<string>("");
   const [savingRename, setSavingRename] = useState(false);
@@ -50,7 +47,7 @@ export default function CVsList() {
   const { downloadCV } = useDownloadManager();
   
   // Custom hooks
-  const { generalCV, jobMatcherCVs, loading, loadCVs, deleteCV: deleteCVFromDB, renameCV, updateCVLogo } = useCVsManager();
+  const { userCVs, jobMatcherReports, loading, loadCVs, deleteCV: deleteCVFromDB, renameCV, updateCVLogo } = useCVsManager();
   const {
     logoEditCvId,
     logoQuery,
@@ -65,16 +62,19 @@ export default function CVsList() {
 
   // Initialize logo map when CVs are loaded
   useState(() => {
-    if (generalCV || jobMatcherCVs.length > 0) {
-      const allCVs = [generalCV, ...jobMatcherCVs].filter(Boolean);
+    if (userCVs.length > 0 || jobMatcherReports.length > 0) {
+      const allCVs = [...userCVs, ...jobMatcherReports].filter(Boolean);
       initializeLogoMap(allCVs);
     }
   });
 
-  const filteredJobMatcherCVs = jobMatcherCVs.filter(cv => 
-    cv.title.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredUserCVs = userCVs.filter(cv => 
+    cv.title.toLowerCase().includes(userCVsSearchTerm.toLowerCase())
   );
 
+  const filteredJobMatcherReports = jobMatcherReports.filter(cv => 
+    cv.title.toLowerCase().includes(jobMatcherSearchTerm.toLowerCase())
+  );
 
   // Event handlers
   function handleViewCV(cv: CV) {
@@ -87,32 +87,20 @@ export default function CVsList() {
 
   function handleEditCV(cv: CV) {
     console.log('Editing CV:', cv);
-    console.log('CV content:', cv.content);
-    console.log('General CV:', generalCV);
     
     if (isJobReport(cv)) {
-      // CV adaptation functionality temporarily disabled
-      // setAdaptationCV(cv);
-      toast.info("La funcionalidad de adaptación de CV está temporalmente deshabilitada");
-    } else if (cv.cv_source === 'job_matcher') {
-      if (!generalCV || !generalCV.content) {
-        toast.error("No se encontró el CV principal para editar");
-        console.error('No general CV found for editing');
-        return;
-      }
-      
-      if (!cv.content) {
-        toast.error("El CV adaptado no tiene contenido válido");
-        console.error('Job Matcher CV has no content');
-        return;
-      }
-      
-      // CV adaptation functionality temporarily disabled
-      // setEditingJobMatcherCV(cv);
-      toast.info("La funcionalidad de adaptación de CV está temporalmente deshabilitada");
-    } else {
-      navigate(`/app/cv/${cv.id}`);
+      toast.info("Los informes no se pueden editar");
+      return;
     }
+    
+    // Navigate to editor with the specific CV ID
+    navigate(`/app/cv/${cv.id}`);
+  }
+
+  function handleCreateNewCV() {
+    console.log('Creating new CV');
+    // Navigate to editor with 'new' to create a blank CV
+    navigate("/app/cv/new");
   }
 
   async function handleDownloadCV(cv: CV, format: 'pdf' | 'word' = 'pdf') {
@@ -174,11 +162,6 @@ export default function CVsList() {
     await updateCVLogo(cv, logoUrl);
   }
 
-  function handleSaveEditedCV() {
-    setEditingJobMatcherCV(null);
-    loadCVs();
-  }
-
   async function updateLinkedJobApplications(cvId: string, newTitle: string) {
     try {
       const jobTitle = extractJobTitle(newTitle);
@@ -230,7 +213,7 @@ export default function CVsList() {
         .select('id, position')
         .eq('user_id', user.id)
         .eq('company', companyName)
-        .ilike('position', `${jobTitle}%`); // Use ilike to find positions that start with the job title
+        .ilike('position', `${jobTitle}%`);
 
       if (fetchError) {
         console.error('Error checking existing entries:', fetchError);
@@ -241,7 +224,6 @@ export default function CVsList() {
       // If there are existing entries, add a numeric suffix to make this one unique
       let finalJobTitle = jobTitle;
       if (existingEntries && existingEntries.length > 0) {
-        // Find the highest number suffix
         let maxSuffix = 0;
         existingEntries.forEach(entry => {
           const match = entry.position.match(new RegExp(`^${jobTitle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*\\((\\d+)\\)$`));
@@ -251,12 +233,10 @@ export default function CVsList() {
               maxSuffix = suffix;
             }
           } else if (entry.position === jobTitle) {
-            // Original entry without suffix counts as (1)
             if (maxSuffix === 0) maxSuffix = 1;
           }
         });
         
-        // Add new suffix
         finalJobTitle = `${jobTitle} (${maxSuffix + 1})`;
       }
 
@@ -268,7 +248,7 @@ export default function CVsList() {
           company: companyName,
           status: 'saved',
           applied_date: new Date().toISOString().split('T')[0],
-          notes: `CV adaptado: ${cv.title}`,
+          notes: `Informe JobMatcher: ${cv.title}`,
           cv_id: cv.id
         });
 
@@ -276,7 +256,7 @@ export default function CVsList() {
         console.error('Error adding to tracking:', error);
         toast.error(`Error al agregar al seguimiento: ${error.message}`);
       } else {
-        toast.success("CV agregado al seguimiento de Kanban");
+        toast.success("Informe agregado al seguimiento de Kanban");
       }
     } catch (error) {
       console.error('Error adding to tracking:', error);
@@ -313,17 +293,19 @@ export default function CVsList() {
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-8">
                 <div className="min-w-0 flex-1 mb-4 sm:mb-0">
                   <h1 className="font-bold text-2xl sm:text-3xl gradient-text">
-                    Mis Currículums
+                    Gestión de Currículums
                   </h1>
                   <p className="text-gray-600 mt-2 text-sm sm:text-base">
-                    Gestiona tu Currículum Principal y los currículums adaptados por Match de Ofertas
+                    Gestiona tus CVs creados e informes de JobMatcher
                   </p>
                 </div>
               </div>
 
-              {/* General CV Section */}
-              <GeneralCVSection
-                generalCV={generalCV}
+              {/* User CVs Section */}
+              <UserCVsSection
+                userCVs={userCVs}
+                filteredUserCVs={filteredUserCVs}
+                searchTerm={userCVsSearchTerm}
                 isMobile={isMobile}
                 renamingCVId={renamingCVId}
                 renamingTitle={renamingTitle}
@@ -332,7 +314,8 @@ export default function CVsList() {
                 logoQuery={logoQuery}
                 logoSuggestions={logoSuggestions}
                 logoMap={logoMap}
-                onCreateCV={() => navigate("/app/cv/new")}
+                onSearchChange={setUserCVsSearchTerm}
+                onCreateNewCV={handleCreateNewCV}
                 onView={handleViewCV}
                 onEdit={handleEditCV}
                 onDownload={handleDownloadCV}
@@ -344,14 +327,13 @@ export default function CVsList() {
                 onStartLogoEdit={startLogoEdit}
                 onSelectLogo={handleSelectLogo}
                 onLogoQueryChange={setLogoQuery}
-                onAddToTracking={handleAddToTracking}
               />
 
-              {/* Job Matcher CVs Section */}
-              <JobMatcherCVsSection
-                jobMatcherCVs={jobMatcherCVs}
-                filteredJobMatcherCVs={filteredJobMatcherCVs}
-                searchTerm={searchTerm}
+              {/* JobMatcher Reports Section */}
+              <JobMatcherReportsSection
+                jobMatcherReports={jobMatcherReports}
+                filteredJobMatcherReports={filteredJobMatcherReports}
+                searchTerm={jobMatcherSearchTerm}
                 isMobile={isMobile}
                 renamingCVId={renamingCVId}
                 renamingTitle={renamingTitle}
@@ -360,7 +342,7 @@ export default function CVsList() {
                 logoQuery={logoQuery}
                 logoSuggestions={logoSuggestions}
                 logoMap={logoMap}
-                onSearchChange={setSearchTerm}
+                onSearchChange={setJobMatcherSearchTerm}
                 onGoToJobMatcher={() => navigate("/app/match")}
                 onView={handleViewCV}
                 onEdit={handleEditCV}
@@ -394,42 +376,10 @@ export default function CVsList() {
           reportTitle={jobReportCV?.title || ""}
           reportId={jobReportCV?.id}
           onApply={() => {
-            // CV adaptation functionality temporarily disabled
             toast.info("La funcionalidad de adaptación de CV está temporalmente deshabilitada");
             setJobReportCV(null);
-            // loadCVs(); // Reload CVs after adaptation
           }}
         />
-
-        {/* CV Adaptation Modal - Temporarily disabled */}
-        {/*
-        <CVAdaptationModal
-          isOpen={!!adaptationCV}
-          onClose={() => setAdaptationCV(null)}
-          matchResult={adaptationCV?.content?.matchResult || null}
-          jobDetails={adaptationCV?.content?.jobDetails || { title: "", company: "" }}
-          onSave={() => {
-            setAdaptationCV(null);
-            loadCVs();
-          }}
-        />
-        */}
-
-        {/* CV Adaptation Preview Modal - Temporarily disabled */}
-        {/*
-        {editingJobMatcherCV && generalCV && (
-          <CVAdaptationPreviewModal
-            isOpen={!!editingJobMatcherCV}
-            onClose={() => setEditingJobMatcherCV(null)}
-            originalCvData={generalCV.content || null}
-            adaptedCvData={editingJobMatcherCV.content || null}
-            jobTitle={extractJobTitle(editingJobMatcherCV.title)}
-            companyName={extractCompanyName(editingJobMatcherCV.title)}
-            existingCVId={editingJobMatcherCV.id}
-            onSave={handleSaveEditedCV}
-          />
-        )}
-        */}
 
         <DeleteConfirmDialog
           isOpen={!!deleteCV}
