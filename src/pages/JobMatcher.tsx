@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
@@ -17,6 +16,7 @@ import { AIUsageIndicator } from "@/components/AIUsageIndicator";
 import { useFeatureLimits } from "@/hooks/useFeatureLimits";
 import { useAIUsage } from "@/contexts/AIUsageContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { CVSelector } from "@/components/job-matcher/CVSelector";
 
 interface MatchResult {
   score: number;
@@ -39,6 +39,8 @@ const JobMatcher = () => {
   const [matchResult, setMatchResult] = useState<MatchResult | null>(null);
   const [jobDetails, setJobDetails] = useState<JobDetails>({ title: "", company: "" });
   const [showAdaptationModal, setShowAdaptationModal] = useState(false);
+  const [selectedCVId, setSelectedCVId] = useState<string | null>(null);
+  const [selectedCVTitle, setSelectedCVTitle] = useState<string>("");
   const { user } = useAuth();
   const navigate = useNavigate();
   const { usage, limits, canUseFeature, incrementUsage, isPro } = useFeatureLimits();
@@ -71,6 +73,11 @@ const JobMatcher = () => {
       return;
     }
 
+    if (!selectedCVId) {
+      toast.error("Por favor, selecciona un CV para realizar el análisis");
+      return;
+    }
+
     if (!user) {
       toast.error("Debes estar autenticado para usar esta función");
       return;
@@ -93,7 +100,8 @@ const JobMatcher = () => {
       const { data, error } = await supabase.functions.invoke('analyze-job-compatibility', {
         body: {
           jobDescription: jobDescription,
-          userId: user.id
+          userId: user.id,
+          cvId: selectedCVId
         }
       });
 
@@ -130,7 +138,7 @@ const JobMatcher = () => {
 
   // Función para guardar el informe
   const saveReport = async () => {
-    if (!matchResult || !user) return;
+    if (!matchResult || !user || !selectedCVTitle) return;
     
     try {
       const cvTitle = `Informe - ${jobDetails.title} en ${jobDetails.company}`;
@@ -144,6 +152,7 @@ const JobMatcher = () => {
             jobDescription,
             matchResult,
             jobDetails,
+            usedCV: selectedCVTitle,
             type: 'job_report'
           } as any,
           status: 'draft',
@@ -186,6 +195,11 @@ const JobMatcher = () => {
     saveReport();
   };
 
+  const handleCVSelect = (cvId: string, cvTitle: string) => {
+    setSelectedCVId(cvId);
+    setSelectedCVTitle(cvTitle);
+  };
+
   const getScoreColor = (score: number) => {
     if (score >= 80) return "text-success-600";
     if (score >= 60) return "text-yellow-600";
@@ -214,6 +228,13 @@ const JobMatcher = () => {
           </header>
 
           <div className="p-6 max-w-7xl mx-auto space-y-6">
+            {/* CV Selector Section */}
+            <CVSelector
+              selectedCVId={selectedCVId}
+              onCVSelect={handleCVSelect}
+              className="mb-6"
+            />
+
             {/* Job Description Section - Full Width */}
             <Card>
               <CardHeader>
@@ -273,7 +294,7 @@ Ejemplo:
                 
                 <Button 
                   onClick={analyzeMatch}
-                  disabled={isAnalyzing || !jobDescription.trim() || !canUseFeature('job_matcher_advanced')}
+                  disabled={isAnalyzing || !jobDescription.trim() || !selectedCVId || !canUseFeature('job_matcher_advanced')}
                   className="bg-gradient-to-r from-brand-500 to-brand-700"
                   size="lg"
                 >
@@ -302,7 +323,7 @@ Ejemplo:
                       Esperando análisis
                     </h3>
                     <p className="text-gray-500">
-                      Pega una descripción de trabajo y haz clic en "Analizar" para ver la compatibilidad con tu CV General
+                      Selecciona un CV, pega una descripción de trabajo y haz clic en "Analizar" para ver la compatibilidad
                     </p>
                   </div>
                 </CardContent>
@@ -318,7 +339,7 @@ Ejemplo:
                       Analizando con IA...
                     </h3>
                     <p className="text-gray-500">
-                      Comparando tu CV General con los requisitos de la oferta
+                      Comparando tu CV "{selectedCVTitle}" con los requisitos de la oferta
                     </p>
                   </div>
                 </CardContent>
@@ -327,6 +348,15 @@ Ejemplo:
 
             {matchResult && (
               <div className="grid gap-6">
+                {/* CV Used Info */}
+                <Card className="bg-blue-50 border-blue-200">
+                  <CardContent className="pt-6">
+                    <p className="text-blue-800 font-medium text-center">
+                      Informe generado con el CV: {selectedCVTitle}
+                    </p>
+                  </CardContent>
+                </Card>
+
                 {/* Score Card */}
                 <Card className={`border-2 ${getScoreBg(matchResult.score)}`}>
                   <CardHeader className="text-center">
@@ -335,7 +365,7 @@ Ejemplo:
                     </div>
                     <CardTitle>Compatibilidad General</CardTitle>
                     <CardDescription>
-                      Tu CV General coincide en un {matchResult.score}% con esta oferta
+                      Tu CV "{selectedCVTitle}" coincide en un {matchResult.score}% con esta oferta
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
