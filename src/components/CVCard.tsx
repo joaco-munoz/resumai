@@ -478,7 +478,7 @@ export const CVCard = ({
       </div>
 
       {/* Updated Date Column */}
-      <div className={isJobMatcherCV ? "col-span-3" : "col-span-2"} className="text-sm text-gray-500 dark:text-gray-400">
+      <div className={`text-sm text-gray-500 dark:text-gray-400 ${isJobMatcherCV ? "col-span-3" : "col-span-2"}`}>
         {formatDate(cv.last_updated)}
       </div>
 
