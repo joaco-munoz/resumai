@@ -18,6 +18,7 @@ interface CVNamingModalProps {
   onSave: (cvName: string) => void;
   defaultName?: string;
   isSaving?: boolean;
+  isReport?: boolean; // New prop to differentiate between CV and Report
 }
 
 export const CVNamingModal = ({ 
@@ -25,42 +26,53 @@ export const CVNamingModal = ({
   onClose, 
   onSave, 
   defaultName = "",
-  isSaving = false 
+  isSaving = false,
+  isReport = false
 }: CVNamingModalProps) => {
-  const [cvName, setCvName] = useState(defaultName);
+  const [name, setName] = useState(defaultName);
 
   const handleSave = () => {
-    if (cvName.trim()) {
-      onSave(cvName.trim());
+    if (name.trim()) {
+      onSave(name.trim());
     }
   };
 
   const handleClose = () => {
-    setCvName(defaultName);
+    setName(defaultName);
     onClose();
   };
+
+  // Update content based on whether it's for CV or Report
+  const title = isReport ? "Nombrar Informe" : "Nombrar CV";
+  const description = isReport 
+    ? "Ingresa un nombre para tu informe de JobMatcher"
+    : "Ingresa un nombre para tu currículum vitae";
+  const label = isReport ? "Nombre del Informe" : "Nombre del CV";
+  const placeholder = isReport 
+    ? "Ej: Informe - Desarrollador Frontend 2024"
+    : "Ej: CV Marketing Digital 2024";
 
   return (
     <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Nombrar CV</DialogTitle>
+          <DialogTitle>{title}</DialogTitle>
           <DialogDescription>
-            Ingresa un nombre para tu currículum vitae
+            {description}
           </DialogDescription>
         </DialogHeader>
         
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="cv-name">Nombre del CV</Label>
+            <Label htmlFor="name-input">{label}</Label>
             <Input
-              id="cv-name"
-              value={cvName}
-              onChange={(e) => setCvName(e.target.value)}
-              placeholder="Ej: CV Marketing Digital 2024"
+              id="name-input"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder={placeholder}
               autoFocus
               onKeyDown={(e) => {
-                if (e.key === 'Enter' && cvName.trim()) {
+                if (e.key === 'Enter' && name.trim()) {
                   handleSave();
                 }
               }}
@@ -80,7 +92,7 @@ export const CVNamingModal = ({
           <Button 
             type="button" 
             onClick={handleSave}
-            disabled={!cvName.trim() || isSaving}
+            disabled={!name.trim() || isSaving}
           >
             {isSaving ? "Guardando..." : "Guardar"}
           </Button>

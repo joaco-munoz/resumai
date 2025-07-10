@@ -17,6 +17,7 @@ import { useFeatureLimits } from "@/hooks/useFeatureLimits";
 import { useAIUsage } from "@/contexts/AIUsageContext";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { CVSelector } from "@/components/job-matcher/CVSelector";
+import { CVNamingModal } from "@/components/cv-builder/CVNamingModal";
 
 interface MatchResult {
   score: number;
@@ -45,6 +46,8 @@ const JobMatcher = () => {
   const navigate = useNavigate();
   const { usage, limits, canUseFeature, incrementUsage, isPro } = useFeatureLimits();
   const { refreshUsage } = useAIUsage();
+  const [showReportNamingModal, setShowReportNamingModal] = useState(false);
+  const [isSavingReport, setIsSavingReport] = useState(false);
 
   // Función para extraer el título del trabajo y la empresa de la descripción
   const extractJobDetails = (description: string): JobDetails => {
@@ -136,6 +139,65 @@ const JobMatcher = () => {
   // Estado para controlar la visibilidad del modal de confirmación
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
+  // Función para generar nombre por defecto del informe
+  const generateDefaultReportName = () => {
+    if (!matchResult || !selectedCVTitle) return "Informe JobMatcher";
+    
+    const timestamp = new Date().toLocaleString('es-ES', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+    return `Informe - ${jobDetails.title} en ${jobDetails.company} - ${timestamp}`;
+  };
+
+  // Función para abrir el modal de nombrado del informe
+  const handleSaveReport = () => {
+    setShowReportNamingModal(true);
+  };
+
+  // Función para guardar el informe con nombre personalizado
+  const saveReportWithName = async (reportName: string) => {
+    if (!matchResult || !user || !selectedCVTitle) return;
+    
+    setIsSavingReport(true);
+    try {
+      const { error } = await supabase
+        .from('cvs')
+        .insert({
+          user_id: user.id,
+          title: reportName,
+          content: {
+            jobDescription,
+            matchResult,
+            jobDetails,
+            usedCV: selectedCVTitle,
+            type: 'job_report'
+          } as any,
+          status: 'draft',
+          cv_source: 'job_matcher',
+          ai_score: matchResult.score
+        });
+
+      if (error) {
+        console.error('Error saving job report:', error);
+        toast.error(`Error al guardar el informe: ${error.message}`);
+        return;
+      }
+      
+      toast.success("Informe guardado exitosamente");
+      setShowReportNamingModal(false);
+      navigate("/app/cvs");
+    } catch (error) {
+      console.error('Error saving job report:', error);
+      toast.error("Error al guardar el informe");
+    } finally {
+      setIsSavingReport(false);
+    }
+  };
+
   // Función para guardar el informe
   const saveReport = async () => {
     if (!matchResult || !user || !selectedCVTitle) return;
@@ -188,11 +250,6 @@ const JobMatcher = () => {
   // Función para cerrar el modal y volver al informe
   const handleCancelNoSave = () => {
     setShowConfirmDialog(false);
-  };
-
-  // Función para guardar el informe
-  const handleSaveReport = () => {
-    saveReport();
   };
 
   const handleCVSelect = (cvId: string, cvTitle: string) => {
@@ -529,6 +586,16 @@ Ejemplo:
             </DialogFooter>
           </DialogContent>
         </Dialog>
+        
+        {/* Modal de nombrado para informes */}
+        <CVNamingModal
+          isOpen={showReportNamingModal}
+          onClose={() => setShowReportNamingModal(false)}
+          onSave={saveReportWithName}
+          defaultName={generateDefaultReportName()}
+          isSaving={isSavingReport}
+          isReport={true}
+        />
       </div>
     </SidebarProvider>
   );

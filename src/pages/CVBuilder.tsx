@@ -64,7 +64,10 @@ const CVBuilder = () => {
 
   const navigate = useNavigate();
 
-  // New save functions that accept CV name
+  // Determine if this is an existing CV
+  const isExistingCV = !!currentCvId;
+
+  // Updated save functions that handle redirection properly
   const saveCV = async (cvName: string) => {
     if (!user) {
       toast.error("Debes estar autenticado para guardar el CV");
@@ -100,10 +103,6 @@ const CVBuilder = () => {
             cv_source: 'editor'
           })
           .select();
-
-        if (result.data && result.data[0]) {
-          navigate(`/app/cv/${result.data[0].id}`, { replace: true });
-        }
       }
 
       if (result.error) {
@@ -113,6 +112,9 @@ const CVBuilder = () => {
       }
       
       toast.success("CV guardado exitosamente");
+      
+      // Always redirect to CVs list after saving
+      navigate("/app/cvs");
     } catch (error) {
       console.error('Error saving CV:', error);
       toast.error("Error al guardar el CV");
@@ -120,11 +122,54 @@ const CVBuilder = () => {
   };
 
   const saveAndRedirectToJobMatcher = async (cvName: string) => {
+    if (!user) {
+      toast.error("Debes estar autenticado para guardar el CV");
+      return;
+    }
+
     try {
-      await saveCV(cvName);
+      let result;
+
+      if (currentCvId) {
+        // Update existing CV
+        result = await supabase
+          .from('cvs')
+          .update({
+            title: cvName,
+            content: cvData as any,
+            status: 'draft',
+            template_name: 'modern',
+            last_updated: new Date().toISOString()
+          })
+          .eq('id', currentCvId)
+          .select();
+      } else {
+        // Create new CV
+        result = await supabase
+          .from('cvs')
+          .insert({
+            user_id: user.id,
+            title: cvName,
+            content: cvData as any,
+            status: 'draft',
+            template_name: 'modern',
+            cv_source: 'editor'
+          })
+          .select();
+      }
+
+      if (result.error) {
+        console.error('Error saving CV:', result.error);
+        toast.error(`Error al guardar el CV: ${result.error.message}`);
+        return;
+      }
+      
+      toast.success("CV guardado exitosamente");
+      
+      // Redirect to Job Matcher
       navigate("/app/match");
     } catch (error) {
-      console.error('Error saving CV and redirecting:', error);
+      console.error('Error saving CV:', error);
       toast.error("Error al guardar el CV");
     }
   };
@@ -222,6 +267,7 @@ const CVBuilder = () => {
                     goToPreviousTab={goToPreviousTab}
                     saveCV={saveCV}
                     saveAndRedirectToJobMatcher={saveAndRedirectToJobMatcher}
+                    isExistingCV={isExistingCV}
                   />
                 </TabsContent>
               </Tabs>

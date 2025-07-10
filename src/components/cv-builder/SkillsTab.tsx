@@ -15,6 +15,7 @@ interface SkillsTabProps {
   goToPreviousTab: () => void;
   saveCV: (cvName: string) => Promise<void>;
   saveAndRedirectToJobMatcher: (cvName: string) => Promise<void>;
+  isExistingCV?: boolean; // New prop to determine if this is an existing CV
 }
 
 export const SkillsTab = ({ 
@@ -23,7 +24,8 @@ export const SkillsTab = ({
   removeSkill, 
   goToPreviousTab, 
   saveCV,
-  saveAndRedirectToJobMatcher
+  saveAndRedirectToJobMatcher,
+  isExistingCV = false
 }: SkillsTabProps) => {
   const [showNamingModal, setShowNamingModal] = useState(false);
   const [modalAction, setModalAction] = useState<'save' | 'saveAndRedirect'>('save');
@@ -42,13 +44,43 @@ export const SkillsTab = ({
   };
 
   const handleSaveCV = () => {
-    setModalAction('save');
-    setShowNamingModal(true);
+    if (isExistingCV) {
+      // For existing CVs, save directly without modal
+      handleDirectSave('save');
+    } else {
+      // For new CVs, show naming modal
+      setModalAction('save');
+      setShowNamingModal(true);
+    }
   };
 
   const handleSaveAndRedirect = () => {
-    setModalAction('saveAndRedirect');
-    setShowNamingModal(true);
+    if (isExistingCV) {
+      // For existing CVs, save directly without modal
+      handleDirectSave('saveAndRedirect');
+    } else {
+      // For new CVs, show naming modal
+      setModalAction('saveAndRedirect');
+      setShowNamingModal(true);
+    }
+  };
+
+  const handleDirectSave = async (action: 'save' | 'saveAndRedirect') => {
+    setIsSaving(true);
+    try {
+      // For existing CVs, use the current CV title or generate a default
+      const cvName = cvData.personalInfo.fullName || generateDefaultName();
+      
+      if (action === 'save') {
+        await saveCV(cvName);
+      } else {
+        await saveAndRedirectToJobMatcher(cvName);
+      }
+    } catch (error) {
+      console.error('Error saving CV:', error);
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleModalSave = async (cvName: string) => {
@@ -72,6 +104,12 @@ export const SkillsTab = ({
       setShowNamingModal(false);
     }
   };
+
+  // Determine button labels based on whether it's an existing CV
+  const saveButtonLabel = isExistingCV ? "Actualizar CV" : "Guardar CV";
+  const saveAndRedirectLabel = isExistingCV 
+    ? "Actualizar CV e ir al Match de ofertas" 
+    : "Guardar CV e ir al Match de ofertas";
 
   return (
     <>
@@ -110,24 +148,34 @@ export const SkillsTab = ({
               Atrás
             </Button>
             <div className="flex gap-2">
-              <Button variant="outline" onClick={handleSaveCV}>
-                Guardar CV
+              <Button 
+                variant="outline" 
+                onClick={handleSaveCV}
+                disabled={isSaving}
+              >
+                {isSaving && modalAction === 'save' ? "Guardando..." : saveButtonLabel}
               </Button>
-              <Button onClick={handleSaveAndRedirect}>
-                Guardar CV e ir al Match de ofertas
+              <Button 
+                onClick={handleSaveAndRedirect}
+                disabled={isSaving}
+              >
+                {isSaving && modalAction === 'saveAndRedirect' ? "Guardando..." : saveAndRedirectLabel}
               </Button>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      <CVNamingModal
-        isOpen={showNamingModal}
-        onClose={handleModalClose}
-        onSave={handleModalSave}
-        defaultName={generateDefaultName()}
-        isSaving={isSaving}
-      />
+      {/* Only show naming modal for new CVs */}
+      {!isExistingCV && (
+        <CVNamingModal
+          isOpen={showNamingModal}
+          onClose={handleModalClose}
+          onSave={handleModalSave}
+          defaultName={generateDefaultName()}
+          isSaving={isSaving}
+        />
+      )}
     </>
   );
 };
