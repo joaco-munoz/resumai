@@ -156,7 +156,7 @@ const JobMatcher = () => {
           user_id: user.id,
           title: reportName,
           content: reportData as any,
-          status: 'report' as const,
+          status: 'draft',
           template_name: 'job_matcher_report',
           cv_source: 'job_matcher',
         })

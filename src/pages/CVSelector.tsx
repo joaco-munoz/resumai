@@ -55,7 +55,7 @@ const CVSelector = () => {
 
       const sortedCVs = (data || []).map(cv => ({
         ...cv,
-        content: cv.content as CVData
+        content: cv.content as unknown as CVData
       }));
       setCvs(sortedCVs);
 
