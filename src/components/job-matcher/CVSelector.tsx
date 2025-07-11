@@ -11,11 +11,13 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { Star } from "lucide-react";
 
 interface CV {
   id: string;
   title: string;
   created_at: string;
+  is_favorite?: boolean;
 }
 
 interface CVSelectorProps {
@@ -39,9 +41,10 @@ export const CVSelector = ({ selectedCVId, onCVSelect, className = "" }: CVSelec
     try {
       const { data, error } = await supabase
         .from('cvs')
-        .select('id, title, created_at')
+        .select('id, title, created_at, is_favorite')
         .eq('user_id', user.id)
         .eq('cv_source', 'editor')
+        .order('is_favorite', { ascending: false })
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -52,9 +55,11 @@ export const CVSelector = ({ selectedCVId, onCVSelect, className = "" }: CVSelec
 
       setCvs(data || []);
       
-      // If no CV is selected and we have CVs, select the most recent one
+      // Auto-select favorite CV or most recent one
       if (!selectedCVId && data && data.length > 0) {
-        onCVSelect(data[0].id, data[0].title);
+        const favoriteCV = data.find(cv => cv.is_favorite);
+        const cvToSelect = favoriteCV || data[0];
+        onCVSelect(cvToSelect.id, cvToSelect.title);
       }
     } catch (error) {
       console.error('Error loading CVs:', error);
@@ -101,7 +106,10 @@ export const CVSelector = ({ selectedCVId, onCVSelect, className = "" }: CVSelec
         <SelectContent>
           {cvs.map((cv) => (
             <SelectItem key={cv.id} value={cv.id}>
-              {cv.title}
+              <div className="flex items-center gap-2">
+                {cv.is_favorite && <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />}
+                <span>{cv.title}</span>
+              </div>
             </SelectItem>
           ))}
         </SelectContent>

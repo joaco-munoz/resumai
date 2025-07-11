@@ -13,6 +13,7 @@ interface CV {
   ai_score?: number;
   content?: any;
   cv_source: string;
+  is_favorite?: boolean;
 }
 
 export const useCVsManager = () => {
@@ -27,7 +28,7 @@ export const useCVsManager = () => {
       
       const { data, error } = await supabase
         .from('cvs')
-        .select('id, title, status, created_at, last_updated, ai_score, content, cv_source')
+        .select('id, title, status, created_at, last_updated, ai_score, content, cv_source, is_favorite')
         .eq('user_id', user?.id)
         .order('last_updated', { ascending: false });
 
@@ -143,6 +144,32 @@ export const useCVsManager = () => {
     }
   };
 
+  const toggleFavoriteCV = async (cvId: string) => {
+    try {
+      const { error } = await supabase
+        .from('cvs')
+        .update({ 
+          is_favorite: true,
+          last_updated: new Date().toISOString()
+        })
+        .eq('id', cvId);
+      
+      if (error) {
+        console.error('Error setting favorite CV:', error);
+        toast.error(`Error al marcar como favorito: ${error.message}`);
+        return false;
+      }
+      
+      toast.success("CV marcado como favorito");
+      loadCVs();
+      return true;
+    } catch (err) {
+      console.error('Error setting favorite CV:', err);
+      toast.error("Error al marcar como favorito");
+      return false;
+    }
+  };
+
   useEffect(() => {
     if (user) {
       loadCVs();
@@ -156,6 +183,7 @@ export const useCVsManager = () => {
     loadCVs,
     deleteCV,
     renameCV,
-    updateCVLogo
+    updateCVLogo,
+    toggleFavoriteCV
   };
 };

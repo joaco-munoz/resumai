@@ -14,6 +14,7 @@ interface CV {
   ai_score?: number;
   content?: any;
   cv_source: string;
+  is_favorite?: boolean;
 }
 
 interface CompanySuggestion {
@@ -48,6 +49,7 @@ interface UserCVsSectionProps {
   onSelectLogo: (cv: CV, logoUrl: string) => void;
   onLogoQueryChange: (query: string) => void;
   onAddToTracking: (cv: CV) => void;
+  onToggleFavorite: (cvId: string) => void;
 }
 
 export const UserCVsSection = ({
@@ -75,7 +77,8 @@ export const UserCVsSection = ({
   onStartLogoEdit,
   onSelectLogo,
   onLogoQueryChange,
-  onAddToTracking
+  onAddToTracking,
+  onToggleFavorite
 }: UserCVsSectionProps) => {
   return (
     <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow-sm mb-6">
@@ -142,11 +145,11 @@ export const UserCVsSection = ({
           <div className="space-y-4">
             {/* Table Header - only on desktop */}
             {!isMobile && (
-              <div className="grid grid-cols-12 gap-4 text-sm font-medium text-gray-500 dark:text-gray-400 border-b pb-3">
+              <div className="grid grid-cols-13 gap-4 text-sm font-medium text-gray-500 dark:text-gray-400 border-b pb-3">
                 <div className="col-span-5">Currículum</div>
                 <div className="col-span-3">Creado</div>
                 <div className="col-span-2">Actualizado</div>
-                <div className="col-span-1">Seguimiento</div>
+                <div className="col-span-2">Seguimiento</div>
                 <div className="col-span-1"></div>
               </div>
             )}
@@ -176,6 +179,7 @@ export const UserCVsSection = ({
                 onSelectLogo={onSelectLogo}
                 onLogoQueryChange={onLogoQueryChange}
                 onAddToTracking={onAddToTracking}
+                onToggleFavorite={onToggleFavorite}
               />
             ))}
           </div>

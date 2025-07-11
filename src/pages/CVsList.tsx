@@ -28,6 +28,7 @@ interface CV {
   ai_score?: number;
   content?: any;
   cv_source: string;
+  is_favorite?: boolean;
 }
 
 export default function CVsList() {
@@ -47,7 +48,7 @@ export default function CVsList() {
   const { downloadCV } = useDownloadManager();
   
   // Custom hooks
-  const { userCVs, jobMatcherReports, loading, loadCVs, deleteCV: deleteCVFromDB, renameCV, updateCVLogo } = useCVsManager();
+  const { userCVs, jobMatcherReports, loading, loadCVs, deleteCV: deleteCVFromDB, renameCV, updateCVLogo, toggleFavoriteCV } = useCVsManager();
   const {
     logoEditCvId,
     logoQuery,
@@ -264,6 +265,10 @@ export default function CVsList() {
     }
   };
 
+  const handleToggleFavorite = async (cvId: string) => {
+    await toggleFavoriteCV(cvId);
+  };
+
   if (loading) {
     return (
       <SidebarProvider>
@@ -328,6 +333,7 @@ export default function CVsList() {
                 onSelectLogo={handleSelectLogo}
                 onLogoQueryChange={setLogoQuery}
                 onAddToTracking={handleAddToTracking}
+                onToggleFavorite={handleToggleFavorite}
               />
 
               {/* JobMatcher Reports Section */}

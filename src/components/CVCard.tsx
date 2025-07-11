@@ -17,7 +17,8 @@ import {
   ChevronDown,
   FileText,
   BarChart3,
-  Plus
+  Plus,
+  Star
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -37,6 +38,7 @@ interface CV {
   ai_score?: number;
   content?: any;
   cv_source: string;
+  is_favorite?: boolean;
 }
 
 interface CompanySuggestion {
@@ -67,6 +69,7 @@ interface CVCardProps {
   onSelectLogo: (cv: CV, logoUrl: string) => void;
   onLogoQueryChange: (query: string) => void;
   onAddToTracking: (cv: CV) => void;
+  onToggleFavorite?: (cvId: string) => void;
 }
 
 export const CVCard = ({
@@ -90,7 +93,8 @@ export const CVCard = ({
   onStartLogoEdit,
   onSelectLogo,
   onLogoQueryChange,
-  onAddToTracking
+  onAddToTracking,
+  onToggleFavorite
 }: CVCardProps) => {
   const [downloadDropdownOpen, setDownloadDropdownOpen] = useState(false);
 
@@ -183,6 +187,9 @@ export const CVCard = ({
                 <div className="flex items-center gap-2 mb-2">
                   {isJobReportCV && (
                     <BarChart3 className="h-5 w-5 text-blue-500 flex-shrink-0" />
+                  )}
+                  {isUserCV && cv.is_favorite && (
+                    <Star className="h-5 w-5 fill-yellow-400 text-yellow-400 flex-shrink-0" />
                   )}
                   <h3 className="font-medium text-gray-900 dark:text-gray-100 truncate text-base">
                     {cv.title}
@@ -284,6 +291,18 @@ export const CVCard = ({
                   </>
                 )}
                 <DropdownMenuSeparator />
+                {isUserCV && onToggleFavorite && (
+                  <DropdownMenuItem 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onToggleFavorite(cv.id);
+                    }}
+                    className="py-2"
+                  >
+                    <Star className="h-5 w-5 mr-2" />
+                    Elegir como favorito
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem 
                   onClick={(e) => {
                     e.stopPropagation();
@@ -421,6 +440,9 @@ export const CVCard = ({
                   {isJobReportCV && (
                     <BarChart3 className="h-4 w-4 text-blue-500 flex-shrink-0" />
                   )}
+                  {isUserCV && cv.is_favorite && (
+                    <Star className="h-4 w-4 fill-yellow-400 text-yellow-400 flex-shrink-0" />
+                  )}
                   <h3 className="font-medium text-gray-900 dark:text-gray-100 truncate">
                     {cv.title}
                   </h3>
@@ -539,6 +561,12 @@ export const CVCard = ({
               </>
             )}
             <DropdownMenuSeparator />
+            {isUserCV && onToggleFavorite && (
+              <DropdownMenuItem onClick={() => onToggleFavorite(cv.id)}>
+                <Star className="h-4 w-4 mr-2" />
+                Elegir como favorito
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem onClick={() => onStartRename(cv)}>
               <Edit className="h-4 w-4 mr-2" />
               Renombrar
