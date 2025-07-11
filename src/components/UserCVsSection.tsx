@@ -47,6 +47,7 @@ interface UserCVsSectionProps {
   onStartLogoEdit: (cvId: string) => void;
   onSelectLogo: (cv: CV, logoUrl: string) => void;
   onLogoQueryChange: (query: string) => void;
+  onAddToTracking: (cv: CV) => void;
 }
 
 export const UserCVsSection = ({
@@ -73,7 +74,8 @@ export const UserCVsSection = ({
   onRenamingTitleChange,
   onStartLogoEdit,
   onSelectLogo,
-  onLogoQueryChange
+  onLogoQueryChange,
+  onAddToTracking
 }: UserCVsSectionProps) => {
   return (
     <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow-sm mb-6">
@@ -141,9 +143,10 @@ export const UserCVsSection = ({
             {/* Table Header - only on desktop */}
             {!isMobile && (
               <div className="grid grid-cols-12 gap-4 text-sm font-medium text-gray-500 dark:text-gray-400 border-b pb-3">
-                <div className="col-span-6">Currículum</div>
+                <div className="col-span-5">Currículum</div>
                 <div className="col-span-3">Creado</div>
                 <div className="col-span-2">Actualizado</div>
+                <div className="col-span-1">Seguimiento</div>
                 <div className="col-span-1"></div>
               </div>
             )}
@@ -172,7 +175,7 @@ export const UserCVsSection = ({
                 onStartLogoEdit={onStartLogoEdit}
                 onSelectLogo={onSelectLogo}
                 onLogoQueryChange={onLogoQueryChange}
-                onAddToTracking={() => {}} // No needed for user CVs
+                onAddToTracking={onAddToTracking}
               />
             ))}
           </div>

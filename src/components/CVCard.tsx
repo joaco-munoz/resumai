@@ -129,7 +129,7 @@ export const CVCard = ({
                     className="w-12 h-12 rounded object-contain bg-gray-50 dark:bg-gray-700 p-1 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
                     onClick={(e) => {
                       e.stopPropagation();
-                      isJobMatcherCV && onStartLogoEdit(cv.id);
+                      isUserCV && onStartLogoEdit(cv.id);
                     }}
                   />
                   <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 rounded transition-all duration-200 flex items-center justify-center">
@@ -143,7 +143,7 @@ export const CVCard = ({
                   className="w-12 h-12 p-0"
                   onClick={(e) => {
                     e.stopPropagation();
-                    isJobMatcherCV && onStartLogoEdit(cv.id);
+                    isUserCV && onStartLogoEdit(cv.id);
                   }}
                 >
                   <Building2 className="h-5 w-5" />
@@ -211,7 +211,7 @@ export const CVCard = ({
           </div>
 
           <div className="flex items-center">
-            {isJobMatcherCV && (
+            {isUserCV && (
               <Button
                 size="sm"
                 onClick={(e) => {
@@ -221,7 +221,7 @@ export const CVCard = ({
                 className="mr-2 h-10 text-sm font-medium"
               >
                 <Plus className="h-4 w-4 mr-1" />
-                Añadir
+                Añadir Seguimiento
               </Button>
             )}
             <DropdownMenu>
@@ -309,8 +309,8 @@ export const CVCard = ({
           </div>
         </div>
 
-        {/* Logo Edit Interface */}
-        {isJobMatcherCV && logoEditCvId === cv.id && (
+        {/* Logo Edit Interface - Only for User CVs */}
+        {isUserCV && logoEditCvId === cv.id && (
           <div className="border-t pt-4 space-y-4" onClick={(e) => e.stopPropagation()}>
             <Input
               placeholder="Buscar empresa..."
@@ -348,40 +348,42 @@ export const CVCard = ({
   }
 
   // Desktop version
-  const gridCols = isJobMatcherCV ? "grid-cols-13" : "grid-cols-12";
+  const gridCols = isUserCV ? "grid-cols-13" : "grid-cols-12";
   
   return (
     <div className={`grid ${gridCols} gap-4 py-4 items-center border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors`}>
       {/* CV Info Column */}
-      <div className={isJobMatcherCV ? "col-span-5" : "col-span-6"}>
+      <div className={isUserCV ? "col-span-5" : "col-span-6"}>
         <div className="flex items-center gap-3">
           {/* Logo/Icon */}
           <div className="flex-shrink-0">
             {isUserCV ? (
+              currentLogo ? (
+                <div className="relative group">
+                  <img 
+                    src={currentLogo} 
+                    alt="Company logo" 
+                    className="w-10 h-10 rounded object-contain bg-gray-50 dark:bg-gray-700 p-1 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                    onClick={() => onStartLogoEdit(cv.id)}
+                  />
+                  <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 rounded transition-all duration-200 flex items-center justify-center">
+                    <Edit className="h-3 w-3 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </div>
+                </div>
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-10 h-10 p-0"
+                  onClick={() => onStartLogoEdit(cv.id)}
+                >
+                  <Building2 className="h-4 w-4" />
+                </Button>
+              )
+            ) : (
               <div className="w-10 h-10 flex items-center justify-center">
                 <FileText className="h-5 w-5 text-blue-600 dark:text-blue-400" />
               </div>
-            ) : currentLogo ? (
-              <div className="relative group">
-                <img 
-                  src={currentLogo} 
-                  alt="Company logo" 
-                  className="w-10 h-10 rounded object-contain bg-gray-50 dark:bg-gray-700 p-1 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
-                  onClick={() => isJobMatcherCV && onStartLogoEdit(cv.id)}
-                />
-                <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 rounded transition-all duration-200 flex items-center justify-center">
-                  <Edit className="h-3 w-3 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
-                </div>
-              </div>
-            ) : (
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-10 h-10 p-0"
-                onClick={() => isJobMatcherCV && onStartLogoEdit(cv.id)}
-              >
-                <Building2 className="h-4 w-4" />
-              </Button>
             )}
           </div>
 
@@ -439,8 +441,8 @@ export const CVCard = ({
             )}
           </div>
 
-          {/* Logo Edit Interface */}
-          {isJobMatcherCV && logoEditCvId === cv.id && (
+          {/* Logo Edit Interface - Only for User CVs */}
+          {isUserCV && logoEditCvId === cv.id && (
             <div className="absolute z-50 mt-2 w-80 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-4 space-y-3">
               <Input
                 placeholder="Buscar empresa..."
@@ -478,19 +480,19 @@ export const CVCard = ({
       </div>
 
       {/* Updated Date Column */}
-      <div className={`text-sm text-gray-500 dark:text-gray-400 ${isJobMatcherCV ? "col-span-3" : "col-span-2"}`}>
+      <div className={`text-sm text-gray-500 dark:text-gray-400 ${isUserCV ? "col-span-2" : "col-span-2"}`}>
         {formatDate(cv.last_updated)}
       </div>
 
-      {/* Add to Tracking Column - only for JobMatcher CVs */}
-      {isJobMatcherCV && (
-        <div className="col-span-1 flex items-center justify-end">
+      {/* Add to Tracking Column - only for User CVs */}
+      {isUserCV && (
+        <div className="col-span-2 flex items-center justify-center">
           <Button
             size="sm"
             onClick={() => onAddToTracking(cv)}
           >
             <Plus className="h-4 w-4 mr-2" />
-            Añadir a seguimiento
+            Añadir Seguimiento
           </Button>
         </div>
       )}

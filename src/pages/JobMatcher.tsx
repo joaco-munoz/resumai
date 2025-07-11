@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useLocation, useSearchParams } from "react-router-dom";
 import { SidebarProvider } from "@/components/ui/sidebar";
@@ -15,6 +16,8 @@ import { CVSelector } from "@/components/job-matcher/CVSelector";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { CVNamingModal } from "@/components/cv-builder/CVNamingModal";
+import { useFeatureLimits } from "@/hooks/useFeatureLimits";
+import { AIUsageIndicator } from "@/components/AIUsageIndicator";
 
 interface MatchResult {
   matched_keywords: string[];
@@ -36,6 +39,9 @@ const JobMatcher = () => {
   const [showNamingModal, setShowNamingModal] = useState(false);
   const [selectedCVId, setSelectedCVId] = useState<string | null>(null);
   const [selectedCVTitle, setSelectedCVTitle] = useState<string>("");
+
+  // Feature limits hook
+  const { canUseFeature, incrementUsage, isPro, usage, limits } = useFeatureLimits();
 
   // Effect to handle CV selection from URL parameter
   useEffect(() => {
@@ -60,6 +66,11 @@ const JobMatcher = () => {
     if (!jobDescription.trim()) {
       toast.error("Por favor ingresa una descripción de trabajo");
       return;
+    }
+
+    // Check if user can use this feature
+    if (!canUseFeature('job_matcher_advanced')) {
+      return; // Error already shown by the hook
     }
 
     setIsAnalyzing(true);
@@ -108,6 +119,9 @@ const JobMatcher = () => {
       const result = await response.json();
       setAnalysisResult(result);
       setShowResult(true);
+
+      // Increment usage after successful analysis
+      await incrementUsage('job_matcher_advanced');
     } catch (error) {
       console.error('Error during analysis:', error);
       toast.error("Error al analizar la compatibilidad");
@@ -177,6 +191,18 @@ const JobMatcher = () => {
                   Analiza qué tan compatible es tu CV con ofertas de trabajo específicas
                 </p>
               </div>
+              
+              {/* Usage indicator for non-pro users */}
+              {!isPro && (
+                <div className="flex-shrink-0">
+                  <AIUsageIndicator
+                    current={usage.job_matcher_advanced}
+                    limit={limits.job_matcher_advanced}
+                    type="job_matcher_advanced"
+                    isPro={isPro}
+                  />
+                </div>
+              )}
             </div>
 
             {/* CV Selector */}
@@ -199,7 +225,11 @@ const JobMatcher = () => {
             </div>
 
             {/* Analysis Section */}
-            <Button onClick={analyzeMatch} disabled={isAnalyzing} className="w-full">
+            <Button 
+              onClick={analyzeMatch} 
+              disabled={isAnalyzing || !canUseFeature('job_matcher_advanced')} 
+              className="w-full"
+            >
               {isAnalyzing ? "Analizando..." : "Analizar Compatibilidad"}
             </Button>
 
@@ -208,6 +238,9 @@ const JobMatcher = () => {
               <Card className="mt-6">
                 <CardHeader>
                   <CardTitle>Resultado del Análisis</CardTitle>
+                  <CardDescription>
+                    Informe generado con el CV: {selectedCVTitle}
+                  </CardDescription>
                   <CardDescription>
                     Porcentaje de compatibilidad: {Math.round(analysisResult.score)}%
                   </CardDescription>

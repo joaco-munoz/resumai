@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Search, BarChart3, Target } from "lucide-react";
+import { Search, BarChart3 } from "lucide-react";
 import { CVCard } from "./CVCard";
 
 interface CV {
@@ -80,16 +80,27 @@ export const JobMatcherReportsSection = ({
   return (
     <Card className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow-sm">
       <CardHeader className="pb-3 sm:pb-6">
-        <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
-          <BarChart3 className="h-5 w-5 text-green-600 dark:text-green-400" />
-          Informes JobMatcher
-        </CardTitle>
-        <p className="text-sm text-gray-600 dark:text-gray-300">
-          Informes y análisis generados con la herramienta JobMatcher
-        </p>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+              <BarChart3 className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+              Informes JobMatcher
+            </CardTitle>
+            <p className="text-sm text-gray-600 dark:text-gray-300 mt-1">
+              Tus análisis de compatibilidad de CVs con ofertas de trabajo
+            </p>
+          </div>
+          <Button 
+            onClick={onGoToJobMatcher}
+            className="flex items-center gap-2"
+          >
+            <BarChart3 className="h-4 w-4" />
+            Nuevo Análisis
+          </Button>
+        </div>
       </CardHeader>
       <CardContent>
-        {/* Search for JobMatcher Reports */}
+        {/* Search for Job Matcher Reports */}
         {jobMatcherReports.length > 0 && (
           <div className="mb-4 sm:mb-6">
             <div className="relative w-full">
@@ -108,11 +119,11 @@ export const JobMatcherReportsSection = ({
           <div className="text-center py-6 sm:py-12 px-3 sm:px-6">
             <BarChart3 className="h-14 w-14 text-gray-400 mx-auto mb-5" />
             <h3 className="text-lg sm:text-xl font-medium text-gray-900 dark:text-gray-100 mb-3">
-              {jobMatcherReports.length === 0 ? "No tienes informes JobMatcher" : "No se encontraron informes"}
+              {jobMatcherReports.length === 0 ? "No tienes informes de Job Matcher" : "No se encontraron informes"}
             </h3>
             <p className="text-sm sm:text-base text-gray-500 dark:text-gray-400 mb-5 max-w-md mx-auto">
               {jobMatcherReports.length === 0 
-                ? "Los informes generados con JobMatcher aparecerán aquí" 
+                ? "Crea tu primer informe comparando un CV con ofertas de trabajo" 
                 : "Intenta con otro término de búsqueda"
               }
             </p>
@@ -122,8 +133,8 @@ export const JobMatcherReportsSection = ({
                 size={isMobile ? "default" : "lg"}
                 className="h-12 px-5 text-base font-medium"
               >
-                <Target className="h-5 w-5 mr-2" />
-                Ir a JobMatcher
+                <BarChart3 className="h-5 w-5 mr-2" />
+                Crear Primer Informe
               </Button>
             )}
           </div>
@@ -131,11 +142,10 @@ export const JobMatcherReportsSection = ({
           <div className="space-y-4">
             {/* Table Header - only on desktop */}
             {!isMobile && (
-              <div className="grid grid-cols-13 gap-4 text-sm font-medium text-gray-500 dark:text-gray-400 border-b pb-3">
-                <div className="col-span-5">Informe</div>
+              <div className="grid grid-cols-12 gap-4 text-sm font-medium text-gray-500 dark:text-gray-400 border-b pb-3">
+                <div className="col-span-6">Informe</div>
                 <div className="col-span-3">Creado</div>
-                <div className="col-span-3">Actualizado</div>
-                <div className="col-span-1"></div>
+                <div className="col-span-2">Actualizado</div>
                 <div className="col-span-1"></div>
               </div>
             )}
@@ -164,7 +174,7 @@ export const JobMatcherReportsSection = ({
                 onStartLogoEdit={onStartLogoEdit}
                 onSelectLogo={onSelectLogo}
                 onLogoQueryChange={onLogoQueryChange}
-                onAddToTracking={onAddToTracking}
+                onAddToTracking={() => {}} // Removed for job matcher reports
               />
             ))}
           </div>

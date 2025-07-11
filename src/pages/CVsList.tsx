@@ -193,19 +193,19 @@ export default function CVsList() {
     }
 
     try {
-      // Extract job title and company from CV content
-      let jobTitle = 'Posición sin especificar';
+      // Extract job title and company from CV title or content
+      let jobTitle = cv.title || 'Posición sin especificar';
       let companyName = 'Empresa sin especificar';
 
-      if (cv.title) {
-        const extractedJobTitle = extractJobTitle(cv.title);
+      // If there's a company logo, we can try to extract company name from it
+      const currentLogo = logoMap[cv.id] || cv.content?.companyLogo;
+      if (currentLogo) {
+        // Try to extract company name from logo URL or content
         const extractedCompanyName = extractCompanyName(cv.title);
-        
-        if (extractedJobTitle) jobTitle = extractedJobTitle;
         if (extractedCompanyName) companyName = extractedCompanyName;
       }
 
-      console.log('Adding to tracking:', { jobTitle, companyName, cvTitle: cv.title });
+      console.log('Adding CV to tracking:', { jobTitle, companyName, cvTitle: cv.title });
 
       // Check if entries with same company & position already exist
       const { data: existingEntries, error: fetchError } = await supabase
@@ -248,7 +248,7 @@ export default function CVsList() {
           company: companyName,
           status: 'saved',
           applied_date: new Date().toISOString().split('T')[0],
-          notes: `Informe JobMatcher: ${cv.title}`,
+          notes: `CV: ${cv.title}`,
           cv_id: cv.id
         });
 
@@ -256,7 +256,7 @@ export default function CVsList() {
         console.error('Error adding to tracking:', error);
         toast.error(`Error al agregar al seguimiento: ${error.message}`);
       } else {
-        toast.success("Informe agregado al seguimiento de Kanban");
+        toast.success("CV agregado al seguimiento de Kanban");
       }
     } catch (error) {
       console.error('Error adding to tracking:', error);
@@ -327,6 +327,7 @@ export default function CVsList() {
                 onStartLogoEdit={startLogoEdit}
                 onSelectLogo={handleSelectLogo}
                 onLogoQueryChange={setLogoQuery}
+                onAddToTracking={handleAddToTracking}
               />
 
               {/* JobMatcher Reports Section */}
@@ -355,7 +356,7 @@ export default function CVsList() {
                 onStartLogoEdit={startLogoEdit}
                 onSelectLogo={handleSelectLogo}
                 onLogoQueryChange={setLogoQuery}
-                onAddToTracking={handleAddToTracking}
+                onAddToTracking={() => {}} // No needed for job matcher reports
               />
             </div>
           </div>
