@@ -6,6 +6,38 @@ import { QuickActions } from "@/components/dashboard/QuickActions";
 import { RecentActivity } from "@/components/dashboard/RecentActivity";
 
 export default function Dashboard() {
+  // Mock data for dashboard stats
+  const mockStats = {
+    cvsCreated: 3,
+    applications: 12,
+    interviews: 4,
+    responseRate: 33
+  };
+
+  // Mock data for recent activities
+  const mockActivities = [
+    {
+      id: '1',
+      type: 'cv_created' as const,
+      title: 'CV Desarrollador Frontend',
+      date: 'Hace 2 días',
+      status: 'Completado'
+    },
+    {
+      id: '2',
+      type: 'application_sent' as const,
+      title: 'Aplicación a TechCorp',
+      date: 'Hace 3 días'
+    },
+    {
+      id: '3',
+      type: 'interview_scheduled' as const,
+      title: 'Entrevista con StartupXYZ',
+      date: 'Hace 5 días',
+      status: 'Programada'
+    }
+  ];
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full">
@@ -24,13 +56,13 @@ export default function Dashboard() {
               </div>
 
               {/* Stats */}
-              <DashboardStats />
+              <DashboardStats stats={mockStats} />
 
               {/* Quick Actions */}
               <QuickActions />
 
               {/* Recent Activity */}
-              <RecentActivity />
+              <RecentActivity activities={mockActivities} />
             </div>
           </div>
         </SidebarInset>
