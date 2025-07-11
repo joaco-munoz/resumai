@@ -1,7 +1,7 @@
 
 import { FileText, BarChart3, Briefcase, User, CreditCard, Home, LogOut, Kanban } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
-import { LogoIcon } from "./LogoIcon";
+import LogoIcon from "./LogoIcon";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 

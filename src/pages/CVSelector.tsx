@@ -53,7 +53,10 @@ const CVSelector = () => {
         return;
       }
 
-      const sortedCVs = data || [];
+      const sortedCVs = (data || []).map(cv => ({
+        ...cv,
+        content: cv.content as CVData
+      }));
       setCvs(sortedCVs);
 
       // Auto-select favorite CV or first CV
@@ -107,7 +110,7 @@ const CVSelector = () => {
         .insert({
           user_id: user?.id,
           title: 'CV sin título',
-          content: newCVData,
+          content: newCVData as any,
           status: 'draft',
           template_name: 'modern',
           cv_source: 'editor',

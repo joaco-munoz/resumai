@@ -152,14 +152,14 @@ const JobMatcher = () => {
 
       const { data, error } = await supabase
         .from('cvs')
-        .insert([{
+        .insert({
           user_id: user.id,
           title: reportName,
-          content: reportData,
+          content: reportData as any,
           status: 'report' as const,
           template_name: 'job_matcher_report',
           cv_source: 'job_matcher',
-        }])
+        })
         .select();
 
       if (error) {
