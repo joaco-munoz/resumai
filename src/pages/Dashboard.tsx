@@ -1,216 +1,40 @@
-import { useState, useEffect } from "react";
-import { SidebarProvider, SidebarInset, useSidebar } from "@/components/ui/sidebar";
+
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
-import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 import { DashboardStats } from "@/components/dashboard/DashboardStats";
 import { QuickActions } from "@/components/dashboard/QuickActions";
 import { RecentActivity } from "@/components/dashboard/RecentActivity";
-import { OnboardingModal } from "@/components/onboarding/OnboardingModal";
-import { useOnboarding } from "@/hooks/useOnboarding";
-import { useSubscriptionStatus } from "@/hooks/useSubscriptionStatus";
-import { Badge } from "@/components/ui/badge";
-import { Crown, Menu } from "lucide-react";
-import { NPSModal } from "@/components/NPSModal";
-import { useNPS } from "@/hooks/useNPS";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { Button } from "@/components/ui/button";
 
-const Dashboard = () => {
-  const { user } = useAuth();
-  const { showOnboarding, isLoading: onboardingLoading, completeOnboarding } = useOnboarding();
-  const { tier, isPremium, isLoading: statusLoading } = useSubscriptionStatus();
-  const [stats, setStats] = useState({
-    cvsCreated: 0,
-    applications: 0,
-    interviews: 0,
-    responseRate: 0
-  });
-  const [recentActivities, setRecentActivities] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const { shouldShowNPS, dismissNPS } = useNPS();
-  const isMobile = useIsMobile();
-  
-  // We'll use this in the actual component, not here in the provider
-  const toggleSidebarFn = () => {
-    // This will be implemented in the component after SidebarProvider is rendered
-  };
-
-  useEffect(() => {
-    if (user) {
-      fetchDashboardData();
-    }
-  }, [user]);
-
-  const fetchDashboardData = async () => {
-    if (!user) return;
-    
-    setLoading(true);
-    try {
-      // Fetch CVs count
-      const { count: cvsCount } = await supabase
-        .from('cvs')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id);
-
-      // Count applications with status 'applied' (Postulado)
-      const { count: applicationsCount } = await supabase
-        .from('job_applications_tracking')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id)
-        .eq('status', 'applied');
-
-      // Count applications with status 'interviewing' (En entrevista)
-      const { count: interviewsCount } = await supabase
-        .from('job_applications_tracking')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id)
-        .eq('status', 'interviewing');
-
-      setStats({
-        cvsCreated: cvsCount || 0,
-        applications: applicationsCount || 0,
-        interviews: interviewsCount || 0,
-        responseRate: 0
-      });
-
-      // Fetch recent activities
-      const { data: recentCVs } = await supabase
-        .from('cvs')
-        .select('id, title, created_at')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(3);
-
-      const { data: recentApplications } = await supabase
-        .from('job_applications_tracking')
-        .select('id, status, applied_date, position, company')
-        .eq('user_id', user.id)
-        .order('applied_date', { ascending: false })
-        .limit(3);
-
-      const activities = [
-        ...(recentCVs || []).map(cv => ({
-          id: cv.id,
-          type: 'cv_created' as const,
-          title: cv.title,
-          date: new Date(cv.created_at).toLocaleDateString('es-ES'),
-          status: 'Completado'
-        })),
-        ...(recentApplications || []).map(app => ({
-          id: app.id,
-          type: 'application_sent' as const,
-          title: app.position || 'Aplicación',
-          date: new Date(app.applied_date).toLocaleDateString('es-ES'),
-          status: app.status
-        }))
-      ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 5);
-
-      setRecentActivities(activities);
-
-    } catch (error) {
-      console.error('Error fetching dashboard data:', error);
-      toast.error("Error al cargar los datos del dashboard");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleOnboardingClose = () => {
-    completeOnboarding();
-  };
-
-  if (loading || onboardingLoading || statusLoading) {
-    return (
-      <SidebarProvider>
-        <div className="min-h-screen flex w-full bg-gray-50">
-          <AppSidebar />
-          <SidebarInset>
-            <div className="flex-1 flex items-center justify-center">
-              <div className="text-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-600 mx-auto"></div>
-                <p className="mt-2 text-gray-600">Cargando dashboard...</p>
-              </div>
-            </div>
-          </SidebarInset>
-        </div>
-      </SidebarProvider>
-    );
-  }
-
+export default function Dashboard() {
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-gray-50">
+      <div className="min-h-screen flex w-full">
         <AppSidebar />
-        <main className="flex-1 overflow-x-hidden">
-          <header className="bg-white border-b px-4 sm:px-6 py-4">
-            <div className="flex items-center justify-between w-full">
-              <div>
-                <div className="flex items-center gap-3">
-                  {isMobile && (
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={() => {
-                        const sidebar = document.querySelector('[data-state]');
-                        if (sidebar) {
-                          const isCollapsed = sidebar.getAttribute('data-state') === 'collapsed';
-                          sidebar.setAttribute('data-state', isCollapsed ? 'expanded' : 'collapsed');
-                        }
-                      }} 
-                      className="mr-2 p-1"
-                      aria-label="Toggle menu"
-                    >
-                      <Menu className="h-5 w-5" />
-                    </Button>
-                  )}
-                  <h1 className="text-2xl sm:text-3xl font-bold gradient-text">Dashboard</h1>
-                </div>
-                <p className="text-sm sm:text-base text-gray-600 mt-2">
-                  {isPremium 
-                    ? "Aprovecha todas las funciones premium" 
-                    : "Resumen de tu actividad y progreso"
-                  }
+        <SidebarInset>
+          <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
+            <div className="max-w-7xl mx-auto">
+              {/* Header */}
+              <div className="mb-8">
+                <h1 className="font-bold text-3xl gradient-text mb-2">
+                  Dashboard
+                </h1>
+                <p className="text-gray-600 dark:text-gray-300">
+                  Bienvenido a tu panel de control. Aquí puedes gestionar tus CVs y ver tu progreso.
                 </p>
               </div>
-              {isPremium && (
-                <Badge 
-                  variant="default"
-                  className="bg-gradient-to-r from-brand-500 to-brand-700 text-white hidden sm:flex"
-                >
-                  <Crown className="h-3 w-3 mr-1" />
-                  Plan Pro
-                </Badge>
-              )}
-            </div>
-          </header>
-          
-          <div className="flex-1 p-4 sm:p-6">
-            <div className="space-y-4 sm:space-y-6">
-              <DashboardStats stats={stats} />
-              
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-                <QuickActions />
-                <RecentActivity activities={recentActivities} />
-              </div>
+
+              {/* Stats */}
+              <DashboardStats />
+
+              {/* Quick Actions */}
+              <QuickActions />
+
+              {/* Recent Activity */}
+              <RecentActivity />
             </div>
           </div>
-        </main>
+        </SidebarInset>
       </div>
-
-      {/* Onboarding Modal */}
-      <OnboardingModal 
-        isOpen={showOnboarding} 
-        onClose={handleOnboardingClose}
-      />
-
-      <NPSModal 
-        isOpen={shouldShowNPS} 
-        onClose={dismissNPS} 
-      />
     </SidebarProvider>
   );
-};
-
-export default Dashboard;
+}
