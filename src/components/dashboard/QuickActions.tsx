@@ -1,7 +1,7 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { FileText, BarChart3, Briefcase, Plus } from "lucide-react";
+import { FileText, BarChart3, Briefcase, FolderOpen } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export function QuickActions() {
@@ -28,6 +28,13 @@ export function QuickActions() {
       icon: Briefcase,
       action: () => navigate("/app/kanban"),
       buttonText: "Ver Seguimiento"
+    },
+    {
+      title: "Mis Currículums",
+      description: "Revisa tus currículums e informes",
+      icon: FolderOpen,
+      action: () => navigate("/app/cvs"),
+      buttonText: "Ver Currículums"
     }
   ];
 
@@ -36,26 +43,27 @@ export function QuickActions() {
       <h2 className="text-xl font-semibold mb-4 text-gray-900 dark:text-gray-100">
         Acciones Rápidas
       </h2>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {actions.map((action, index) => (
           <Card key={index} className="bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 shadow-sm hover:shadow-md transition-shadow">
-            <CardHeader className="pb-3">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-100 dark:bg-blue-900 rounded-lg">
-                  <action.icon className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+            <CardHeader className="py-2 px-3">
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 bg-blue-100 dark:bg-blue-900 rounded-lg">
+                  <action.icon className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                 </div>
                 <div>
-                  <CardTitle className="text-lg">{action.title}</CardTitle>
+                  <CardTitle className="text-base">{action.title}</CardTitle>
                 </div>
               </div>
-              <CardDescription className="text-sm">
+              <CardDescription className="text-xs mt-1">
                 {action.description}
               </CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="pt-0 pb-3 px-3">
               <Button 
                 onClick={action.action}
-                className="w-full"
+                className="w-full text-sm py-1.5" 
+                size="sm"
               >
                 {action.buttonText}
               </Button>
