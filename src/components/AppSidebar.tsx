@@ -60,41 +60,43 @@ export function AppSidebar() {
   };
 
   return (
-    <Sidebar className="w-[220px] border-r border-gray-200">
-      <SidebarHeader className="p-6 border-b border-gray-100">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-8 h-8 bg-[#1E63FF] rounded-lg flex items-center justify-center">
+    <Sidebar className="w-64 bg-white border-r border-gray-100 shadow-sm">
+      <SidebarHeader className="px-6 py-6 border-b border-gray-50">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-sm">
             <FileText className="h-5 w-5 text-white" />
           </div>
-          <span className="font-bold text-lg text-[#1E63FF]">ResumAI</span>
-        </div>
-        <div className="inline-flex items-center px-3 py-1 rounded-full bg-gray-100 text-sm text-gray-600">
-          Plan Gratuito
+          <div className="flex flex-col">
+            <span className="font-bold text-xl text-gray-900">ResumAI</span>
+            <div className="inline-flex items-center px-2 py-1 rounded-full bg-gray-50 text-xs text-gray-600 font-medium mt-1">
+              Plan Gratuito
+            </div>
+          </div>
         </div>
       </SidebarHeader>
       
       <SidebarContent className="px-4 py-6">
         <SidebarGroup>
           <SidebarGroupContent>
-            <SidebarMenu className="space-y-2">
+            <SidebarMenu className="space-y-1">
               {menuItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild className="h-12 rounded-lg">
+                  <SidebarMenuButton asChild className="h-12 rounded-xl transition-all duration-200 hover:shadow-sm">
                     <NavLink
                       to={item.url}
                       className={({ isActive }) =>
-                        `flex items-center gap-3 px-4 py-3 rounded-lg transition-colors w-full ${
+                        `flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200 w-full ${
                           isActive
-                            ? "bg-[#1E63FF] text-white"
-                            : "text-[#334155] hover:bg-gray-50"
+                            ? "bg-gradient-to-r from-blue-500 to-blue-600 text-white shadow-md shadow-blue-200"
+                            : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
                         }`
                       }
                       end={item.url === "/app"}
                     >
                       {({ isActive }) => (
                         <>
-                          <item.icon className={`h-5 w-5 ${isActive ? "text-white" : "text-[#667085]"}`} />
-                          <span className="font-medium">{item.title}</span>
+                          <item.icon className={`h-5 w-5 ${isActive ? "text-white" : "text-gray-500"}`} />
+                          <span className="font-medium text-sm">{item.title}</span>
                         </>
                       )}
                     </NavLink>
@@ -106,14 +108,14 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
 
-      <SidebarFooter className="p-6 border-t border-gray-100">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="w-10 h-10 bg-[#1E63FF] rounded-full flex items-center justify-center">
-            <span className="text-white font-semibold">D</span>
+      <SidebarFooter className="p-6 border-t border-gray-50 bg-gray-25">
+        <div className="flex items-center gap-3 mb-4 p-3 bg-white rounded-xl border border-gray-100">
+          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white font-semibold text-sm shadow-sm">
+            D
           </div>
-          <div className="flex-1">
-            <div className="font-semibold text-gray-900">Davitech</div>
-            <div className="text-sm text-gray-500">davitech.dev@gmail.com</div>
+          <div className="flex-1 min-w-0">
+            <div className="font-semibold text-gray-900 text-sm truncate">Davitech</div>
+            <div className="text-xs text-gray-500 truncate">davitech.dev@gmail.com</div>
           </div>
         </div>
         
@@ -121,7 +123,7 @@ export function AppSidebar() {
           <SidebarMenuButton asChild>
             <NavLink
               to="/app/profile"
-              className="flex items-center gap-3 px-2 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors w-full"
+              className="flex items-center gap-3 px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-white rounded-lg transition-all duration-200 w-full text-sm"
             >
               <User className="h-4 w-4" />
               <span>Mi Perfil</span>
@@ -129,7 +131,7 @@ export function AppSidebar() {
           </SidebarMenuButton>
           
           <SidebarMenuButton onClick={handleSignOut}>
-            <div className="flex items-center gap-3 px-2 py-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors w-full cursor-pointer">
+            <div className="flex items-center gap-3 px-3 py-2 text-gray-600 hover:text-gray-900 hover:bg-white rounded-lg transition-all duration-200 w-full cursor-pointer text-sm">
               <LogOut className="h-4 w-4" />
               <span>Cerrar Sesión</span>
             </div>
