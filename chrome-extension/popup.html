@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ResumAI Job Assistant</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="popup-container">
+    <!-- Header -->
+    <div class="popup-header">
+      <img src="icons/icon32.png" alt="ResumAI" class="logo">
+      <h1>ResumAI Job Assistant</h1>
+    </div>
+
+    <!-- Estado de conexión -->
+    <div class="connection-status" id="connectionStatus">
+      <div class="status-indicator" id="statusIndicator"></div>
+      <span id="statusText">Verificando conexión...</span>
+    </div>
+
+    <!-- Sección de autenticación -->
+    <div class="auth-section" id="authSection">
+      <div class="auth-content">
+        <h2>Conectar con ResumAI</h2>
+        <p>Para usar la extensión, necesitas autenticarte con tu cuenta de ResumAI.</p>
+        
+        <div class="auth-methods">
+          <div class="auth-method">
+            <h3>Método 1: Token Manual</h3>
+            <p>Copia tu token de sesión desde ResumAI:</p>
+            <div class="input-group">
+              <input type="password" id="tokenInput" placeholder="Pega tu token aquí...">
+              <button id="tokenSubmit" class="btn-primary">Conectar</button>
+            </div>
+            <small>El token se encuentra en las herramientas de desarrollador → Application → Local Storage</small>
+          </div>
+          
+          <div class="divider">O</div>
+          
+          <div class="auth-method">
+            <h3>Método 2: Abrir ResumAI</h3>
+            <p>Abre ResumAI en una nueva pestaña y luego regresa aquí:</p>
+            <button id="openResumAI" class="btn-secondary">Abrir ResumAI</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Sección principal (cuando está autenticado) -->
+    <div class="main-section" id="mainSection" style="display: none;">
+      <!-- Información del usuario -->
+      <div class="user-info" id="userInfo">
+        <div class="user-avatar">
+          <div class="avatar-placeholder" id="userAvatar">U</div>
+        </div>
+        <div class="user-details">
+          <h3 id="userName">Usuario</h3>
+          <p id="userEmail">email@ejemplo.com</p>
+        </div>
+        <button id="logoutBtn" class="btn-logout">Desconectar</button>
+      </div>
+
+      <!-- Información de la página actual -->
+      <div class="page-info" id="pageInfo">
+        <h3>Página Actual</h3>
+        <div class="page-details" id="pageDetails">
+          <p>Cargando información de la página...</p>
+        </div>
+      </div>
+
+      <!-- Selector de CV -->
+      <div class="cv-section">
+        <h3>Seleccionar CV</h3>
+        <div class="cv-selector">
+          <select id="cvSelect" class="cv-select">
+            <option value="">Cargando CVs...</option>
+          </select>
+          <button id="refreshCVs" class="btn-refresh">↻</button>
+        </div>
+        <div class="cv-preview" id="cvPreview" style="display: none;">
+          <h4>Vista previa del CV</h4>
+          <div class="cv-details" id="cvDetails"></div>
+        </div>
+      </div>
+
+      <!-- Acciones -->
+      <div class="actions-section">
+        <h3>Acciones</h3>
+        <div class="action-buttons">
+          <button id="fillFormBtn" class="btn-action btn-fill">
+            <span class="btn-icon">📝</span>
+            Rellenar Formulario
+          </button>
+          <button id="autoApplyBtn" class="btn-action btn-apply">
+            <span class="btn-icon">🚀</span>
+            Postular Automáticamente
+          </button>
+        </div>
+        <div class="action-info">
+          <small>Asegúrate de estar en una página de postulación de trabajo compatible.</small>
+        </div>
+      </div>
+
+      <!-- Configuración -->
+      <div class="settings-section">
+        <details>
+          <summary>Configuración</summary>
+          <div class="settings-content">
+            <div class="setting-item">
+              <label>
+                <input type="checkbox" id="autoFillEnabled" checked>
+                Rellenado automático habilitado
+              </label>
+            </div>
+            <div class="setting-item">
+              <label>
+                <input type="checkbox" id="notificationsEnabled" checked>
+                Mostrar notificaciones
+              </label>
+            </div>
+            <div class="setting-item">
+              <label>
+                <input type="checkbox" id="debugMode">
+                Modo debug (para desarrolladores)
+              </label>
+            </div>
+          </div>
+        </details>
+      </div>
+    </div>
+
+    <!-- Sección de error -->
+    <div class="error-section" id="errorSection" style="display: none;">
+      <div class="error-content">
+        <h2>Error de Conexión</h2>
+        <p id="errorMessage">Ha ocurrido un error inesperado.</p>
+        <button id="retryBtn" class="btn-primary">Reintentar</button>
+      </div>
+    </div>
+
+    <!-- Loading overlay -->
+    <div class="loading-overlay" id="loadingOverlay" style="display: none;">
+      <div class="loading-spinner"></div>
+      <p id="loadingText">Cargando...</p>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
