@@ -1,4 +1,3 @@
-
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { FileText, Send, Calendar, TrendingUp } from "lucide-react";
 
@@ -7,15 +6,15 @@ interface DashboardStatsProps {
     cvsCreated: number;
     applications: number;
     interviews: number;
-    responseRate: number;
   };
 }
 
 export const DashboardStats = ({ stats }: DashboardStatsProps) => {
-  // Calculate response rate: interviews / (applications + interviews) * 100
-  const totalActiveApplications = stats.applications + stats.interviews;
-  const calculatedResponseRate = totalActiveApplications > 0 
-    ? Math.round((stats.interviews / totalActiveApplications) * 100) 
+  // Calculate response rate: interviews / (interviews + applications) * 100
+  // Show '— %' only if there are no applications AND no interviews
+  const totalOpportunities = stats.applications + stats.interviews;
+  const responseRate = totalOpportunities > 0
+    ? Math.round((stats.interviews / totalOpportunities) * 100)
     : 0;
 
   return (
@@ -59,7 +58,7 @@ export const DashboardStats = ({ stats }: DashboardStatsProps) => {
           <TrendingUp className="h-4 w-4 text-muted-foreground" />
         </CardHeader>
         <CardContent>
-          <div className="text-2xl font-bold text-brand-600">{calculatedResponseRate}%</div>
+          <div className="text-2xl font-bold text-brand-600">{totalOpportunities > 0 ? `${responseRate}%` : '— %'}</div>
           <p className="text-xs text-muted-foreground">Respuestas positivas</p>
         </CardContent>
       </Card>
