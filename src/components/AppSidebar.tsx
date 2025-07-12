@@ -106,15 +106,16 @@ const MenuItem = memo(({ item, isActive, isCollapsed, isMobile }: {
         <NavLink 
           to={item.url} 
           className={({ isActive: navIsActive }) =>
-            `${navIsActive 
-              ? "bg-blue-500 text-white font-medium" 
-              : "text-gray-700"
+            `flex items-center gap-2 rounded-md px-3 py-2 transition-colors duration-200 ${
+              navIsActive 
+                ? "bg-brand-500 text-white font-medium" 
+                : "text-gray-700 hover:bg-gray-50"
             } ${isMobile ? "py-3" : ""} touch-manipulation`
           }
           end={item.url === "/app"}
         >
-          <item.icon className={`${isMobile ? "h-5 w-5" : "h-4 w-4"}`} />
-          {!isCollapsed && <span className={isMobile ? "text-base ml-3" : "ml-2"}>{item.title}</span>}
+          <item.icon className={`${isMobile ? "h-5 w-5" : "h-4 w-4"} flex-shrink-0`} />
+          {!isCollapsed && <span className={isMobile ? "text-base" : "text-sm"}>{item.title}</span>}
         </NavLink>
       </SidebarMenuButton>
     </SidebarMenuItem>
@@ -294,13 +295,15 @@ export function AppSidebar() {
                     <NavLink 
                       to="/app/admin" 
                       className={({ isActive }) =>
-                        isActive
-                          ? "bg-blue-500 text-white font-medium" 
-                          : "text-gray-700"
+                        `flex items-center gap-2 rounded-md px-3 py-2 transition-colors duration-200 ${
+                          isActive
+                            ? "bg-brand-500 text-white font-medium" 
+                            : "text-gray-700 hover:bg-gray-50"
+                        }`
                       }
                     >
-                      <LayoutDashboard className="h-4 w-4" />
-                      {!isCollapsed && <span>Panel Admin</span>}
+                      <LayoutDashboard className="h-4 w-4 flex-shrink-0" />
+                      {!isCollapsed && <span className="text-sm">Panel Admin</span>}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -326,14 +329,15 @@ export function AppSidebar() {
               <NavLink 
                 to={profileItem.url} 
                 className={({ isActive }) =>
-                  `${isActive
-                    ? "bg-blue-500 text-white font-medium" 
-                    : "text-gray-700"
+                  `flex items-center gap-2 rounded-md px-3 py-2 transition-colors duration-200 ${
+                    isActive
+                      ? "bg-brand-500 text-white font-medium" 
+                      : "text-gray-700 hover:bg-gray-50"
                   } ${isMobile ? "py-3" : ""} touch-manipulation`
                 }
               >
-                <profileItem.icon className={`${isMobile ? "h-5 w-5" : "h-4 w-4"}`} />
-                {!isCollapsed && <span className={isMobile ? "text-base ml-3" : "ml-2"}>{profileItem.title}</span>}
+                <profileItem.icon className={`${isMobile ? "h-5 w-5" : "h-4 w-4"} flex-shrink-0`} />
+                {!isCollapsed && <span className={isMobile ? "text-base" : "text-sm"}>{profileItem.title}</span>}
               </NavLink>
             </SidebarMenuButton>
           </SidebarMenuItem>
@@ -342,10 +346,10 @@ export function AppSidebar() {
               <Button
                 variant="ghost"
                 onClick={signOut}
-                className={`w-full justify-start ${isMobile ? "h-12 py-3" : "h-10"} px-2 text-gray-700 hover:bg-gray-100 touch-manipulation`}
+                className={`w-full justify-start gap-2 rounded-md px-3 py-2 transition-colors duration-200 text-gray-700 hover:bg-gray-50 hover:text-gray-700 ${isMobile ? "h-12 py-3" : "h-10"} touch-manipulation`}
               >
-                <LogOut className={`${isMobile ? "h-5 w-5" : "h-4 w-4"}`} />
-                {!isCollapsed && <span className={isMobile ? "text-base ml-3" : "ml-2"}>Cerrar Sesión</span>}
+                <LogOut className={`${isMobile ? "h-5 w-5" : "h-4 w-4"} flex-shrink-0`} />
+                {!isCollapsed && <span className={isMobile ? "text-base" : "text-sm"}>Cerrar Sesión</span>}
               </Button>
             </SidebarMenuButton>
           </SidebarMenuItem>
