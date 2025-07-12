@@ -108,8 +108,8 @@ const MenuItem = memo(({ item, isActive, isCollapsed, isMobile }: {
           className={({ isActive: navIsActive }) =>
             `flex items-center gap-2 rounded-md px-3 py-2 transition-colors duration-200 ${
               navIsActive 
-                ? "bg-brand-500 text-white font-medium" 
-                : "text-gray-700 hover:bg-gray-50"
+                ? "bg-[#1E63FF] text-white font-medium" 
+                : "text-[#334155] hover:bg-[#F1F5F9]"
             } ${isMobile ? "py-3" : ""} touch-manipulation`
           }
           end={item.url === "/app"}
@@ -297,8 +297,8 @@ export function AppSidebar() {
                       className={({ isActive }) =>
                         `flex items-center gap-2 rounded-md px-3 py-2 transition-colors duration-200 ${
                           isActive
-                            ? "bg-brand-500 text-white font-medium" 
-                            : "text-gray-700 hover:bg-gray-50"
+                            ? "bg-[#1E63FF] text-white font-medium" 
+                            : "text-[#334155] hover:bg-[#F1F5F9]"
                         }`
                       }
                     >
@@ -331,8 +331,8 @@ export function AppSidebar() {
                 className={({ isActive }) =>
                   `flex items-center gap-2 rounded-md px-3 py-2 transition-colors duration-200 ${
                     isActive
-                      ? "bg-brand-500 text-white font-medium" 
-                      : "text-gray-700 hover:bg-gray-50"
+                      ? "bg-[#1E63FF] text-white font-medium" 
+                      : "text-[#334155] hover:bg-[#F1F5F9]"
                   } ${isMobile ? "py-3" : ""} touch-manipulation`
                 }
               >
@@ -346,7 +346,7 @@ export function AppSidebar() {
               <Button
                 variant="ghost"
                 onClick={signOut}
-                className={`w-full justify-start gap-2 rounded-md px-3 py-2 transition-colors duration-200 text-gray-700 hover:bg-gray-50 hover:text-gray-700 ${isMobile ? "h-12 py-3" : "h-10"} touch-manipulation`}
+                className={`w-full justify-start gap-2 rounded-md px-3 py-2 transition-colors duration-200 text-[#334155] hover:bg-[#F1F5F9] hover:text-[#334155] ${isMobile ? "h-12 py-3" : "h-10"} touch-manipulation`}
               >
                 <LogOut className={`${isMobile ? "h-5 w-5" : "h-4 w-4"} flex-shrink-0`} />
                 {!isCollapsed && <span className={isMobile ? "text-base" : "text-sm"}>Cerrar Sesión</span>}
