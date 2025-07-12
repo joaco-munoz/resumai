@@ -87,7 +87,7 @@ function DashboardContent() {
         // 2. Obtener postulaciones recientes
         const { data: recentApplications, error: applicationsError } = await supabase
           .from('job_applications_tracking')
-          .select('id, job_title, company_name, created_at, status')
+          .select('id, position, company, created_at, status')
           .eq('user_id', user.id)
           .eq('status', 'applied')
           .order('created_at', { ascending: false })
@@ -100,7 +100,7 @@ function DashboardContent() {
         // 3. Obtener entrevistas recientes
         const { data: recentInterviews, error: interviewsError } = await supabase
           .from('job_applications_tracking')
-          .select('id, job_title, company_name, created_at, status')
+          .select('id, position, company, created_at, status')
           .eq('user_id', user.id)
           .eq('status', 'interviewing')
           .order('created_at', { ascending: false })
@@ -122,13 +122,13 @@ function DashboardContent() {
           ...(recentApplications || []).map(app => ({
             id: app.id,
             type: 'application_sent' as const,
-            title: `${app.job_title} en ${app.company_name}`,
+            title: `${app.position} en ${app.company}`,
             date: formatRelativeTime(String(app.created_at))
           })),
           ...(recentInterviews || []).map(interview => ({
             id: interview.id,
             type: 'interview_scheduled' as const,
-            title: `${interview.job_title} en ${interview.company_name}`,
+            title: `${interview.position} en ${interview.company}`,
             date: formatRelativeTime(String(interview.created_at)),
             status: 'En proceso'
           }))

@@ -91,10 +91,12 @@ export function AppSidebar() {
                       }
                       end={item.url === "/app"}
                     >
-                      <item.icon className={({ isActive }) => 
-                        `h-5 w-5 ${isActive ? "text-white" : "text-[#667085]"}`
-                      } />
-                      <span className="font-medium">{item.title}</span>
+                      {({ isActive }) => (
+                        <>
+                          <item.icon className={`h-5 w-5 ${isActive ? "text-white" : "text-[#667085]"}`} />
+                          <span className="font-medium">{item.title}</span>
+                        </>
+                      )}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
