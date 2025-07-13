@@ -113,6 +113,7 @@ const MenuItem = memo(({ item, isActive, isCollapsed, isMobile }: {
             } ${isMobile ? "py-3" : ""} touch-manipulation`
           }
           end={item.url === "/app"}
+          style={isActive ? { backgroundColor: "hsl(217.2, 91.2%, 59.8%)", color: "white", fontWeight: 500 } : {}}
         >
           <item.icon className={`${isMobile ? "h-5 w-5" : "h-4 w-4"} flex-shrink-0`} />
           {!isCollapsed && <span className={isMobile ? "text-base" : "text-sm"}>{item.title}</span>}
