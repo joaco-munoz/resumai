@@ -325,23 +325,13 @@ export function AppSidebar() {
             isCollapsed={isCollapsed} 
           />
           
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild>
-              <NavLink 
-                to={profileItem.url} 
-                className={({ isActive }) =>
-                  `flex items-center gap-2 rounded-md px-3 py-2 transition-colors duration-200 ${
-                    isActive
-                      ? "bg-[#1E63FF] text-white font-medium" 
-                      : "text-gray-700 hover:bg-[#F1F5F9]"
-                  } ${isMobile ? "py-3" : ""} touch-manipulation`
-                }
-              >
-                <profileItem.icon className={`${isMobile ? "h-5 w-5" : "h-4 w-4"} flex-shrink-0`} />
-                {!isCollapsed && <span className={isMobile ? "text-base" : "text-sm"}>{profileItem.title}</span>}
-              </NavLink>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
+          <MenuItem
+            key={profileItem.url}
+            item={profileItem}
+            isActive={isActiveMemo(profileItem.url)}
+            isCollapsed={isCollapsed}
+            isMobile={isMobile}
+          />
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
               <Button
