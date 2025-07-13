@@ -1,5 +1,5 @@
 
-// ResumAI Chrome Extension - Enhanced Popup Script
+// ResumAI Chrome Extension - Enhanced Popup Script with Real Authentication
 
 // Variables globales
 let currentUser = null;
@@ -8,6 +8,7 @@ let selectedCV = null;
 let userProfile = null;
 let currentTab = null;
 let appStats = { applications: 0, autoFills: 0 };
+let isAuthenticated = false;
 
 // Elementos del DOM
 const elements = {
@@ -16,6 +17,8 @@ const elements = {
   emailInput: document.getElementById('emailInput'),
   passwordInput: document.getElementById('passwordInput'),
   loginBtn: document.getElementById('loginBtn'),
+  loginBtnText: document.getElementById('loginBtnText'),
+  loginSpinner: document.getElementById('loginSpinner'),
   openResumAI: document.getElementById('openResumAI'),
   
   // Main elements
@@ -28,7 +31,13 @@ const elements = {
   userAvatar: document.getElementById('userAvatar'),
   userName: document.getElementById('userName'),
   userEmail: document.getElementById('userEmail'),
-  settingsBtn: document.getElementById('settingsBtn'),
+  signOutBtn: document.getElementById('signOutBtn'),
+  
+  // Navigation tabs
+  autofillTab: document.getElementById('autofillTab'),
+  profileTab: document.getElementById('profileTab'),
+  autofillContent: document.getElementById('autofillContent'),
+  profileContent: document.getElementById('profileContent'),
   
   // Page detection
   detectedSite: document.getElementById('detectedSite'),
@@ -41,17 +50,27 @@ const elements = {
   cvTitle: document.getElementById('cvTitle'),
   cvDetails: document.getElementById('cvDetails'),
   
-  // Profile elements
-  profileCard: document.getElementById('profileCard'),
+  // Profile display elements
+  profileDisplay: document.getElementById('profileDisplay'),
+  displayFullName: document.getElementById('displayFullName'),
+  displayEmail: document.getElementById('displayEmail'),
+  displayPhone: document.getElementById('displayPhone'),
+  displayLocation: document.getElementById('displayLocation'),
+  displayJobTitle: document.getElementById('displayJobTitle'),
+  displayCompany: document.getElementById('displayCompany'),
+  
+  // Profile form elements
   profileForm: document.getElementById('profileForm'),
-  profileName: document.getElementById('profileName'),
+  profileFullName: document.getElementById('profileFullName'),
+  profileEmail: document.getElementById('profileEmail'),
   profilePhone: document.getElementById('profilePhone'),
   profileLocation: document.getElementById('profileLocation'),
-  profileNameInput: document.getElementById('profileNameInput'),
-  profilePhoneInput: document.getElementById('profilePhoneInput'),
-  profileLocationInput: document.getElementById('profileLocationInput'),
+  profileJobTitle: document.getElementById('profileJobTitle'),
+  profileCompany: document.getElementById('profileCompany'),
   editProfileBtn: document.getElementById('editProfileBtn'),
   saveProfileBtn: document.getElementById('saveProfileBtn'),
+  saveProfileText: document.getElementById('saveProfileText'),
+  saveSpinner: document.getElementById('saveSpinner'),
   cancelProfileBtn: document.getElementById('cancelProfileBtn'),
   
   // Action elements
@@ -95,9 +114,13 @@ function setupEventListeners() {
   elements.openResumAI.addEventListener('click', () => {
     chrome.tabs.create({ url: 'https://resumai.dev' });
   });
+  elements.signOutBtn.addEventListener('click', handleSignOut);
+  
+  // Navigation events
+  elements.autofillTab.addEventListener('click', () => switchTab('autofill'));
+  elements.profileTab.addEventListener('click', () => switchTab('profile'));
   
   // Main events
-  elements.settingsBtn.addEventListener('click', showSettings);
   elements.refreshCVs.addEventListener('click', refreshCVs);
   elements.cvSelect.addEventListener('change', handleCVSelection);
   
@@ -114,14 +137,12 @@ function setupEventListeners() {
 async function loadStoredData() {
   try {
     const result = await chrome.storage.local.get([
-      'authToken', 
       'user', 
-      'userProfile', 
+      'authToken',
       'appStats'
     ]);
     
     currentUser = result.user || null;
-    userProfile = result.userProfile || null;
     appStats = result.appStats || { applications: 0, autoFills: 0 };
     
     updateStatsDisplay();
@@ -134,20 +155,21 @@ async function checkAuthentication() {
   showLoading('Verificando autenticación...');
   
   try {
-    const result = await chrome.storage.local.get(['authToken', 'user']);
+    // Intentar refrescar la autenticación
+    const response = await chrome.runtime.sendMessage({ action: 'refreshAuth' });
     
-    if (!result.authToken || !result.user) {
+    if (response.success && response.data.authenticated) {
+      console.log('Usuario autenticado:', response.data.user.email);
+      currentUser = response.data.user;
+      isAuthenticated = true;
+      await loadMainInterface();
+    } else {
+      console.log('Usuario no autenticado');
       showAuthSection();
-      return;
     }
-    
-    // Simular verificación de token (en implementación real, verificar con ResumAI)
-    currentUser = result.user;
-    await loadMainInterface();
     
   } catch (error) {
     console.error('Error verificando autenticación:', error);
-    showToast('Error de autenticación', 'error');
     showAuthSection();
   } finally {
     hideLoading();
@@ -163,33 +185,66 @@ async function handleLogin() {
     return;
   }
   
-  showLoading('Iniciando sesión...');
+  // Mostrar spinner
   elements.loginBtn.disabled = true;
+  elements.loginBtnText.style.display = 'none';
+  elements.loginSpinner.style.display = 'block';
   
   try {
-    // Simular autenticación (en implementación real, conectar con ResumAI)
-    const mockUser = {
-      id: 'user_' + Date.now(),
-      email: email,
-      name: email.split('@')[0],
-      avatar_url: null
-    };
+    console.log('Intentando autenticar con:', email);
     
-    await chrome.storage.local.set({
-      authToken: 'mock_token_' + Date.now(),
-      user: mockUser
+    const response = await chrome.runtime.sendMessage({ 
+      action: 'authenticate',
+      email: email,
+      password: password
     });
     
-    currentUser = mockUser;
-    await loadMainInterface();
-    showToast('Sesión iniciada correctamente', 'success');
+    if (response.success) {
+      console.log('Autenticación exitosa');
+      currentUser = response.data.user;
+      isAuthenticated = true;
+      await loadMainInterface();
+      showToast('Sesión iniciada correctamente', 'success');
+    } else {
+      console.error('Error de autenticación:', response.error);
+      let errorMessage = 'Error al iniciar sesión';
+      
+      if (response.error.includes('Invalid login credentials')) {
+        errorMessage = 'Email o contraseña incorrectos';
+      } else if (response.error.includes('Email not confirmed')) {
+        errorMessage = 'Debes confirmar tu email antes de iniciar sesión';
+      }
+      
+      showToast(errorMessage, 'error');
+    }
     
   } catch (error) {
     console.error('Error en login:', error);
-    showToast('Error al iniciar sesión', 'error');
+    showToast('Error de conexión. Verifica tu internet.', 'error');
   } finally {
     elements.loginBtn.disabled = false;
-    hideLoading();
+    elements.loginBtnText.style.display = 'block';
+    elements.loginSpinner.style.display = 'none';
+  }
+}
+
+async function handleSignOut() {
+  try {
+    await chrome.runtime.sendMessage({ action: 'signOut' });
+    
+    // Limpiar estado local
+    currentUser = null;
+    isAuthenticated = false;
+    currentCVs = [];
+    selectedCV = null;
+    userProfile = null;
+    
+    showAuthSection();
+    showToast('Sesión cerrada correctamente', 'success');
+    
+  } catch (error) {
+    console.error('Error cerrando sesión:', error);
+    showToast('Error al cerrar sesión', 'error');
   }
 }
 
@@ -204,7 +259,7 @@ async function loadMainInterface() {
 function updateUserInfo() {
   if (!currentUser) return;
   
-  const displayName = currentUser.name || currentUser.email.split('@')[0];
+  const displayName = currentUser.user_metadata?.full_name || currentUser.email.split('@')[0];
   const initials = displayName.substring(0, 2).toUpperCase();
   
   elements.userAvatar.textContent = initials;
@@ -219,38 +274,18 @@ function updateConnectionStatus(status, text) {
 
 async function loadUserCVs() {
   try {
-    // Simular carga de CVs (en implementación real, obtener de ResumAI API)
-    const mockCVs = [
-      {
-        id: 'cv1',
-        title: 'CV Desarrollador Full Stack',
-        created_at: new Date().toISOString(),
-        content: {
-          personalInfo: {
-            fullName: 'Juan Pérez',
-            email: 'juan@email.com',
-            phone: '+56 9 1234 5678',
-            location: 'Santiago, Chile'
-          }
-        }
-      },
-      {
-        id: 'cv2',
-        title: 'CV Marketing Digital',
-        created_at: new Date().toISOString(),
-        content: {
-          personalInfo: {
-            fullName: 'María González',
-            email: 'maria@email.com',
-            phone: '+56 9 8765 4321',
-            location: 'Valparaíso, Chile'
-          }
-        }
-      }
-    ];
+    console.log('Cargando CVs del usuario...');
     
-    currentCVs = mockCVs;
-    updateCVSelector();
+    const response = await chrome.runtime.sendMessage({ action: 'getUserCVs' });
+    
+    if (response.success) {
+      currentCVs = response.data;
+      console.log('CVs cargados:', currentCVs.length);
+      updateCVSelector();
+    } else {
+      console.error('Error cargando CVs:', response.error);
+      showToast('Error al cargar CVs', 'error');
+    }
     
   } catch (error) {
     console.error('Error cargando CVs:', error);
@@ -261,15 +296,24 @@ async function loadUserCVs() {
 function updateCVSelector() {
   elements.cvSelect.innerHTML = '<option value="">Seleccionar CV...</option>';
   
+  if (currentCVs.length === 0) {
+    elements.cvSelect.innerHTML = '<option value="">No hay CVs disponibles</option>';
+    return;
+  }
+  
   currentCVs.forEach(cv => {
     const option = document.createElement('option');
     option.value = cv.id;
-    option.textContent = cv.title;
+    option.textContent = `${cv.is_favorite ? '⭐ ' : ''}${cv.title}`;
     elements.cvSelect.appendChild(option);
   });
   
-  if (currentCVs.length === 0) {
-    elements.cvSelect.innerHTML = '<option value="">No hay CVs disponibles</option>';
+  // Auto-seleccionar CV favorito o el primero
+  const favoriteCV = currentCVs.find(cv => cv.is_favorite);
+  const cvToSelect = favoriteCV || currentCVs[0];
+  if (cvToSelect) {
+    elements.cvSelect.value = cvToSelect.id;
+    handleCVSelection();
   }
 }
 
@@ -279,6 +323,8 @@ async function handleCVSelection() {
   if (!selectedCVId) {
     elements.cvPreview.style.display = 'none';
     selectedCV = null;
+    elements.autofillBtn.disabled = true;
+    elements.autoApplyBtn.disabled = true;
     return;
   }
   
@@ -286,26 +332,38 @@ async function handleCVSelection() {
   
   if (selectedCV) {
     elements.cvTitle.textContent = selectedCV.title;
-    elements.cvDetails.textContent = `Creado: ${new Date(selectedCV.created_at).toLocaleDateString()}`;
+    elements.cvDetails.textContent = `Creado: ${new Date(selectedCV.created_at).toLocaleDateString('es-ES')}`;
     elements.cvPreview.style.display = 'block';
     
-    // Habilitar botones de acción
-    elements.autofillBtn.disabled = false;
-    elements.autoApplyBtn.disabled = false;
+    // Verificar detección de sitio para habilitar botones
+    await detectCurrentSite();
   }
 }
 
 async function loadUserProfile() {
   try {
-    // Simular carga de perfil (en implementación real, obtener de ResumAI)
-    const mockProfile = userProfile || {
-      fullName: currentUser?.name || '',
-      phone: '',
-      location: ''
-    };
+    console.log('Cargando perfil del usuario...');
     
-    userProfile = mockProfile;
-    updateProfileDisplay();
+    const response = await chrome.runtime.sendMessage({ action: 'getUserProfile' });
+    
+    if (response.success && response.data) {
+      userProfile = response.data;
+      console.log('Perfil cargado:', userProfile);
+      updateProfileDisplay();
+    } else {
+      console.log('No hay perfil disponible');
+      // Crear perfil básico con datos del usuario
+      userProfile = {
+        full_name: currentUser?.user_metadata?.full_name || '',
+        email: currentUser?.email || '',
+        phone: '',
+        city: '',
+        country: '',
+        job_title: '',
+        company: ''
+      };
+      updateProfileDisplay();
+    }
     
   } catch (error) {
     console.error('Error cargando perfil:', error);
@@ -315,9 +373,29 @@ async function loadUserProfile() {
 function updateProfileDisplay() {
   if (!userProfile) return;
   
-  elements.profileName.textContent = userProfile.fullName || '-';
-  elements.profilePhone.textContent = userProfile.phone || '-';
-  elements.profileLocation.textContent = userProfile.location || '-';
+  elements.displayFullName.textContent = userProfile.full_name || '-';
+  elements.displayEmail.textContent = userProfile.email || '-';
+  elements.displayPhone.textContent = userProfile.phone || '-';
+  
+  const location = [userProfile.city, userProfile.country].filter(Boolean).join(', ');
+  elements.displayLocation.textContent = location || '-';
+  
+  elements.displayJobTitle.textContent = userProfile.job_title || '-';
+  elements.displayCompany.textContent = userProfile.company || '-';
+}
+
+function switchTab(tabName) {
+  // Actualizar tabs
+  document.querySelectorAll('.nav-tab').forEach(tab => tab.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+  
+  if (tabName === 'autofill') {
+    elements.autofillTab.classList.add('active');
+    elements.autofillContent.classList.add('active');
+  } else if (tabName === 'profile') {
+    elements.profileTab.classList.add('active');
+    elements.profileContent.classList.add('active');
+  }
 }
 
 function toggleProfileEdit() {
@@ -327,40 +405,72 @@ function toggleProfileEdit() {
     cancelProfileEdit();
   } else {
     // Llenar formulario con datos actuales
-    elements.profileNameInput.value = userProfile?.fullName || '';
-    elements.profilePhoneInput.value = userProfile?.phone || '';
-    elements.profileLocationInput.value = userProfile?.location || '';
+    elements.profileFullName.value = userProfile?.full_name || '';
+    elements.profileEmail.value = userProfile?.email || '';
+    elements.profilePhone.value = userProfile?.phone || '';
     
-    elements.profileCard.style.display = 'none';
+    const location = [userProfile?.city, userProfile?.country].filter(Boolean).join(', ');
+    elements.profileLocation.value = location || '';
+    
+    elements.profileJobTitle.value = userProfile?.job_title || '';
+    elements.profileCompany.value = userProfile?.company || '';
+    
+    elements.profileDisplay.style.display = 'none';
     elements.profileForm.style.display = 'block';
     elements.editProfileBtn.textContent = 'Cancelar';
   }
 }
 
 async function saveProfile() {
-  const newProfile = {
-    fullName: elements.profileNameInput.value.trim(),
-    phone: elements.profilePhoneInput.value.trim(),
-    location: elements.profileLocationInput.value.trim()
-  };
+  // Mostrar spinner
+  elements.saveProfileBtn.disabled = true;
+  elements.saveProfileText.style.display = 'none';
+  elements.saveSpinner.style.display = 'block';
   
   try {
-    // Guardar en storage
-    await chrome.storage.local.set({ userProfile: newProfile });
-    userProfile = newProfile;
+    const locationParts = elements.profileLocation.value.split(',').map(part => part.trim());
+    const city = locationParts[0] || '';
+    const country = locationParts[1] || '';
+
+    const profileData = {
+      full_name: elements.profileFullName.value.trim(),
+      email: elements.profileEmail.value.trim(),
+      phone: elements.profilePhone.value.trim(),
+      city: city,
+      country: country,
+      job_title: elements.profileJobTitle.value.trim(),
+      company: elements.profileCompany.value.trim()
+    };
     
-    updateProfileDisplay();
-    cancelProfileEdit();
-    showToast('Perfil actualizado correctamente', 'success');
+    console.log('Guardando perfil:', profileData);
+    
+    const response = await chrome.runtime.sendMessage({ 
+      action: 'updateProfile',
+      profileData: profileData
+    });
+    
+    if (response.success) {
+      userProfile = { ...userProfile, ...profileData };
+      updateProfileDisplay();
+      cancelProfileEdit();
+      showToast('Perfil actualizado correctamente', 'success');
+    } else {
+      console.error('Error actualizando perfil:', response.error);
+      showToast('Error al actualizar perfil', 'error');
+    }
     
   } catch (error) {
     console.error('Error guardando perfil:', error);
     showToast('Error al guardar perfil', 'error');
+  } finally {
+    elements.saveProfileBtn.disabled = false;
+    elements.saveProfileText.style.display = 'block';
+    elements.saveSpinner.style.display = 'none';
   }
 }
 
 function cancelProfileEdit() {
-  elements.profileCard.style.display = 'block';
+  elements.profileDisplay.style.display = 'block';
   elements.profileForm.style.display = 'none';
   elements.editProfileBtn.textContent = 'Editar';
 }
@@ -395,7 +505,7 @@ async function detectCurrentSite() {
     elements.detectionStatus.innerHTML = '<span class="status-badge" style="background: #dcfce7; color: #166534;">✓ Compatible</span>';
     
     // Habilitar acciones si hay CV seleccionado
-    if (selectedCV) {
+    if (selectedCV && isAuthenticated) {
       elements.autofillBtn.disabled = false;
       elements.autoApplyBtn.disabled = false;
     }
@@ -410,7 +520,7 @@ async function detectCurrentSite() {
 }
 
 async function performAutofill() {
-  if (!selectedCV || !currentTab) {
+  if (!selectedCV || !currentTab || !isAuthenticated) {
     showToast('Selecciona un CV primero', 'warning');
     return;
   }
@@ -418,11 +528,16 @@ async function performAutofill() {
   showLoading('Rellenando formulario...');
   
   try {
+    // Combinar datos del CV y perfil
+    const autofillData = {
+      personalInfo: selectedCV.content?.personalInfo || {},
+      profile: userProfile || {}
+    };
+    
     // Enviar mensaje al content script
     await chrome.tabs.sendMessage(currentTab.id, {
       action: 'autofill',
-      cvData: selectedCV.content,
-      profileData: userProfile
+      data: autofillData
     });
     
     // Actualizar estadísticas
@@ -440,7 +555,7 @@ async function performAutofill() {
 }
 
 async function performAutoApply() {
-  if (!selectedCV || !currentTab) {
+  if (!selectedCV || !currentTab || !isAuthenticated) {
     showToast('Selecciona un CV primero', 'warning');
     return;
   }
@@ -455,11 +570,16 @@ async function performAutoApply() {
   showLoading('Postulando automáticamente...');
   
   try {
+    // Combinar datos del CV y perfil
+    const applicationData = {
+      personalInfo: selectedCV.content?.personalInfo || {},
+      profile: userProfile || {}
+    };
+    
     // Enviar mensaje al content script
     await chrome.tabs.sendMessage(currentTab.id, {
       action: 'autoApply',
-      cvData: selectedCV.content,
-      profileData: userProfile
+      data: applicationData
     });
     
     // Actualizar estadísticas
@@ -499,11 +619,6 @@ async function refreshCVs() {
     elements.refreshCVs.disabled = false;
     elements.refreshCVs.textContent = '↻';
   }
-}
-
-function showSettings() {
-  // Implementar modal de configuración
-  showToast('Configuración próximamente', 'info');
 }
 
 // Funciones de UI

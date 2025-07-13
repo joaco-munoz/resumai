@@ -1,3 +1,4 @@
+
 // Background Service Worker para ResumAI Chrome Extension
 
 // Configuración de Supabase
@@ -22,31 +23,37 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   
   switch (request.action) {
     case 'authenticate':
-      handleAuthentication(request.token)
+      handleAuthentication(request.email, request.password)
         .then(result => sendResponse({ success: true, data: result }))
         .catch(error => sendResponse({ success: false, error: error.message }));
-      return true; // Mantener el canal abierto para respuesta asíncrona
+      return true;
       
-    case 'getUserData':
-      getUserData(request.token)
+    case 'refreshAuth':
+      refreshAuthentication()
         .then(result => sendResponse({ success: true, data: result }))
         .catch(error => sendResponse({ success: false, error: error.message }));
       return true;
       
     case 'getUserCVs':
-      getUserCVs(request.token)
+      getUserCVs()
         .then(result => sendResponse({ success: true, data: result }))
         .catch(error => sendResponse({ success: false, error: error.message }));
       return true;
       
-    case 'getCVContent':
-      getCVContent(request.cvId, request.token)
+    case 'getUserProfile':
+      getUserProfile()
         .then(result => sendResponse({ success: true, data: result }))
         .catch(error => sendResponse({ success: false, error: error.message }));
       return true;
       
-    case 'downloadCV':
-      downloadCV(request.cvId, request.token)
+    case 'updateProfile':
+      updateProfile(request.profileData)
+        .then(result => sendResponse({ success: true, data: result }))
+        .catch(error => sendResponse({ success: false, error: error.message }));
+      return true;
+      
+    case 'signOut':
+      signOut()
         .then(result => sendResponse({ success: true, data: result }))
         .catch(error => sendResponse({ success: false, error: error.message }));
       return true;
@@ -62,7 +69,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
     const url = new URL(tab.url);
     const hostname = url.hostname.replace('www.', '');
     
-    if (SUPPORTED_SITES.includes(hostname)) {
+    if (SUPPORTED_SITES.some(site => hostname.includes(site))) {
       // Activar el ícono de la extensión
       chrome.action.setIcon({
         tabId: tabId,
@@ -79,82 +86,144 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
         target: { tabId: tabId },
         files: ['content.js']
       }).catch(err => {
-        // El script ya está inyectado o hay un error
         console.log('Content script ya inyectado o error:', err);
       });
     }
   }
 });
 
-// Funciones de API para Supabase
+// Funciones de autenticación y API
 
-async function handleAuthentication(token) {
+async function handleAuthentication(email, password) {
   try {
-    // Verificar el token con Supabase
-    const response = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
+    console.log('Iniciando autenticación con Supabase');
+    
+    const response = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+      method: 'POST',
       headers: {
-        'Authorization': `Bearer ${token}`,
-        'apikey': SUPABASE_ANON_KEY
-      }
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+      },
+      body: JSON.stringify({
+        email: email,
+        password: password
+      })
     });
-    
+
+    const data = await response.json();
+
     if (!response.ok) {
-      throw new Error('Token inválido');
+      throw new Error(data.error_description || data.message || 'Error de autenticación');
     }
-    
-    const user = await response.json();
-    
-    // Guardar el token en storage
-    await chrome.storage.local.set({ 
-      authToken: token,
-      user: user,
+
+    console.log('Autenticación exitosa');
+
+    // Guardar tokens y datos del usuario
+    await chrome.storage.local.set({
+      authToken: data.access_token,
+      refreshToken: data.refresh_token,
+      user: data.user,
+      expiresAt: Date.now() + (data.expires_in * 1000),
       lastAuth: Date.now()
     });
-    
-    return { user, authenticated: true };
+
+    return { 
+      user: data.user, 
+      authenticated: true,
+      token: data.access_token
+    };
   } catch (error) {
     console.error('Error en autenticación:', error);
     throw error;
   }
 }
 
-async function getUserData(token) {
+async function refreshAuthentication() {
   try {
-    const response = await fetch(`${SUPABASE_URL}/rest/v1/profiles?select=*`, {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'apikey': SUPABASE_ANON_KEY,
-        'Content-Type': 'application/json'
-      }
-    });
+    const result = await chrome.storage.local.get(['refreshToken', 'expiresAt']);
     
-    if (!response.ok) {
-      throw new Error('Error al obtener datos del usuario');
+    if (!result.refreshToken) {
+      throw new Error('No hay token de refresh disponible');
     }
+
+    // Verificar si el token aún es válido
+    if (result.expiresAt && Date.now() < result.expiresAt - 60000) { // 1 minuto de margen
+      const userResult = await chrome.storage.local.get(['user', 'authToken']);
+      return { 
+        user: userResult.user, 
+        authenticated: true,
+        token: userResult.authToken
+      };
+    }
+
+    console.log('Refrescando token de autenticación');
     
-    const profiles = await response.json();
-    return profiles[0] || null;
+    const response = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=refresh_token`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_ANON_KEY
+      },
+      body: JSON.stringify({
+        refresh_token: result.refreshToken
+      })
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.error_description || data.message || 'Error al refrescar token');
+    }
+
+    // Actualizar tokens
+    await chrome.storage.local.set({
+      authToken: data.access_token,
+      refreshToken: data.refresh_token,
+      user: data.user,
+      expiresAt: Date.now() + (data.expires_in * 1000),
+      lastAuth: Date.now()
+    });
+
+    return { 
+      user: data.user, 
+      authenticated: true,
+      token: data.access_token
+    };
   } catch (error) {
-    console.error('Error obteniendo datos del usuario:', error);
+    console.error('Error refrescando autenticación:', error);
+    // Limpiar datos si hay error
+    await chrome.storage.local.clear();
     throw error;
   }
 }
 
-async function getUserCVs(token) {
+async function getUserCVs() {
   try {
-    const response = await fetch(`${SUPABASE_URL}/rest/v1/cvs?select=*&order=created_at.desc`, {
+    const result = await chrome.storage.local.get(['authToken', 'user']);
+    
+    if (!result.authToken || !result.user) {
+      throw new Error('Usuario no autenticado');
+    }
+
+    console.log('Obteniendo CVs del usuario');
+
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/cvs?user_id=eq.${result.user.id}&cv_source=eq.editor&select=id,title,created_at,content,is_favorite&order=is_favorite.desc,created_at.desc`, {
       headers: {
-        'Authorization': `Bearer ${token}`,
+        'Authorization': `Bearer ${result.authToken}`,
         'apikey': SUPABASE_ANON_KEY,
         'Content-Type': 'application/json'
       }
     });
-    
+
     if (!response.ok) {
-      throw new Error('Error al obtener CVs');
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Error al obtener CVs');
     }
-    
+
     const cvs = await response.json();
+    console.log('CVs obtenidos:', cvs.length);
+    
     return cvs;
   } catch (error) {
     console.error('Error obteniendo CVs:', error);
@@ -162,64 +231,100 @@ async function getUserCVs(token) {
   }
 }
 
-async function getCVContent(cvId, token) {
+async function getUserProfile() {
   try {
-    const response = await fetch(`${SUPABASE_URL}/rest/v1/cvs?id=eq.${cvId}&select=*`, {
+    const result = await chrome.storage.local.get(['authToken', 'user']);
+    
+    if (!result.authToken || !result.user) {
+      throw new Error('Usuario no autenticado');
+    }
+
+    console.log('Obteniendo perfil del usuario');
+
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/profiles?id=eq.${result.user.id}&select=*`, {
       headers: {
-        'Authorization': `Bearer ${token}`,
+        'Authorization': `Bearer ${result.authToken}`,
         'apikey': SUPABASE_ANON_KEY,
         'Content-Type': 'application/json'
       }
     });
-    
+
     if (!response.ok) {
-      throw new Error('Error al obtener contenido del CV');
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Error al obtener perfil');
     }
+
+    const profiles = await response.json();
+    console.log('Perfil obtenido:', profiles[0]);
     
-    const cvs = await response.json();
-    return cvs[0] || null;
+    return profiles[0] || null;
   } catch (error) {
-    console.error('Error obteniendo contenido del CV:', error);
+    console.error('Error obteniendo perfil:', error);
     throw error;
   }
 }
 
-async function downloadCV(cvId, token) {
+async function updateProfile(profileData) {
   try {
-    // Obtener la URL del archivo del CV desde Supabase Storage
-    const response = await fetch(`${SUPABASE_URL}/storage/v1/object/sign/cvs/${cvId}.pdf`, {
-      method: 'POST',
+    const result = await chrome.storage.local.get(['authToken', 'user']);
+    
+    if (!result.authToken || !result.user) {
+      throw new Error('Usuario no autenticado');
+    }
+
+    console.log('Actualizando perfil del usuario');
+
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/profiles?id=eq.${result.user.id}`, {
+      method: 'PATCH',
       headers: {
-        'Authorization': `Bearer ${token}`,
+        'Authorization': `Bearer ${result.authToken}`,
         'apikey': SUPABASE_ANON_KEY,
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal'
       },
-      body: JSON.stringify({ expiresIn: 3600 }) // 1 hora
+      body: JSON.stringify({
+        ...profileData,
+        updated_at: new Date().toISOString()
+      })
     });
-    
+
     if (!response.ok) {
-      throw new Error('Error al obtener URL del CV');
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Error al actualizar perfil');
     }
-    
-    const { signedURL } = await response.json();
-    
-    // Descargar el archivo
-    const fileResponse = await fetch(signedURL);
-    if (!fileResponse.ok) {
-      throw new Error('Error al descargar el CV');
-    }
-    
-    const blob = await fileResponse.blob();
-    const arrayBuffer = await blob.arrayBuffer();
-    
-    return {
-      data: Array.from(new Uint8Array(arrayBuffer)),
-      filename: `cv_${cvId}.pdf`,
-      mimeType: 'application/pdf'
-    };
+
+    console.log('Perfil actualizado correctamente');
+    return true;
   } catch (error) {
-    console.error('Error descargando CV:', error);
+    console.error('Error actualizando perfil:', error);
     throw error;
+  }
+}
+
+async function signOut() {
+  try {
+    const result = await chrome.storage.local.get(['authToken']);
+    
+    if (result.authToken) {
+      await fetch(`${SUPABASE_URL}/auth/v1/logout`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${result.authToken}`,
+          'apikey': SUPABASE_ANON_KEY
+        }
+      });
+    }
+    
+    // Limpiar storage local
+    await chrome.storage.local.clear();
+    console.log('Sesión cerrada correctamente');
+    
+    return true;
+  } catch (error) {
+    console.error('Error cerrando sesión:', error);
+    // Limpiar storage aunque haya error
+    await chrome.storage.local.clear();
+    return true;
   }
 }
 
@@ -228,15 +333,10 @@ chrome.alarms.create('cleanupExpiredData', { periodInMinutes: 60 });
 
 chrome.alarms.onAlarm.addListener((alarm) => {
   if (alarm.name === 'cleanupExpiredData') {
-    chrome.storage.local.get(['lastAuth'], (result) => {
-      const lastAuth = result.lastAuth || 0;
-      const now = Date.now();
-      const oneDay = 24 * 60 * 60 * 1000;
-      
-      if (now - lastAuth > oneDay) {
-        // Limpiar datos expirados
+    chrome.storage.local.get(['expiresAt'], (result) => {
+      if (result.expiresAt && Date.now() > result.expiresAt) {
+        console.log('Token expirado, limpiando datos');
         chrome.storage.local.clear();
-        console.log('Datos de autenticación limpiados por expiración');
       }
     });
   }
