@@ -155,8 +155,8 @@ async function checkAuthentication() {
   showLoading('Verificando autenticación...');
   
   try {
-    // Intentar refrescar la autenticación
-    const response = await chrome.runtime.sendMessage({ action: 'refreshAuth' });
+    // Verificar autenticación con el background script
+    const response = await chrome.runtime.sendMessage({ action: 'checkAuth' });
     
     if (response.success && response.data.authenticated) {
       console.log('Usuario autenticado:', response.data.user.email);
@@ -203,6 +203,11 @@ async function handleLogin() {
       console.log('Autenticación exitosa');
       currentUser = response.data.user;
       isAuthenticated = true;
+      
+      // Limpiar formulario
+      elements.emailInput.value = '';
+      elements.passwordInput.value = '';
+      
       await loadMainInterface();
       showToast('Sesión iniciada correctamente', 'success');
     } else {

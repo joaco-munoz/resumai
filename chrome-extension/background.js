@@ -28,8 +28,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         .catch(error => sendResponse({ success: false, error: error.message }));
       return true;
       
-    case 'refreshAuth':
-      refreshAuthentication()
+    case 'checkAuth':
+      checkAuthentication()
         .then(result => sendResponse({ success: true, data: result }))
         .catch(error => sendResponse({ success: false, error: error.message }));
       return true;
@@ -102,8 +102,7 @@ async function handleAuthentication(email, password) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'apikey': SUPABASE_ANON_KEY,
-        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+        'apikey': SUPABASE_ANON_KEY
       },
       body: JSON.stringify({
         email: email,
@@ -139,22 +138,53 @@ async function handleAuthentication(email, password) {
   }
 }
 
-async function refreshAuthentication() {
+async function checkAuthentication() {
   try {
-    const result = await chrome.storage.local.get(['refreshToken', 'expiresAt']);
+    const result = await chrome.storage.local.get(['authToken', 'refreshToken', 'user', 'expiresAt']);
     
-    if (!result.refreshToken) {
-      throw new Error('No hay token de refresh disponible');
+    if (!result.authToken || !result.user) {
+      return { authenticated: false };
     }
 
-    // Verificar si el token aún es válido
-    if (result.expiresAt && Date.now() < result.expiresAt - 60000) { // 1 minuto de margen
-      const userResult = await chrome.storage.local.get(['user', 'authToken']);
+    // Verificar si el token ha expirado
+    if (result.expiresAt && Date.now() > result.expiresAt - 60000) { // 1 minuto de margen
+      console.log('Token expirado, intentando refrescar...');
+      return await refreshToken(result.refreshToken);
+    }
+
+    // Verificar que el token funciona haciendo una petición simple
+    const testResponse = await fetch(`${SUPABASE_URL}/rest/v1/profiles?id=eq.${result.user.id}&select=id`, {
+      headers: {
+        'Authorization': `Bearer ${result.authToken}`,
+        'apikey': SUPABASE_ANON_KEY,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (testResponse.ok) {
       return { 
-        user: userResult.user, 
+        user: result.user, 
         authenticated: true,
-        token: userResult.authToken
+        token: result.authToken
       };
+    } else {
+      // Token inválido, intentar refrescar
+      if (result.refreshToken) {
+        return await refreshToken(result.refreshToken);
+      } else {
+        return { authenticated: false };
+      }
+    }
+  } catch (error) {
+    console.error('Error verificando autenticación:', error);
+    return { authenticated: false };
+  }
+}
+
+async function refreshToken(refreshToken) {
+  try {
+    if (!refreshToken) {
+      throw new Error('No hay token de refresh disponible');
     }
 
     console.log('Refrescando token de autenticación');
@@ -166,7 +196,7 @@ async function refreshAuthentication() {
         'apikey': SUPABASE_ANON_KEY
       },
       body: JSON.stringify({
-        refresh_token: result.refreshToken
+        refresh_token: refreshToken
       })
     });
 
@@ -194,7 +224,7 @@ async function refreshAuthentication() {
     console.error('Error refrescando autenticación:', error);
     // Limpiar datos si hay error
     await chrome.storage.local.clear();
-    throw error;
+    return { authenticated: false };
   }
 }
 
