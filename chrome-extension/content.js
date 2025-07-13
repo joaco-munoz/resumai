@@ -79,348 +79,400 @@ function initialize() {
   chrome.runtime.onMessage.addListener(handleMessage);
 }
 
-function detectJobApplicationForms() {
-  const config = SITE_CONFIGS[currentSite];
-  const forms = document.querySelectorAll(config.formContainer);
+// Mejorar la detección de formularios y campos
+const ENHANCED_SITE_CONFIGS = {
+  'trabajando.cl': {
+    name: 'Trabajando.cl',
+    selectors: {
+      firstName: [
+        'input[name*="nombre"]',
+        'input[id*="nombre"]',
+        'input[placeholder*="nombre"]',
+        'input[aria-label*="nombre"]',
+        '.form-field input[type="text"]:first-of-type'
+      ],
+      lastName: [
+        'input[name*="apellido"]',
+        'input[id*="apellido"]', 
+        'input[placeholder*="apellido"]',
+        'input[aria-label*="apellido"]'
+      ],
+      email: [
+        'input[type="email"]',
+        'input[name*="email"]',
+        'input[id*="email"]',
+        'input[placeholder*="email"]',
+        'input[placeholder*="correo"]'
+      ],
+      phone: [
+        'input[type="tel"]',
+        'input[name*="telefono"]',
+        'input[name*="phone"]',
+        'input[id*="telefono"]',
+        'input[placeholder*="teléfono"]',
+        'input[placeholder*="telefono"]'
+      ],
+      location: [
+        'input[name*="direccion"]',
+        'input[name*="ciudad"]',
+        'input[id*="direccion"]',
+        'input[placeholder*="dirección"]',
+        'input[placeholder*="ciudad"]'
+      ],
+      fileUpload: [
+        'input[type="file"]',
+        'input[name*="cv"]',
+        'input[id*="cv"]',
+        'input[accept*="pdf"]'
+      ],
+      submitButton: [
+        'button[type="submit"]',
+        'input[type="submit"]',
+        '.btn-postular',
+        '.apply-btn',
+        'button:contains("Postular")',
+        'button:contains("Enviar")'
+      ]
+    }
+  },
+  'laborum.com': {
+    name: 'Laborum',
+    selectors: {
+      firstName: [
+        'input[name="firstName"]',
+        'input[id="firstName"]',
+        'input[placeholder*="nombre"]'
+      ],
+      lastName: [
+        'input[name="lastName"]',
+        'input[id="lastName"]',
+        'input[placeholder*="apellido"]'
+      ],
+      email: [
+        'input[type="email"]',
+        'input[name="email"]'
+      ],
+      phone: [
+        'input[type="tel"]',
+        'input[name="phone"]',
+        'input[name="telefono"]'
+      ],
+      location: [
+        'input[name*="address"]',
+        'input[name*="direccion"]',
+        'input[name*="ciudad"]'
+      ],
+      fileUpload: [
+        'input[type="file"]'
+      ],
+      submitButton: [
+        'button[type="submit"]',
+        '.btn-apply'
+      ]
+    }
+  },
+  'getonboard.com': {
+    name: 'GetOnBoard',
+    selectors: {
+      firstName: [
+        'input[name="first_name"]',
+        'input[placeholder*="nombre"]'
+      ],
+      lastName: [
+        'input[name="last_name"]',
+        'input[placeholder*="apellido"]'
+      ],
+      email: [
+        'input[type="email"]',
+        'input[name="email"]'
+      ],
+      phone: [
+        'input[type="tel"]',
+        'input[name="phone"]'
+      ],
+      location: [
+        'input[name*="location"]',
+        'input[name*="address"]'
+      ],
+      fileUpload: [
+        'input[type="file"]',
+        'input[accept*="pdf"]'
+      ],
+      submitButton: [
+        'button[type="submit"]',
+        '.apply-button'
+      ]
+    }
+  }
+};
+
+// Función mejorada para encontrar campos
+function findField(selectors) {
+  if (typeof selectors === 'string') {
+    return document.querySelector(selectors);
+  }
   
-  if (forms.length > 0) {
-    console.log(`Encontrados ${forms.length} formularios de postulación`);
-    forms.forEach((form, index) => {
-      addResumAIWidget(form, index);
-    });
+  if (Array.isArray(selectors)) {
+    for (const selector of selectors) {
+      const element = document.querySelector(selector);
+      if (element) return element;
+    }
+  }
+  
+  return null;
+}
+
+// Función mejorada para rellenar campos con animación natural
+async function fillFieldNaturally(element, value, delay = 50) {
+  if (!element || !value) return;
+  
+  // Hacer focus en el campo
+  element.focus();
+  element.click();
+  
+  // Limpiar campo existente
+  element.value = '';
+  element.dispatchEvent(new Event('input', { bubbles: true }));
+  
+  // Escribir carácter por carácter para simular escritura humana
+  for (let i = 0; i < value.length; i++) {
+    await new Promise(resolve => setTimeout(resolve, delay + Math.random() * 30));
+    element.value += value[i];
+    
+    // Disparar eventos de input
+    element.dispatchEvent(new Event('input', { bubbles: true }));
+    element.dispatchEvent(new Event('keyup', { bubbles: true }));
+  }
+  
+  // Eventos finales
+  element.dispatchEvent(new Event('change', { bubbles: true }));
+  element.dispatchEvent(new Event('blur', { bubbles: true }));
+  
+  console.log(`✅ Campo rellenado: ${value}`);
+}
+
+// Función principal de autofill mejorada
+async function performAutofill(cvData, profileData) {
+  const config = ENHANCED_SITE_CONFIGS[currentSite];
+  if (!config) {
+    throw new Error('Sitio no compatible');
+  }
+  
+  console.log('🚀 Iniciando autofill avanzado...');
+  
+  const personalInfo = cvData?.personalInfo || {};
+  const profile = profileData || {};
+  
+  // Datos a rellenar con prioridad (CV > Perfil > Default)
+  const fillData = {
+    firstName: personalInfo.fullName?.split(' ')[0] || profile.fullName?.split(' ')[0] || '',
+    lastName: personalInfo.fullName?.split(' ').slice(1).join(' ') || profile.fullName?.split(' ').slice(1).join(' ') || '',
+    email: personalInfo.email || currentUser?.email || '',
+    phone: personalInfo.phone || profile.phone || '',
+    location: personalInfo.location || profile.location || ''
+  };
+  
+  // Rellenar campos uno por uno
+  for (const [fieldType, value] of Object.entries(fillData)) {
+    if (!value) continue;
+    
+    const field = findField(config.selectors[fieldType]);
+    if (field && !field.value) {
+      await fillFieldNaturally(field, value);
+      await new Promise(resolve => setTimeout(resolve, 200)); // Pausa entre campos
+    }
+  }
+  
+  // Buscar y rellenar campos adicionales
+  await fillAdditionalFields(cvData);
+  
+  console.log('✅ Autofill completado');
+  showEnhancedNotification('Formulario rellenado correctamente', 'success');
+}
+
+// Función para rellenar campos adicionales específicos del sitio
+async function fillAdditionalFields(cvData) {
+  const additionalFields = document.querySelectorAll('textarea, input[type="text"]:not([name*="nombre"]):not([name*="apellido"])');
+  
+  additionalFields.forEach(async (field) => {
+    const fieldName = (field.name || field.id || field.placeholder || '').toLowerCase();
+    
+    // Experiencia laboral
+    if ((fieldName.includes('experiencia') || fieldName.includes('experience')) && cvData.experience?.length > 0) {
+      const experience = cvData.experience[0];
+      const experienceText = `${experience.position} en ${experience.company}\n${experience.description}`;
+      await fillFieldNaturally(field, experienceText);
+    }
+    
+    // Habilidades
+    if ((fieldName.includes('skill') || fieldName.includes('habilidad')) && cvData.skills?.length > 0) {
+      const skillsText = cvData.skills.join(', ');
+      await fillFieldNaturally(field, skillsText);
+    }
+    
+    // Resumen profesional
+    if ((fieldName.includes('summary') || fieldName.includes('resumen')) && cvData.summary) {
+      await fillFieldNaturally(field, cvData.summary);
+    }
+  });
+}
+
+// Función para aplicar automáticamente
+async function performAutoApply(cvData, profileData) {
+  console.log('🚀 Iniciando aplicación automática...');
+  
+  // Primero rellenar el formulario
+  await performAutofill(cvData, profileData);
+  
+  // Esperar un momento
+  await new Promise(resolve => setTimeout(resolve, 1000));
+  
+  // Intentar adjuntar CV si hay campo de archivo
+  await tryAttachCV();
+  
+  // Buscar y hacer clic en el botón de envío
+  const config = ENHANCED_SITE_CONFIGS[currentSite];
+  const submitButton = findField(config.selectors.submitButton);
+  
+  if (submitButton && !submitButton.disabled) {
+    // Scroll al botón
+    submitButton.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // Hacer clic
+    submitButton.click();
+    
+    console.log('✅ Aplicación enviada');
+    showEnhancedNotification('¡Postulación enviada exitosamente!', 'success');
   } else {
-    // Intentar detectar formularios después de un delay
-    setTimeout(detectJobApplicationForms, 2000);
+    showEnhancedNotification('No se pudo encontrar el botón de envío', 'warning');
   }
 }
 
-function addResumAIWidget(form, index = 0) {
-  // Evitar duplicar widgets
-  if (form.querySelector('.resumai-widget')) {
-    return;
+// Función para intentar adjuntar CV
+async function tryAttachCV() {
+  const config = ENHANCED_SITE_CONFIGS[currentSite];
+  const fileInput = findField(config.selectors.fileUpload);
+  
+  if (fileInput) {
+    // En una implementación real, aquí se descargaría el CV desde ResumAI
+    console.log('📎 Campo de archivo encontrado, pero adjuntar CV requiere implementación del servidor');
+    showEnhancedNotification('Campo de CV encontrado - adjunta manualmente si es necesario', 'info');
   }
-  
-  const widget = createWidget(index);
-  
-  // Insertar el widget antes del formulario o al inicio
-  if (form.parentNode) {
-    form.parentNode.insertBefore(widget, form);
-  } else {
-    form.insertAdjacentElement('afterbegin', widget);
-  }
-  
-  console.log('Widget ResumAI agregado al formulario');
 }
 
-function createWidget(index) {
-  const widget = document.createElement('div');
-  widget.className = 'resumai-widget';
-  widget.id = `resumai-widget-${index}`;
+// Notificación mejorada estilo ResumAI
+function showEnhancedNotification(message, type = 'info') {
+  const notification = document.createElement('div');
+  notification.className = 'resumai-enhanced-notification';
   
-  widget.innerHTML = `
-    <div class="resumai-container">
-      <div class="resumai-header">
-        <img src="${chrome.runtime.getURL('icons/icon32.png')}" alt="ResumAI" class="resumai-logo">
-        <h3>ResumAI Job Assistant</h3>
-        <button class="resumai-toggle" id="resumai-toggle-${index}">
-          <span class="toggle-text">Activar</span>
-        </button>
-      </div>
-      <div class="resumai-content" id="resumai-content-${index}" style="display: none;">
-        <div class="resumai-status" id="resumai-status-${index}">
-          <p>Haz clic en "Conectar" para sincronizar con ResumAI</p>
-        </div>
-        <div class="resumai-actions" id="resumai-actions-${index}" style="display: none;">
-          <div class="cv-selector">
-            <label for="cv-select-${index}">Seleccionar CV:</label>
-            <select id="cv-select-${index}" class="cv-select">
-              <option value="">Cargando CVs...</option>
-            </select>
-          </div>
-          <div class="action-buttons">
-            <button class="btn-fill" id="btn-fill-${index}">Rellenar Formulario</button>
-            <button class="btn-apply" id="btn-apply-${index}">Postular Automáticamente</button>
-          </div>
-        </div>
-        <button class="btn-connect" id="btn-connect-${index}">Conectar con ResumAI</button>
-      </div>
+  const typeColors = {
+    success: '#10b981',
+    error: '#ef4444',
+    warning: '#f59e0b',
+    info: '#1e63ff'
+  };
+  
+  const typeIcons = {
+    success: '✅',
+    error: '❌',
+    warning: '⚠️',
+    info: 'ℹ️'
+  };
+  
+  notification.innerHTML = `
+    <div class="notification-content">
+      <span class="notification-icon">${typeIcons[type]}</span>
+      <span class="notification-message">${message}</span>
     </div>
   `;
   
-  // Agregar event listeners
-  setupWidgetEvents(widget, index);
+  notification.style.cssText = `
+    position: fixed !important;
+    top: 20px !important;
+    right: 20px !important;
+    z-index: 10000 !important;
+    background: white !important;
+    border-radius: 12px !important;
+    padding: 16px 20px !important;
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15) !important;
+    border-left: 4px solid ${typeColors[type]} !important;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+    font-size: 14px !important;
+    font-weight: 500 !important;
+    color: #1e293b !important;
+    max-width: 350px !important;
+    animation: slideInRight 0.3s ease-out !important;
+  `;
   
-  return widget;
+  document.body.appendChild(notification);
+  
+  // Auto-remove después de 4 segundos
+  setTimeout(() => {
+    if (notification.parentNode) {
+      notification.style.animation = 'slideOutRight 0.3s ease-in';
+      setTimeout(() => {
+        if (notification.parentNode) {
+          notification.parentNode.removeChild(notification);
+        }
+      }, 300);
+    }
+  }, 4000);
 }
 
-function setupWidgetEvents(widget, index) {
-  const toggle = widget.querySelector(`#resumai-toggle-${index}`);
-  const content = widget.querySelector(`#resumai-content-${index}`);
-  const connectBtn = widget.querySelector(`#btn-connect-${index}`);
-  const fillBtn = widget.querySelector(`#btn-fill-${index}`);
-  const applyBtn = widget.querySelector(`#btn-apply-${index}`);
-  const cvSelect = widget.querySelector(`#cv-select-${index}`);
+// Agregar CSS para animaciones
+const style = document.createElement('style');
+style.textContent = `
+  @keyframes slideInRight {
+    from {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+    to {
+      transform: translateX(0);
+      opacity: 1;
+    }
+  }
   
-  // Toggle widget
-  toggle.addEventListener('click', () => {
-    const isVisible = content.style.display !== 'none';
-    content.style.display = isVisible ? 'none' : 'block';
-    toggle.querySelector('.toggle-text').textContent = isVisible ? 'Activar' : 'Ocultar';
-  });
+  @keyframes slideOutRight {
+    from {
+      transform: translateX(0);
+      opacity: 1;
+    }
+    to {
+      transform: translateX(100%);
+      opacity: 0;
+    }
+  }
   
-  // Conectar con ResumAI
-  connectBtn.addEventListener('click', () => connectToResumAI(index));
+  .notification-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
   
-  // Rellenar formulario
-  fillBtn.addEventListener('click', () => fillForm(index));
+  .notification-icon {
+    font-size: 18px;
+  }
   
-  // Postular automáticamente
-  applyBtn.addEventListener('click', () => autoApply(index));
+  .notification-message {
+    flex: 1;
+    line-height: 1.4;
+  }
+`;
+document.head.appendChild(style);
+
+// Función para detectar formularios de postulación
+function detectJobApplicationForms() {
+  const config = SITE_CONFIGS[currentSite];
+  if (!config) return [];
   
-  // Cambio de CV
-  cvSelect.addEventListener('change', () => onCVChange(index));
+  const forms = Array.from(document.querySelectorAll(config.formContainer));
+  return forms;
 }
 
-async function connectToResumAI(widgetIndex) {
-  const statusEl = document.querySelector(`#resumai-status-${widgetIndex}`);
-  const connectBtn = document.querySelector(`#btn-connect-${widgetIndex}`);
-  const actionsEl = document.querySelector(`#resumai-actions-${widgetIndex}`);
-  
-  statusEl.innerHTML = '<p>Conectando con ResumAI...</p>';
-  connectBtn.disabled = true;
-  
-  try {
-    // Verificar si hay token guardado
-    const result = await chrome.storage.local.get(['authToken', 'user']);
-    
-    if (!result.authToken) {
-      // Abrir popup para autenticación
-      statusEl.innerHTML = '<p>Por favor, abre la extensión para autenticarte</p>';
-      return;
-    }
-    
-    // Obtener datos del usuario
-    const response = await chrome.runtime.sendMessage({
-      action: 'getUserData',
-      token: result.authToken
-    });
-    
-    if (!response.success) {
-      throw new Error(response.error);
-    }
-    
-    // Obtener CVs del usuario
-    const cvsResponse = await chrome.runtime.sendMessage({
-      action: 'getUserCVs',
-      token: result.authToken
-    });
-    
-    if (!cvsResponse.success) {
-      throw new Error(cvsResponse.error);
-    }
-    
-    // Actualizar UI
-    statusEl.innerHTML = `<p>✅ Conectado como ${response.data.full_name || response.data.email}</p>`;
-    connectBtn.style.display = 'none';
-    actionsEl.style.display = 'block';
-    
-    // Llenar selector de CVs
-    const cvSelect = document.querySelector(`#cv-select-${widgetIndex}`);
-    cvSelect.innerHTML = '<option value="">Seleccionar CV...</option>';
-    
-    cvsResponse.data.forEach(cv => {
-      const option = document.createElement('option');
-      option.value = cv.id;
-      option.textContent = cv.title || `CV ${cv.id}`;
-      cvSelect.appendChild(option);
-    });
-    
-    // Guardar datos en el widget
-    document.querySelector(`#resumai-widget-${widgetIndex}`).userData = response.data;
-    document.querySelector(`#resumai-widget-${widgetIndex}`).userCVs = cvsResponse.data;
-    
-  } catch (error) {
-    console.error('Error conectando con ResumAI:', error);
-    statusEl.innerHTML = `<p>❌ Error: ${error.message}</p>`;
-  } finally {
-    connectBtn.disabled = false;
-  }
-}
-
-async function fillForm(widgetIndex) {
-  const widget = document.querySelector(`#resumai-widget-${widgetIndex}`);
-  const cvSelect = document.querySelector(`#cv-select-${widgetIndex}`);
-  const selectedCVId = cvSelect.value;
-  
-  if (!selectedCVId) {
-    alert('Por favor selecciona un CV primero');
-    return;
-  }
-  
-  if (!widget.userData) {
-    alert('Error: No hay datos de usuario cargados');
-    return;
-  }
-  
-  try {
-    // Obtener contenido del CV seleccionado
-    const result = await chrome.storage.local.get(['authToken']);
-    const cvResponse = await chrome.runtime.sendMessage({
-      action: 'getCVContent',
-      cvId: selectedCVId,
-      token: result.authToken
-    });
-    
-    if (!cvResponse.success) {
-      throw new Error(cvResponse.error);
-    }
-    
-    const cvData = cvResponse.data;
-    const userData = widget.userData;
-    const config = SITE_CONFIGS[currentSite];
-    
-    // Rellenar campos básicos
-    fillField(config.selectors.firstName, userData.full_name?.split(' ')[0] || '');
-    fillField(config.selectors.lastName, userData.full_name?.split(' ').slice(1).join(' ') || '');
-    fillField(config.selectors.email, userData.email || '');
-    fillField(config.selectors.phone, userData.phone || '');
-    
-    // Rellenar campos adicionales si están disponibles en el CV
-    if (cvData.content) {
-      try {
-        const cvContent = JSON.parse(cvData.content);
-        fillAdditionalFields(cvContent, config);
-      } catch (e) {
-        console.log('No se pudo parsear el contenido del CV como JSON');
-      }
-    }
-    
-    // Mostrar confirmación
-    showNotification('Formulario rellenado correctamente', 'success');
-    
-  } catch (error) {
-    console.error('Error rellenando formulario:', error);
-    showNotification(`Error: ${error.message}`, 'error');
-  }
-}
-
-function fillField(selector, value) {
-  if (!value) return;
-  
-  const field = document.querySelector(selector);
-  if (field) {
-    field.value = value;
-    field.dispatchEvent(new Event('input', { bubbles: true }));
-    field.dispatchEvent(new Event('change', { bubbles: true }));
-    console.log(`Campo rellenado: ${selector} = ${value}`);
-  }
-}
-
-function fillAdditionalFields(cvContent, config) {
-  // Aquí puedes agregar lógica específica para rellenar campos adicionales
-  // basados en el contenido del CV (experiencia, educación, etc.)
-  
-  // Ejemplo: si el CV tiene campos estructurados
-  if (cvContent.personalInfo) {
-    const info = cvContent.personalInfo;
-    if (info.address) {
-      fillField('input[name*="direccion"], input[name*="address"]', info.address);
-    }
-    if (info.city) {
-      fillField('input[name*="ciudad"], input[name*="city"]', info.city);
-    }
-  }
-}
-
-async function autoApply(widgetIndex) {
-  const confirmation = confirm(
-    '¿Estás seguro de que quieres postular automáticamente?\n\n' +
-    'Esta acción enviará el formulario con los datos rellenados.'
-  );
-  
-  if (!confirmation) return;
-  
-  try {
-    // Primero rellenar el formulario
-    await fillForm(widgetIndex);
-    
-    // Esperar un momento para que se procesen los cambios
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Intentar adjuntar CV si es posible
-    await attachCV(widgetIndex);
-    
-    // Enviar formulario
-    const config = SITE_CONFIGS[currentSite];
-    const submitButton = document.querySelector(config.selectors.submitButton);
-    
-    if (submitButton) {
-      submitButton.click();
-      showNotification('Postulación enviada automáticamente', 'success');
-    } else {
-      showNotification('No se pudo encontrar el botón de envío. Por favor, envía manualmente.', 'warning');
-    }
-    
-  } catch (error) {
-    console.error('Error en postulación automática:', error);
-    showNotification(`Error: ${error.message}`, 'error');
-  }
-}
-
-async function attachCV(widgetIndex) {
-  const cvSelect = document.querySelector(`#cv-select-${widgetIndex}`);
-  const selectedCVId = cvSelect.value;
-  
-  if (!selectedCVId) return;
-  
-  try {
-    const result = await chrome.storage.local.get(['authToken']);
-    const cvResponse = await chrome.runtime.sendMessage({
-      action: 'downloadCV',
-      cvId: selectedCVId,
-      token: result.authToken
-    });
-    
-    if (!cvResponse.success) {
-      console.log('No se pudo descargar el CV para adjuntar');
-      return;
-    }
-    
-    const config = SITE_CONFIGS[currentSite];
-    const fileInput = document.querySelector(config.selectors.fileUpload);
-    
-    if (fileInput) {
-      // Crear archivo blob
-      const uint8Array = new Uint8Array(cvResponse.data.data);
-      const blob = new Blob([uint8Array], { type: cvResponse.data.mimeType });
-      const file = new File([blob], cvResponse.data.filename, { type: cvResponse.data.mimeType });
-      
-      // Crear FileList
-      const dataTransfer = new DataTransfer();
-      dataTransfer.items.add(file);
-      fileInput.files = dataTransfer.files;
-      
-      // Disparar eventos
-      fileInput.dispatchEvent(new Event('change', { bubbles: true }));
-      
-      console.log('CV adjuntado correctamente');
-    }
-    
-  } catch (error) {
-    console.error('Error adjuntando CV:', error);
-  }
-}
-
-function onCVChange(widgetIndex) {
-  const cvSelect = document.querySelector(`#cv-select-${widgetIndex}`);
-  const selectedCVId = cvSelect.value;
-  
-  if (selectedCVId) {
-    console.log(`CV seleccionado: ${selectedCVId}`);
-    // Aquí podrías mostrar una preview del CV si quisieras
-  }
-}
-
+// Función para observar cambios en el DOM y detectar nuevos formularios
 function observeFormChanges() {
   const observer = new MutationObserver((mutations) => {
     mutations.forEach((mutation) => {
@@ -446,55 +498,55 @@ function observeFormChanges() {
   });
 }
 
+// Función para agregar widget ResumAI a un formulario
+function addResumAIWidget(form, index = 0) {
+  if (form.querySelector('.resumai-widget')) return;
+  
+  const widget = document.createElement('div');
+  widget.className = 'resumai-widget';
+  widget.id = `resumai-widget-${index}`;
+  widget.textContent = 'ResumAI Job Assistant';
+  
+  form.parentNode.insertBefore(widget, form);
+  console.log('Widget ResumAI agregado al formulario');
+}
+
+// Manejar mensajes recibidos
 function handleMessage(request, sender, sendResponse) {
   switch (request.action) {
-    case 'fillForm':
-      fillForm(0);
-      sendResponse({ success: true });
-      break;
+    case 'autofill':
+      performAutofill(request.cvData, request.profileData)
+        .then(() => sendResponse({ success: true }))
+        .catch(error => {
+          console.error('Error en autofill:', error);
+          sendResponse({ success: false, error: error.message });
+        });
+      return true;
+      
+    case 'autoApply':
+      performAutoApply(request.cvData, request.profileData)
+        .then(() => sendResponse({ success: true }))
+        .catch(error => {
+          console.error('Error en auto apply:', error);
+          sendResponse({ success: false, error: error.message });
+        });
+      return true;
+      
     case 'getPageInfo':
       sendResponse({
         success: true,
         data: {
           url: window.location.href,
           title: document.title,
-          site: currentSite
+          site: currentSite,
+          hasJobForm: detectJobApplicationForms().length > 0
         }
       });
       break;
+      
     default:
       sendResponse({ success: false, error: 'Acción no reconocida' });
   }
 }
 
-function showNotification(message, type = 'info') {
-  // Crear notificación temporal
-  const notification = document.createElement('div');
-  notification.className = `resumai-notification resumai-notification-${type}`;
-  notification.textContent = message;
-  
-  notification.style.cssText = `
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    background: ${type === 'success' ? '#4CAF50' : type === 'error' ? '#f44336' : '#2196F3'};
-    color: white;
-    padding: 12px 20px;
-    border-radius: 4px;
-    z-index: 10000;
-    font-family: Arial, sans-serif;
-    font-size: 14px;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.2);
-  `;
-  
-  document.body.appendChild(notification);
-  
-  // Remover después de 3 segundos
-  setTimeout(() => {
-    if (notification.parentNode) {
-      notification.parentNode.removeChild(notification);
-    }
-  }, 3000);
-}
-
-console.log('ResumAI Content Script inicializado correctamente');
+console.log('✅ ResumAI Enhanced Content Script cargado para:', currentSite);
