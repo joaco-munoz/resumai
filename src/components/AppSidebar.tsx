@@ -26,7 +26,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 
 const mainMenuItems = [
   { title: "Inicio", url: "/app", icon: House },
-  { title: "Editor de CV principal", url: "/app/cv-selector", icon: FileText },
+  { title: "Editor de CVs", url: "/app/cv-selector", icon: FileText },
   { title: "Match de Ofertas", url: "/app/match", icon: Target },
   { title: "Mis Currículums", url: "/app/cvs", icon: FolderOpen },
   { title: "Seguimiento de Postulaciones", url: "/app/kanban", icon: CheckCircle },
