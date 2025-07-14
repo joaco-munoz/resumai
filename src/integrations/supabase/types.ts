@@ -161,6 +161,7 @@ export type Database = {
           cv_source: string
           download_count: number | null
           id: string
+          is_favorite: boolean | null
           is_primary: boolean | null
           is_public: boolean | null
           last_updated: string | null
@@ -181,6 +182,7 @@ export type Database = {
           cv_source?: string
           download_count?: number | null
           id?: string
+          is_favorite?: boolean | null
           is_primary?: boolean | null
           is_public?: boolean | null
           last_updated?: string | null
@@ -201,6 +203,7 @@ export type Database = {
           cv_source?: string
           download_count?: number | null
           id?: string
+          is_favorite?: boolean | null
           is_primary?: boolean | null
           is_public?: boolean | null
           last_updated?: string | null

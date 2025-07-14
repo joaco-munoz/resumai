@@ -1,3 +1,4 @@
+
 import { NavLink, useLocation } from "react-router-dom";
 import {
   Sidebar,
@@ -25,7 +26,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 
 const mainMenuItems = [
   { title: "Inicio", url: "/app", icon: House },
-  { title: "Editor de CV principal", url: "/app/cv/new", icon: FileText },
+  { title: "Editor de CVs", url: "/app/cv-selector", icon: FileText },
   { title: "Match de Ofertas", url: "/app/match", icon: Target },
   { title: "Mis Currículums", url: "/app/cvs", icon: FolderOpen },
   { title: "Seguimiento de Postulaciones", url: "/app/kanban", icon: CheckCircle },
@@ -104,13 +105,18 @@ const MenuItem = memo(({ item, isActive, isCollapsed, isMobile }: {
       <SidebarMenuButton asChild>
         <NavLink 
           to={item.url} 
-          className={`${isActive 
-            ? "bg-blue-500 text-white font-medium" 
-            : "text-gray-700"
-          } ${isMobile ? "py-3" : ""} touch-manipulation`}
+          className={({ isActive: navIsActive }) =>
+            `flex items-center gap-2 rounded-md px-3 py-2 transition-colors duration-200 ${
+              navIsActive 
+                ? "bg-[#1E63FF] text-gray-700 font-medium" 
+                : "text-gray-700 hover:bg-[#F1F5F9]"
+            } ${isMobile ? "py-3" : ""} touch-manipulation`
+          }
+          end={item.url === "/app"}
+          style={isActive ? { backgroundColor: "hsl(217.2, 91.2%, 59.8%)", color: "white", fontWeight: 500 } : {}}
         >
-          <item.icon className={`${isMobile ? "h-5 w-5" : "h-4 w-4"}`} />
-          {!isCollapsed && <span className={isMobile ? "text-base ml-3" : "ml-2"}>{item.title}</span>}
+          <item.icon className={`${isMobile ? "h-5 w-5" : "h-4 w-4"} flex-shrink-0`} />
+          {!isCollapsed && <span className={isMobile ? "text-base" : "text-sm"}>{item.title}</span>}
         </NavLink>
       </SidebarMenuButton>
     </SidebarMenuItem>
@@ -198,7 +204,7 @@ export function AppSidebar() {
     if (url === "/app" && currentPath === "/app") {
       return true;
     }
-    if (url === "/app/cv/new" && currentPath.startsWith("/app/cv/")) {
+    if (url === "/app/cv-selector" && currentPath.startsWith("/app/cv/")) {
       return true;
     }
     if (url !== "/app" && currentPath === url) {
@@ -241,7 +247,7 @@ export function AppSidebar() {
       if (url === "/app" && currentPath === "/app") {
         return true;
       }
-      if (url === "/app/cv/new" && currentPath.startsWith("/app/cv/")) {
+      if (url === "/app/cv-selector" && currentPath.startsWith("/app/cv/")) {
         return true;
       }
       if (url !== "/app" && currentPath === url) {
@@ -289,13 +295,16 @@ export function AppSidebar() {
                   <SidebarMenuButton asChild>
                     <NavLink 
                       to="/app/admin" 
-                      className={isActiveMemo("/app/admin")
-                        ? "bg-blue-500 text-white font-medium" 
-                        : "text-gray-700"
+                      className={({ isActive }) =>
+                        `flex items-center gap-2 rounded-md px-3 py-2 transition-colors duration-200 ${
+                          isActive
+                            ? "bg-[#1E63FF] text-white font-medium" 
+                            : "text-[#334155] hover:bg-[#F1F5F9]"
+                        }`
                       }
                     >
-                      <LayoutDashboard className="h-4 w-4" />
-                      {!isCollapsed && <span>Panel Admin</span>}
+                      <LayoutDashboard className="h-4 w-4 flex-shrink-0" />
+                      {!isCollapsed && <span className="text-sm">Panel Admin</span>}
                     </NavLink>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
@@ -316,29 +325,22 @@ export function AppSidebar() {
             isCollapsed={isCollapsed} 
           />
           
-          <SidebarMenuItem>
-            <SidebarMenuButton asChild>
-              <NavLink 
-                to={profileItem.url} 
-                className={`${isActiveMemo(profileItem.url)
-                  ? "bg-blue-500 text-white font-medium" 
-                  : "text-gray-700"
-                } ${isMobile ? "py-3" : ""} touch-manipulation`}
-              >
-                <profileItem.icon className={`${isMobile ? "h-5 w-5" : "h-4 w-4"}`} />
-                {!isCollapsed && <span className={isMobile ? "text-base ml-3" : "ml-2"}>{profileItem.title}</span>}
-              </NavLink>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
+          <MenuItem
+            key={profileItem.url}
+            item={profileItem}
+            isActive={isActiveMemo(profileItem.url)}
+            isCollapsed={isCollapsed}
+            isMobile={isMobile}
+          />
           <SidebarMenuItem>
             <SidebarMenuButton asChild>
               <Button
                 variant="ghost"
                 onClick={signOut}
-                className={`w-full justify-start ${isMobile ? "h-12 py-3" : "h-10"} px-2 text-gray-700 hover:bg-gray-100 touch-manipulation`}
+                className={`w-full justify-start gap-2 rounded-md px-3 py-2 transition-colors duration-200 text-gray-700 hover:bg-[#F1F5F9] hover:text-gray-700 ${isMobile ? "h-12 py-3" : "h-10"} touch-manipulation`}
               >
-                <LogOut className={`${isMobile ? "h-5 w-5" : "h-4 w-4"}`} />
-                {!isCollapsed && <span className={isMobile ? "text-base ml-3" : "ml-2"}>Cerrar Sesión</span>}
+                <LogOut className={`${isMobile ? "h-5 w-5" : "h-4 w-4"} flex-shrink-0`} />
+                {!isCollapsed && <span className={isMobile ? "text-base" : "text-sm"}>Cerrar Sesión</span>}
               </Button>
             </SidebarMenuButton>
           </SidebarMenuItem>

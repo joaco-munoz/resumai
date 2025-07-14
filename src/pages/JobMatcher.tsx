@@ -1,505 +1,293 @@
 
-import { useState } from "react";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { useState, useEffect } from "react";
+import { useLocation, useSearchParams } from "react-router-dom";
+import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Target, Sparkles, CheckCircle, AlertCircle, TrendingUp } from "lucide-react";
+import { Download, Plus, Trash2, ArrowRight, Check } from "lucide-react";
 import { toast } from "sonner";
+import { CVSelector } from "@/components/job-matcher/CVSelector";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
-import { CVAdaptationModal } from "@/components/CVAdaptationModal";
-import { AIUsageIndicator } from "@/components/AIUsageIndicator";
+import { CVNamingModal } from "@/components/cv-builder/CVNamingModal";
 import { useFeatureLimits } from "@/hooks/useFeatureLimits";
-import { useAIUsage } from "@/contexts/AIUsageContext";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { AIUsageIndicator } from "@/components/AIUsageIndicator";
 
 interface MatchResult {
+  matched_keywords: string[];
+  missing_keywords: string[];
   score: number;
-  missingKeywords: string[];
-  suggestedBullets: string[];
-  strengths: string[];
-  improvements: string[];
 }
-
-interface JobDetails {
-  title: string;
-  company: string;
-}
-
-const MAX_JOB_DESCRIPTION_CHARACTERS = 1500;
 
 const JobMatcher = () => {
-  const [jobDescription, setJobDescription] = useState("");
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [matchResult, setMatchResult] = useState<MatchResult | null>(null);
-  const [jobDetails, setJobDetails] = useState<JobDetails>({ title: "", company: "" });
-  const [showAdaptationModal, setShowAdaptationModal] = useState(false);
   const { user } = useAuth();
-  const navigate = useNavigate();
-  const { usage, limits, canUseFeature, incrementUsage, isPro } = useFeatureLimits();
-  const { refreshUsage } = useAIUsage();
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
+  const cvIdFromUrl = searchParams.get('cvId');
+  
+  const [jobDescription, setJobDescription] = useState("");
+  const [analysisResult, setAnalysisResult] = useState<MatchResult | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [showResult, setShowResult] = useState(false);
+  const [savingReport, setSavingReport] = useState(false);
+  const [showNamingModal, setShowNamingModal] = useState(false);
+  const [selectedCVId, setSelectedCVId] = useState<string | null>(null);
+  const [selectedCVTitle, setSelectedCVTitle] = useState<string>("");
 
-  // Función para extraer el título del trabajo y la empresa de la descripción
-  const extractJobDetails = (description: string): JobDetails => {
-    const lines = description.split('\n').filter(line => line.trim());
-    let title = "Posición";
-    let company = "Empresa";
-    
-    // Buscar patrones comunes para extraer información
-    for (const line of lines) {
-      if (line.toLowerCase().includes('puesto:') || line.toLowerCase().includes('cargo:') || line.toLowerCase().includes('posición:')) {
-        title = line.split(':')[1]?.trim() || title;
-      } else if (line.toLowerCase().includes('empresa:') || line.toLowerCase().includes('compañía:')) {
-        company = line.split(':')[1]?.trim() || company;
-      } else if (line.toLowerCase().includes('buscamos') && line.toLowerCase().includes('developer')) {
-        const match = line.match(/buscamos.*?([a-zA-Z\s]+developer)/i);
-        if (match) title = match[1].trim();
-      }
+  // Feature limits hook
+  const { canUseFeature, incrementUsage, isPro, usage, limits } = useFeatureLimits();
+
+  // Effect to handle CV selection from URL parameter
+  useEffect(() => {
+    if (cvIdFromUrl && cvIdFromUrl !== selectedCVId) {
+      // When coming from CV editor with a specific CV ID, select it
+      setSelectedCVId(cvIdFromUrl);
+      // The CVSelector component will handle loading the CV title
     }
-    
-    return { title, company };
+  }, [cvIdFromUrl]);
+
+  const handleCVSelect = (cvId: string, cvTitle: string) => {
+    setSelectedCVId(cvId);
+    setSelectedCVTitle(cvTitle);
   };
 
   const analyzeMatch = async () => {
+    if (!selectedCVId) {
+      toast.error("Por favor selecciona un CV primero");
+      return;
+    }
+
     if (!jobDescription.trim()) {
-      toast.error("Por favor, pega una descripción de trabajo");
+      toast.error("Por favor ingresa una descripción de trabajo");
       return;
     }
 
-    if (!user) {
-      toast.error("Debes estar autenticado para usar esta función");
-      return;
-    }
-
-    // Verificar si puede usar la feature
+    // Check if user can use this feature
     if (!canUseFeature('job_matcher_advanced')) {
-      toast.error("Has alcanzado el límite de análisis de ofertas. Actualiza a Pro para uso ilimitado.");
-      return;
+      return; // Error already shown by the hook
     }
 
     setIsAnalyzing(true);
-    
-    try {
-      console.log('Starting job compatibility analysis...');
-      
-      // Guardar la descripción del trabajo en localStorage para uso posterior
-      localStorage.setItem('currentJobDescription', jobDescription);
-      
-      const { data, error } = await supabase.functions.invoke('analyze-job-compatibility', {
-        body: {
-          jobDescription: jobDescription,
-          userId: user.id
-        }
-      });
+    setShowResult(false);
 
-      if (error) {
-        console.error('Error calling analyze-job-compatibility function:', error);
-        toast.error(`Error al analizar la compatibilidad: ${error.message}`);
+    try {
+      // Fetch the selected CV content
+      const { data: cvData, error: cvError } = await supabase
+        .from('cvs')
+        .select('content')
+        .eq('id', selectedCVId)
+        .single();
+
+      if (cvError) {
+        console.error('Error fetching CV data:', cvError);
+        toast.error("Error al cargar el CV seleccionado");
         return;
       }
 
-      console.log('Analysis completed successfully:', data);
-      setMatchResult(data as MatchResult);
-      
-      // Extraer detalles del trabajo
-      const details = extractJobDetails(jobDescription);
-      setJobDetails(details);
-      
-      // Incrementar el uso después de un análisis exitoso
+      if (!cvData || !cvData.content) {
+        toast.error("CV no encontrado o contenido inválido");
+        return;
+      }
+
+      // Prepare the data for the API
+      const requestBody = {
+        cv_data: cvData.content,
+        job_description: jobDescription,
+      };
+
+      // Call the API endpoint
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/match`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestBody),
+      });
+
+      if (!response.ok) {
+        console.error('API request failed:', response.status, response.statusText);
+        toast.error("Error al analizar la compatibilidad");
+        return;
+      }
+
+      const result = await response.json();
+      setAnalysisResult(result);
+      setShowResult(true);
+
+      // Increment usage after successful analysis
       await incrementUsage('job_matcher_advanced');
-      // Actualizar la barra de tokens en tiempo real
-      await refreshUsage();
-      
-      toast.success("Análisis completado exitosamente");
-      
     } catch (error) {
-      console.error('Error analyzing job compatibility:', error);
+      console.error('Error during analysis:', error);
       toast.error("Error al analizar la compatibilidad");
     } finally {
       setIsAnalyzing(false);
     }
   };
 
-  // Estado para controlar la visibilidad del modal de confirmación
-  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const saveReport = async (reportName: string) => {
+    if (!user) {
+      toast.error("Debes estar autenticado para guardar el informe");
+      return;
+    }
 
-  // Función para guardar el informe
-  const saveReport = async () => {
-    if (!matchResult || !user) return;
-    
+    if (!analysisResult) {
+      toast.error("No hay resultados para guardar");
+      return;
+    }
+
+    setSavingReport(true);
     try {
-      const cvTitle = `Informe - ${jobDetails.title} en ${jobDetails.company}`;
-      
-      const { error } = await supabase
+      const reportData = {
+        cv_id: selectedCVId,
+        cv_title: selectedCVTitle,
+        job_description: jobDescription,
+        analysis_result: analysisResult,
+      };
+
+      const { data, error } = await supabase
         .from('cvs')
         .insert({
           user_id: user.id,
-          title: cvTitle,
-          content: {
-            jobDescription,
-            matchResult,
-            jobDetails,
-            type: 'job_report'
-          } as any,
+          title: reportName,
+          content: reportData as any,
           status: 'draft',
+          template_name: 'job_matcher_report',
           cv_source: 'job_matcher',
-          ai_score: matchResult.score
-        });
+        })
+        .select();
 
       if (error) {
-        console.error('Error saving job report:', error);
+        console.error('Error saving report:', error);
         toast.error(`Error al guardar el informe: ${error.message}`);
         return;
       }
-      
+
       toast.success("Informe guardado exitosamente");
-      navigate("/app/cvs");
+      setShowNamingModal(false);
     } catch (error) {
-      console.error('Error saving job report:', error);
+      console.error('Error saving report:', error);
       toast.error("Error al guardar el informe");
+    } finally {
+      setSavingReport(false);
     }
-  };
-
-  // Función para abrir el modal de confirmación
-  const handleNoSave = () => {
-    setShowConfirmDialog(true);
-  };
-
-  // Función para cerrar el modal y descartar el informe
-  const handleConfirmNoSave = () => {
-    setShowConfirmDialog(false);
-    navigate("/app/dashboard"); // Redirige a Dashboard
-  };
-
-  // Función para cerrar el modal y volver al informe
-  const handleCancelNoSave = () => {
-    setShowConfirmDialog(false);
-  };
-
-  // Función para guardar el informe
-  const handleSaveReport = () => {
-    saveReport();
-  };
-
-  const getScoreColor = (score: number) => {
-    if (score >= 80) return "text-success-600";
-    if (score >= 60) return "text-yellow-600";
-    return "text-red-600";
-  };
-
-  const getScoreBg = (score: number) => {
-    if (score >= 80) return "bg-success-100 border-success-200";
-    if (score >= 60) return "bg-yellow-100 border-yellow-200";
-    return "bg-red-100 border-red-200";
   };
 
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-gray-50">
         <AppSidebar />
-        <main className="flex-1">
-          <header className="bg-white border-b px-6 py-4">
-            <div className="flex items-center gap-4">
-              <SidebarTrigger />
-              <div className="flex-1">
-                <h1 className="text-3xl font-bold gradient-text">Match de Ofertas</h1>
-                <p className="text-gray-600 mt-2">Compara tu currículum con una oferta y recibe recomendaciones para maximizar tu compatibilidad</p>
+        <main className="flex-1 p-6">
+          <div className="max-w-4xl mx-auto space-y-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">Job Matcher</h1>
+                <p className="text-gray-600 mt-2">
+                  Analiza qué tan compatible es tu CV con ofertas de trabajo específicas
+                </p>
               </div>
-            </div>
-          </header>
-
-          <div className="p-6 max-w-7xl mx-auto space-y-6">
-            {/* Job Description Section - Full Width */}
-            <Card>
-              <CardHeader>
-                <div className="flex justify-between items-center">
-                  <CardTitle className="flex items-center gap-2">
-                    <Target className="h-5 w-5 text-brand-500" />
-                    Descripción del Trabajo
-                  </CardTitle>
-                  {!isPro && (
-                    <div className="w-48">
-                      <AIUsageIndicator 
-                        current={usage.job_matcher_advanced}
-                        limit={limits.job_matcher_advanced}
-                        type="job_matcher_advanced"
-                        isPro={isPro}
-                      />
-                    </div>
-                  )}
-                </div>
-                <CardDescription>
-                Pega aquí la descripción completa del puesto que te interesa (título, requisitos, responsabilidades y otros)
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Textarea
-                    placeholder="Pega aquí la descripción del trabajo completa...
-
-Ejemplo:
-- Estamos buscando un Frontend Developer con experiencia en React
-- Requisitos: 3+ años con JavaScript, TypeScript, React
-- Conocimientos en Node.js, APIs REST, Git
-- Experiencia con metodologías ágiles
-- Plus: Docker, Testing, GraphQL"
-                    value={jobDescription}
-                    onChange={(e) => {
-                      const newValue = e.target.value;
-                      if (newValue.length <= MAX_JOB_DESCRIPTION_CHARACTERS) {
-                        setJobDescription(newValue);
-                      }
-                    }}
-                    rows={8}
-                    className="resize-none"
-                    maxLength={MAX_JOB_DESCRIPTION_CHARACTERS}
+              
+              {/* Usage indicator for non-pro users */}
+              {!isPro && (
+                <div className="flex-shrink-0">
+                  <AIUsageIndicator
+                    current={usage.job_matcher_advanced}
+                    limit={limits.job_matcher_advanced}
+                    type="job_matcher_advanced"
+                    isPro={isPro}
                   />
-                  <div className="flex justify-end items-center text-xs">
-                    <span className={`${jobDescription.length >= MAX_JOB_DESCRIPTION_CHARACTERS ? 'text-red-500' : 'text-gray-500'}`}>
-                      {jobDescription.length}/{MAX_JOB_DESCRIPTION_CHARACTERS} caracteres
-                    </span>
-                    {jobDescription.length >= MAX_JOB_DESCRIPTION_CHARACTERS && (
-                      <span className="text-red-500 font-medium ml-2">
-                        Límite máximo alcanzado
-                      </span>
+                </div>
+              )}
+            </div>
+
+            {/* CV Selector */}
+            <CVSelector
+              selectedCVId={selectedCVId}
+              onCVSelect={handleCVSelect}
+              className="mb-6"
+            />
+
+            {/* Job Description Input */}
+            <div className="space-y-2">
+              <Label htmlFor="job-description">Descripción del puesto</Label>
+              <Textarea
+                id="job-description"
+                placeholder="Pega la descripción del puesto aquí..."
+                value={jobDescription}
+                onChange={(e) => setJobDescription(e.target.value)}
+                rows={4}
+              />
+            </div>
+
+            {/* Analysis Section */}
+            <Button 
+              onClick={analyzeMatch} 
+              disabled={isAnalyzing || !canUseFeature('job_matcher_advanced')} 
+              className="w-full"
+            >
+              {isAnalyzing ? "Analizando..." : "Analizar Compatibilidad"}
+            </Button>
+
+            {/* Result Section */}
+            {showResult && analysisResult && (
+              <Card className="mt-6">
+                <CardHeader>
+                  <CardTitle>Resultado del Análisis</CardTitle>
+                  <CardDescription>
+                    Informe generado con el CV: {selectedCVTitle}
+                  </CardDescription>
+                  <CardDescription>
+                    Porcentaje de compatibilidad: {Math.round(analysisResult.score)}%
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <h3 className="text-lg font-semibold">Coincidencias</h3>
+                    {analysisResult.matched_keywords.length > 0 ? (
+                      <div className="flex flex-wrap gap-2">
+                        {analysisResult.matched_keywords.map((keyword) => (
+                          <Badge key={keyword} variant="outline">{keyword}</Badge>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-gray-500">No se encontraron coincidencias.</p>
                     )}
                   </div>
-                </div>
-                
-                <Button 
-                  onClick={analyzeMatch}
-                  disabled={isAnalyzing || !jobDescription.trim() || !canUseFeature('job_matcher_advanced')}
-                  className="bg-gradient-to-r from-brand-500 to-brand-700"
-                  size="lg"
-                >
-                  {isAnalyzing ? (
-                    <>
-                      <Sparkles className="h-4 w-4 mr-2 animate-spin" />
-                      Analizando compatibilidad...
-                    </>
-                  ) : (
-                    <>
-                      <Sparkles className="h-4 w-4 mr-2" />
-                      Analizar Compatibilidad
-                    </>
-                  )}
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Results Section - Vertical Grid */}
-            {!matchResult && !isAnalyzing && (
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="text-center py-12">
-                    <Target className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">
-                      Esperando análisis
-                    </h3>
-                    <p className="text-gray-500">
-                      Pega una descripción de trabajo y haz clic en "Analizar" para ver la compatibilidad con tu CV General
-                    </p>
+                  <div>
+                    <h3 className="text-lg font-semibold">Áreas de Mejora</h3>
+                    {analysisResult.missing_keywords.length > 0 ? (
+                      <div className="flex flex-wrap gap-2">
+                        {analysisResult.missing_keywords.map((keyword) => (
+                          <Badge key={keyword} variant="destructive">{keyword}</Badge>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-gray-500">No hay áreas de mejora.</p>
+                    )}
                   </div>
+                  <Button variant="secondary" onClick={() => setShowNamingModal(true)}>
+                    Guardar Informe
+                  </Button>
                 </CardContent>
               </Card>
-            )}
-
-            {isAnalyzing && (
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="text-center py-12">
-                    <Sparkles className="h-16 w-16 text-brand-500 mx-auto mb-4 animate-spin" />
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">
-                      Analizando con IA...
-                    </h3>
-                    <p className="text-gray-500">
-                      Comparando tu CV General con los requisitos de la oferta
-                    </p>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            {matchResult && (
-              <div className="grid gap-6">
-                {/* Score Card */}
-                <Card className={`border-2 ${getScoreBg(matchResult.score)}`}>
-                  <CardHeader className="text-center">
-                    <div className={`text-4xl font-bold ${getScoreColor(matchResult.score)} mb-2`}>
-                      {matchResult.score}%
-                    </div>
-                    <CardTitle>Compatibilidad General</CardTitle>
-                    <CardDescription>
-                      Tu CV General coincide en un {matchResult.score}% con esta oferta
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <Progress 
-                      value={matchResult.score} 
-                      className="h-3"
-                    />
-                    <div className="flex justify-between text-sm text-gray-500 mt-2">
-                      <span>0%</span>
-                      <span>50%</span>
-                      <span>100%</span>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Strengths */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-success-600">
-                      <CheckCircle className="h-5 w-5" />
-                      Fortalezas Detectadas
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <ul className="space-y-2">
-                      {matchResult.strengths.map((strength, index) => (
-                        <li key={index} className="flex items-start gap-2">
-                          <CheckCircle className="h-4 w-4 text-success-500 mt-0.5 flex-shrink-0" />
-                          <span className="text-sm">{strength}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </CardContent>
-                </Card>
-
-                {/* Missing Keywords */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-red-600">
-                      <AlertCircle className="h-5 w-5" />
-                      Keywords Faltantes
-                    </CardTitle>
-                    <CardDescription>
-                      Considera añadir estas habilidades a tu CV si las tienes
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex flex-wrap gap-2">
-                      {matchResult.missingKeywords.map((keyword) => {
-                        const cap = keyword.charAt(0).toUpperCase() + keyword.slice(1);
-                        return (
-                          <Badge key={keyword} variant="destructive">
-                            {cap}
-                          </Badge>
-                        );
-                      })}
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Suggestions */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-brand-600">
-                      <TrendingUp className="h-5 w-5" />
-                      Bullets Sugeridos
-                    </CardTitle>
-                    <CardDescription>
-                      Fragmentos optimizados para esta oferta específica
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-3">
-                      {matchResult.suggestedBullets.map((bullet, index) => (
-                        <div key={index} className="p-3 bg-brand-50 rounded-lg border border-brand-200">
-                          <p className="text-sm font-mono">{bullet}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Improvements */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2 text-yellow-600">
-                      <TrendingUp className="h-5 w-5" />
-                      Áreas de Mejora
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <ul className="space-y-2">
-                      {matchResult.improvements.map((improvement, index) => (
-                        <li key={index} className="flex items-start gap-2">
-                          <TrendingUp className="h-4 w-4 text-yellow-500 mt-0.5 flex-shrink-0" />
-                          <span className="text-sm">{improvement}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </CardContent>
-                </Card>
-
-                {/* Action Buttons */}
-                <div className="flex gap-4 pt-6">
-                  <Button 
-                    onClick={handleNoSave}
-                    variant="outline"
-                    className="flex-1 bg-white border-gray-300 text-gray-700 hover:bg-gray-50"
-                  >
-                    No guardar informe
-                  </Button>
-                  <Button 
-                    onClick={handleSaveReport}
-                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white"
-                  >
-                    Guardar informe
-                  </Button>
-                </div>
-              </div>
             )}
           </div>
         </main>
-
-        {/* CV Adaptation Modal - Temporarily disabled */}
-        {/*
-        <CVAdaptationModal
-          isOpen={showAdaptationModal}
-          onClose={() => setShowAdaptationModal(false)}
-          matchResult={matchResult}
-          jobDetails={jobDetails}
-          onSave={() => {
-            setShowAdaptationModal(false);
-            navigate("/app/cvs");
-          }}
-        />
-        */}
-        
-        {/* Modal de confirmación para no guardar */}
-        <Dialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
-          <DialogContent className="sm:max-w-[425px]">
-            <DialogHeader>
-              <DialogTitle>¿Seguro que quieres borrar el informe?</DialogTitle>
-              <DialogDescription>
-                Si borras el informe tendrás que hacer el análisis de nuevo para verlo.
-              </DialogDescription>
-            </DialogHeader>
-            <DialogFooter className="flex gap-2">
-              <Button 
-                variant="outline" 
-                onClick={handleCancelNoSave}
-                className="flex-1"
-              >
-                Atrás
-              </Button>
-              <Button 
-                onClick={handleConfirmNoSave}
-                className="flex-1 bg-red-600 hover:bg-red-700 text-white"
-              >
-                Borrar
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
       </div>
+
+      <CVNamingModal
+        isOpen={showNamingModal}
+        onClose={() => setShowNamingModal(false)}
+        onSave={saveReport}
+        defaultName={`${selectedCVTitle} - Informe de Compatibilidad`}
+        isSaving={savingReport}
+        isReport={true}
+      />
     </SidebarProvider>
   );
 };

@@ -537,7 +537,7 @@ export const CVAdaptationPreviewModal = ({
                     removeSkill={removeSkill}
                     goToPreviousTab={() => setActiveTab('education')}
                     saveCV={handleSave}
-                    saveAndAdapt={() => {}} // No aplica en este contexto
+                    saveAndRedirectToJobMatcher={handleSave}
                   />
                 </TabsContent>
               </Tabs>

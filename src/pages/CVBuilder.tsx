@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
@@ -29,14 +28,13 @@ import { SummaryTab } from "@/components/cv-builder/SummaryTab";
 import { ExperienceTab } from "@/components/cv-builder/ExperienceTab";
 import { EducationTab } from "@/components/cv-builder/EducationTab";
 import { SkillsTab } from "@/components/cv-builder/SkillsTab";
+import { SkillsTabExisting } from "@/components/cv-builder/SkillsTabExisting";
 import { CVPreview } from "@/components/cv-builder/CVPreview";
 import { SaveAnimationOverlay } from "@/components/SaveAnimationOverlay";
-// Ya no necesitamos importar useDownloadManager
 
 const CVBuilder = () => {
-  const { cvData, setCvData, isLoading, currentCvId, saveCV, saveAndAdapt } = useCVData();
+  const { cvData, setCvData, isLoading, currentCvId, existingCvTitle, clearDraft } = useCVData();
   const { user } = useAuth();
-  // Ya no necesitamos useDownloadManager
   
   const {
     activeTab,
@@ -67,14 +65,138 @@ const CVBuilder = () => {
 
   const navigate = useNavigate();
 
-  // Funciones de exportación eliminadas
+  // Determine if this is an existing CV
+  const isExistingCV = !!currentCvId;
+  console.log('CVBuilder - currentCvId:', currentCvId, 'isExistingCV:', isExistingCV);
 
-  const handleSaveCV = async () => {
-    await handleSaveWithAnimation(saveCV);
+  // Updated save functions that handle redirection properly
+  const saveCV = async (cvName: string) => {
+    if (!user) {
+      toast.error("Debes estar autenticado para guardar el CV");
+      return;
+    }
+
+    try {
+      let result;
+      let finalCvName = cvName;
+
+      if (currentCvId) {
+        // For existing CVs, use the existing title instead of the provided name
+        finalCvName = existingCvTitle || cvName;
+        
+        // Update existing CV
+        result = await supabase
+          .from('cvs')
+          .update({
+            title: finalCvName,
+            content: cvData as any,
+            status: 'draft',
+            template_name: 'modern',
+            last_updated: new Date().toISOString()
+          })
+          .eq('id', currentCvId)
+          .select();
+      } else {
+        // Create new CV
+        result = await supabase
+          .from('cvs')
+          .insert({
+            user_id: user.id,
+            title: finalCvName,
+            content: cvData as any,
+            status: 'draft',
+            template_name: 'modern',
+            cv_source: 'editor'
+          })
+          .select();
+      }
+
+      if (result.error) {
+        console.error('Error saving CV:', result.error);
+        toast.error(`Error al guardar el CV: ${result.error.message}`);
+        return;
+      }
+      
+      toast.success(currentCvId ? "CV actualizado exitosamente" : "CV guardado exitosamente");
+      
+      // Clear draft if it was a new CV
+      if (!currentCvId) {
+        clearDraft();
+      }
+      
+      // Always redirect to CVs list after saving
+      navigate("/app/cvs");
+    } catch (error) {
+      console.error('Error saving CV:', error);
+      toast.error("Error al guardar el CV");
+    }
   };
 
-  const handleSaveAndAdapt = async () => {
-    await handleSaveWithAnimation(saveAndAdapt);
+  const saveAndRedirectToJobMatcher = async (cvName: string) => {
+    if (!user) {
+      toast.error("Debes estar autenticado para guardar el CV");
+      return;
+    }
+
+    try {
+      let result;
+      let finalCvName = cvName;
+      let savedCvId = currentCvId;
+
+      if (currentCvId) {
+        // For existing CVs, use the existing title instead of the provided name
+        finalCvName = existingCvTitle || cvName;
+        
+        // Update existing CV
+        result = await supabase
+          .from('cvs')
+          .update({
+            title: finalCvName,
+            content: cvData as any,
+            status: 'draft',
+            template_name: 'modern',
+            last_updated: new Date().toISOString()
+          })
+          .eq('id', currentCvId)
+          .select();
+      } else {
+        // Create new CV
+        result = await supabase
+          .from('cvs')
+          .insert({
+            user_id: user.id,
+            title: finalCvName,
+            content: cvData as any,
+            status: 'draft',
+            template_name: 'modern',
+            cv_source: 'editor'
+          })
+          .select();
+          
+        if (result.data && result.data[0]) {
+          savedCvId = result.data[0].id;
+        }
+      }
+
+      if (result.error) {
+        console.error('Error saving CV:', result.error);
+        toast.error(`Error al guardar el CV: ${result.error.message}`);
+        return;
+      }
+      
+      toast.success(currentCvId ? "CV actualizado exitosamente" : "CV guardado exitosamente");
+      
+      // Clear draft if it was a new CV
+      if (!currentCvId) {
+        clearDraft();
+      }
+      
+      // Redirect to Job Matcher with the CV ID as URL parameter so it gets selected
+      navigate(`/app/match?cvId=${savedCvId}`);
+    } catch (error) {
+      console.error('Error saving CV:', error);
+      toast.error("Error al guardar el CV");
+    }
   };
 
   const progress = showSaveAnimation ? savingProgress : getProgress();
@@ -163,14 +285,27 @@ const CVBuilder = () => {
                 </TabsContent>
 
                 <TabsContent value="skills">
-                  <SkillsTab
-                    cvData={cvData}
-                    addSkill={addSkill}
-                    removeSkill={removeSkill}
-                    goToPreviousTab={goToPreviousTab}
-                    saveCV={handleSaveCV}
-                    saveAndAdapt={handleSaveAndAdapt}
-                  />
+                  {isExistingCV ? (
+                    <SkillsTabExisting
+                      cvData={cvData}
+                      addSkill={addSkill}
+                      removeSkill={removeSkill}
+                      goToPreviousTab={goToPreviousTab}
+                      saveCV={saveCV}
+                      saveAndRedirectToJobMatcher={saveAndRedirectToJobMatcher}
+                      existingCvTitle={existingCvTitle || "CV"}
+                    />
+                  ) : (
+                    <SkillsTab
+                      cvData={cvData}
+                      addSkill={addSkill}
+                      removeSkill={removeSkill}
+                      goToPreviousTab={goToPreviousTab}
+                      saveCV={saveCV}
+                      saveAndRedirectToJobMatcher={saveAndRedirectToJobMatcher}
+                      isExistingCV={isExistingCV}
+                    />
+                  )}
                 </TabsContent>
               </Tabs>
             </div>

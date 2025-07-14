@@ -13,6 +13,7 @@ import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import CVBuilder from "./pages/CVBuilder";
+import CVSelector from "./pages/CVSelector";
 import CVsList from "./pages/CVsList";
 import JobMatcher from "./pages/JobMatcher";
 import Profile from "./pages/Profile";
@@ -53,6 +54,11 @@ const App = () => (
             <Route path="/app/cvs" element={
               <ProtectedRoute>
                 <CVsList />
+              </ProtectedRoute>
+            } />
+            <Route path="/app/cv-selector" element={
+              <ProtectedRoute>
+                <CVSelector />
               </ProtectedRoute>
             } />
             <Route path="/app/cv/:id" element={

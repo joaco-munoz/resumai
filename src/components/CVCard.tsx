@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,8 +17,8 @@ import {
   ChevronDown,
   FileText,
   BarChart3,
-  Star,
-  Plus
+  Plus,
+  Star
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -37,6 +38,7 @@ interface CV {
   ai_score?: number;
   content?: any;
   cv_source: string;
+  is_favorite?: boolean;
 }
 
 interface CompanySuggestion {
@@ -67,6 +69,7 @@ interface CVCardProps {
   onSelectLogo: (cv: CV, logoUrl: string) => void;
   onLogoQueryChange: (query: string) => void;
   onAddToTracking: (cv: CV) => void;
+  onToggleFavorite?: (cvId: string) => void;
 }
 
 export const CVCard = ({
@@ -90,7 +93,8 @@ export const CVCard = ({
   onStartLogoEdit,
   onSelectLogo,
   onLogoQueryChange,
-  onAddToTracking
+  onAddToTracking,
+  onToggleFavorite
 }: CVCardProps) => {
   const [downloadDropdownOpen, setDownloadDropdownOpen] = useState(false);
 
@@ -105,6 +109,7 @@ export const CVCard = ({
   const isJobReportCV = isJobReport(cv);
   const currentLogo = logoMap[cv.id] || cv.content?.companyLogo;
   const isJobMatcherCV = cv.cv_source === 'job_matcher';
+  const isUserCV = cv.cv_source === 'editor';
 
   if (isMobile) {
     return (
@@ -114,11 +119,11 @@ export const CVCard = ({
       >
         <div className="flex items-start justify-between">
           <div className="flex items-start gap-3 flex-1 min-w-0">
-            {/* Logo */}
+            {/* Logo/Icon */}
             <div className="flex-shrink-0">
-              {!isJobMatcherCV ? (
+              {isUserCV ? (
                 <div className="w-12 h-12 flex items-center justify-center">
-                  <Star className="h-6 w-6 text-yellow-400" />
+                  <FileText className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                 </div>
               ) : currentLogo ? (
                 <div className="relative group">
@@ -128,7 +133,7 @@ export const CVCard = ({
                     className="w-12 h-12 rounded object-contain bg-gray-50 dark:bg-gray-700 p-1 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
                     onClick={(e) => {
                       e.stopPropagation();
-                      isJobMatcherCV && onStartLogoEdit(cv.id);
+                      isUserCV && onStartLogoEdit(cv.id);
                     }}
                   />
                   <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 rounded transition-all duration-200 flex items-center justify-center">
@@ -142,7 +147,7 @@ export const CVCard = ({
                   className="w-12 h-12 p-0"
                   onClick={(e) => {
                     e.stopPropagation();
-                    isJobMatcherCV && onStartLogoEdit(cv.id);
+                    isUserCV && onStartLogoEdit(cv.id);
                   }}
                 >
                   <Building2 className="h-5 w-5" />
@@ -183,6 +188,9 @@ export const CVCard = ({
                   {isJobReportCV && (
                     <BarChart3 className="h-5 w-5 text-blue-500 flex-shrink-0" />
                   )}
+                  {isUserCV && cv.is_favorite && (
+                    <Star className="h-5 w-5 fill-yellow-400 text-yellow-400 flex-shrink-0" />
+                  )}
                   <h3 className="font-medium text-gray-900 dark:text-gray-100 truncate text-base">
                     {cv.title}
                   </h3>
@@ -210,7 +218,7 @@ export const CVCard = ({
           </div>
 
           <div className="flex items-center">
-            {isJobMatcherCV && (
+            {isUserCV && (
               <Button
                 size="sm"
                 onClick={(e) => {
@@ -220,7 +228,7 @@ export const CVCard = ({
                 className="mr-2 h-10 text-sm font-medium"
               >
                 <Plus className="h-4 w-4 mr-1" />
-                Añadir
+                Añadir Seguimiento
               </Button>
             )}
             <DropdownMenu>
@@ -283,6 +291,18 @@ export const CVCard = ({
                   </>
                 )}
                 <DropdownMenuSeparator />
+                {isUserCV && onToggleFavorite && (
+                  <DropdownMenuItem 
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onToggleFavorite(cv.id);
+                    }}
+                    className="py-2"
+                  >
+                    <Star className="h-5 w-5 mr-2" />
+                    Elegir como favorito
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuItem 
                   onClick={(e) => {
                     e.stopPropagation();
@@ -308,8 +328,8 @@ export const CVCard = ({
           </div>
         </div>
 
-        {/* Logo Edit Interface */}
-        {isJobMatcherCV && logoEditCvId === cv.id && (
+        {/* Logo Edit Interface - Only for User CVs */}
+        {isUserCV && logoEditCvId === cv.id && (
           <div className="border-t pt-4 space-y-4" onClick={(e) => e.stopPropagation()}>
             <Input
               placeholder="Buscar empresa..."
@@ -347,124 +367,133 @@ export const CVCard = ({
   }
 
   // Desktop version
+  const gridCols = isUserCV ? "grid-cols-13" : "grid-cols-12";
+  
   return (
-    <div className="grid grid-cols-13 gap-4 py-4 items-center border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors">
+    <div className={`grid ${gridCols} gap-4 py-4 items-center border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors`}>
       {/* CV Info Column */}
-      <div className="col-span-5 flex items-center gap-3">
-        {/* Logo */}
-        <div className="flex-shrink-0">
-          {!isJobMatcherCV ? (
-                <div className="w-10 h-10 flex items-center justify-center">
-                  <Star className="h-5 w-5 text-yellow-400" />
+      <div className={isUserCV ? "col-span-5" : "col-span-6"}>
+        <div className="flex items-center gap-3">
+          {/* Logo/Icon */}
+          <div className="flex-shrink-0">
+            {isUserCV ? (
+              currentLogo ? (
+                <div className="relative group">
+                  <img 
+                    src={currentLogo} 
+                    alt="Company logo" 
+                    className="w-10 h-10 rounded object-contain bg-gray-50 dark:bg-gray-700 p-1 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
+                    onClick={() => onStartLogoEdit(cv.id)}
+                  />
+                  <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 rounded transition-all duration-200 flex items-center justify-center">
+                    <Edit className="h-3 w-3 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </div>
                 </div>
-              ) : currentLogo ? (
-            <div className="relative group">
-              <img 
-                src={currentLogo} 
-                alt="Company logo" 
-                className="w-10 h-10 rounded object-contain bg-gray-50 dark:bg-gray-700 p-1 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
-                onClick={() => isJobMatcherCV && onStartLogoEdit(cv.id)}
-              />
-              <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 rounded transition-all duration-200 flex items-center justify-center">
-                <Edit className="h-3 w-3 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
-              </div>
-            </div>
-          ) : (
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-10 h-10 p-0"
-              onClick={() => isJobMatcherCV && onStartLogoEdit(cv.id)}
-            >
-              <Building2 className="h-4 w-4" />
-            </Button>
-          )}
-        </div>
-
-        <div className="flex-1 min-w-0">
-          {isRenaming ? (
-            <div className="flex gap-2 items-center">
-              <Input
-                value={renamingTitle}
-                onChange={(e) => onRenamingTitleChange(e.target.value)}
-                onKeyDown={handleKeyPress}
-                className="text-sm h-8"
-                autoFocus
-              />
-              <Button
-                size="sm"
-                onClick={onSaveRename}
-                disabled={savingRename}
-                className="h-8 px-2"
-              >
-                <Check className="h-3 w-3" />
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={onCancelRename}
-                disabled={savingRename}
-                className="h-8 px-2"
-              >
-                <X className="h-3 w-3" />
-              </Button>
-            </div>
-          ) : (
-            <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                {isJobReportCV && (
-                  <BarChart3 className="h-4 w-4 text-blue-500 flex-shrink-0" />
-                )}
-                <h3 className="font-medium text-gray-900 dark:text-gray-100 truncate">
-                  {cv.title}
-                </h3>
-              </div>
-              <div className="flex items-center gap-2">
-                {cv.status !== 'draft' && (
-                  <Badge className={getStatusColor(cv.status)}>
-                    {getStatusLabel(cv.status)}
-                  </Badge>
-                )}
-                {cv.ai_score && isJobReportCV && (
-                  <Badge className={getScoreColor(cv.ai_score)}>
-                    {cv.ai_score}%
-                  </Badge>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Logo Edit Interface */}
-        {isJobMatcherCV && logoEditCvId === cv.id && (
-          <div className="absolute z-50 mt-2 w-80 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-4 space-y-3">
-            <Input
-              placeholder="Buscar empresa..."
-              value={logoQuery}
-              onChange={(e) => onLogoQueryChange(e.target.value)}
-              className="text-sm"
-            />
-            
-            {logoSuggestions.length > 0 && (
-              <div className="space-y-2 max-h-48 overflow-y-auto">
-                {logoSuggestions.map((suggestion) => (
-                  <button
-                    key={suggestion.domain}
-                    onClick={() => onSelectLogo(cv, suggestion.logo)}
-                    className="flex items-center gap-3 p-2 rounded-md border hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors w-full text-left"
-                  >
-                    <img 
-                      src={suggestion.logo} 
-                      alt={suggestion.name}
-                      className="w-8 h-8 object-contain flex-shrink-0"
-                    />
-                    <span className="text-sm truncate">{suggestion.name}</span>
-                  </button>
-                ))}
+              ) : (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-10 h-10 p-0"
+                  onClick={() => onStartLogoEdit(cv.id)}
+                >
+                  <Building2 className="h-4 w-4" />
+                </Button>
+              )
+            ) : (
+              <div className="w-10 h-10 flex items-center justify-center">
+                <FileText className="h-5 w-5 text-blue-600 dark:text-blue-400" />
               </div>
             )}
           </div>
-        )}
+
+          <div className="flex-1 min-w-0">
+            {isRenaming ? (
+              <div className="flex gap-2 items-center">
+                <Input
+                  value={renamingTitle}
+                  onChange={(e) => onRenamingTitleChange(e.target.value)}
+                  onKeyDown={handleKeyPress}
+                  className="text-sm h-8"
+                  autoFocus
+                />
+                <Button
+                  size="sm"
+                  onClick={onSaveRename}
+                  disabled={savingRename}
+                  className="h-8 px-2"
+                >
+                  <Check className="h-3 w-3" />
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={onCancelRename}
+                  disabled={savingRename}
+                  className="h-8 px-2"
+                >
+                  <X className="h-3 w-3" />
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  {isJobReportCV && (
+                    <BarChart3 className="h-4 w-4 text-blue-500 flex-shrink-0" />
+                  )}
+                  {isUserCV && cv.is_favorite && (
+                    <Star className="h-4 w-4 fill-yellow-400 text-yellow-400 flex-shrink-0" />
+                  )}
+                  <h3 className="font-medium text-gray-900 dark:text-gray-100 truncate">
+                    {cv.title}
+                  </h3>
+                </div>
+                <div className="flex items-center gap-2">
+                  {cv.status !== 'draft' && (
+                    <Badge className={getStatusColor(cv.status)}>
+                      {getStatusLabel(cv.status)}
+                    </Badge>
+                  )}
+                  {cv.ai_score && isJobReportCV && (
+                    <Badge className={getScoreColor(cv.ai_score)}>
+                      {cv.ai_score}%
+                    </Badge>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Logo Edit Interface - Only for User CVs */}
+          {isUserCV && logoEditCvId === cv.id && (
+            <div className="absolute z-50 mt-2 w-80 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-4 space-y-3">
+              <Input
+                placeholder="Buscar empresa..."
+                value={logoQuery}
+                onChange={(e) => onLogoQueryChange(e.target.value)}
+                className="text-sm"
+              />
+              
+              {logoSuggestions.length > 0 && (
+                <div className="space-y-2 max-h-48 overflow-y-auto">
+                  {logoSuggestions.map((suggestion) => (
+                    <button
+                      key={suggestion.domain}
+                      onClick={() => onSelectLogo(cv, suggestion.logo)}
+                      className="flex items-center gap-3 p-2 rounded-md border hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors w-full text-left"
+                    >
+                      <img 
+                        src={suggestion.logo} 
+                        alt={suggestion.name}
+                        className="w-8 h-8 object-contain flex-shrink-0"
+                      />
+                      <span className="text-sm truncate">{suggestion.name}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Created Date Column */}
@@ -473,22 +502,22 @@ export const CVCard = ({
       </div>
 
       {/* Updated Date Column */}
-      <div className="col-span-3 text-sm text-gray-500 dark:text-gray-400">
+      <div className={`text-sm text-gray-500 dark:text-gray-400 ${isUserCV ? "col-span-2" : "col-span-2"}`}>
         {formatDate(cv.last_updated)}
       </div>
 
-      {/* Add to Tracking Column */}
-      <div className="col-span-1 flex items-center justify-end">
-        {isJobMatcherCV && (
+      {/* Add to Tracking Column - only for User CVs */}
+      {isUserCV && (
+        <div className="col-span-2 flex items-center justify-center">
           <Button
             size="sm"
             onClick={() => onAddToTracking(cv)}
           >
             <Plus className="h-4 w-4 mr-2" />
-            Añadir a seguimiento
+            Añadir Seguimiento
           </Button>
-        )}
-      </div>
+        </div>
+      )}
 
       {/* Actions Column */}
       <div className="col-span-1 flex items-center justify-end">
@@ -532,6 +561,12 @@ export const CVCard = ({
               </>
             )}
             <DropdownMenuSeparator />
+            {isUserCV && onToggleFavorite && (
+              <DropdownMenuItem onClick={() => onToggleFavorite(cv.id)}>
+                <Star className="h-4 w-4 mr-2" />
+                Elegir como favorito
+              </DropdownMenuItem>
+            )}
             <DropdownMenuItem onClick={() => onStartRename(cv)}>
               <Edit className="h-4 w-4 mr-2" />
               Renombrar

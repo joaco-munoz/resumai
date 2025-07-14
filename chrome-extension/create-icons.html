@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador de Iconos ResumAI</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .icon-preview {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+            margin: 30px 0;
+        }
+        .icon-item {
+            text-align: center;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            background: #fafafa;
+        }
+        .icon-item h3 {
+            margin: 10px 0 5px 0;
+            color: #555;
+        }
+        .icon-item p {
+            margin: 0;
+            font-size: 12px;
+            color: #777;
+        }
+        canvas {
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .download-section {
+            text-align: center;
+            margin-top: 30px;
+        }
+        .download-btn {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+            text-decoration: none;
+            display: inline-block;
+        }
+        .download-btn:hover {
+            background: #45a049;
+        }
+        .instructions {
+            background: #e3f2fd;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 30px;
+        }
+        .instructions h3 {
+            color: #1976d2;
+            margin-top: 0;
+        }
+        .instructions ol {
+            color: #333;
+        }
+        .instructions li {
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 Generador de Iconos ResumAI</h1>
+        
+        <p style="text-align: center; color: #666; margin-bottom: 30px;">
+            Esta herramienta genera iconos temporales para la extensión de Chrome de ResumAI.
+        </p>
+
+        <div class="icon-preview" id="iconPreview">
+            <!-- Los iconos se generarán aquí -->
+        </div>
+
+        <div class="download-section">
+            <button class="download-btn" onclick="generateAllIcons()">🎨 Generar Todos los Iconos</button>
+            <button class="download-btn" onclick="downloadAllIcons()">📥 Descargar Todos</button>
+        </div>
+
+        <div class="instructions">
+            <h3>📋 Instrucciones de Uso</h3>
+            <ol>
+                <li><strong>Generar Iconos:</strong> Haz clic en "Generar Todos los Iconos" para crear los iconos.</li>
+                <li><strong>Descargar:</strong> Usa "Descargar Todos" para obtener un ZIP con todos los iconos.</li>
+                <li><strong>Instalar:</strong> Extrae los archivos en la carpeta <code>chrome-extension/icons/</code></li>
+                <li><strong>Cargar Extensión:</strong> Ve a <code>chrome://extensions/</code> y recarga la extensión.</li>
+            </ol>
+            
+            <h3>📁 Archivos Generados</h3>
+            <ul>
+                <li><code>icon16.png</code> - Ícono pequeño (16x16)</li>
+                <li><code>icon32.png</code> - Ícono mediano (32x32)</li>
+                <li><code>icon48.png</code> - Ícono grande (48x48)</li>
+                <li><code>icon128.png</code> - Ícono extra grande (128x128)</li>
+                <li><code>icon16-active.png</code> - Versión activa pequeña</li>
+                <li><code>icon32-active.png</code> - Versión activa mediana</li>
+                <li><code>icon48-active.png</code> - Versión activa grande</li>
+                <li><code>icon128-active.png</code> - Versión activa extra grande</li>
+            </ul>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script>
+        // Configuración de iconos
+        const iconSizes = [16, 32, 48, 128];
+        const iconTypes = ['normal', 'active'];
+        
+        // Colores
+        const colors = {
+            normal: {
+                primary: '#4CAF50',
+                secondary: '#2E7D32',
+                background: '#E8F5E8',
+                text: '#1B5E20'
+            },
+            active: {
+                primary: '#FF5722',
+                secondary: '#D84315',
+                background: '#FFF3E0',
+                text: '#BF360C'
+            }
+        };
+
+        // Función para crear un ícono SVG
+        function createIconSVG(size, type) {
+            const color = colors[type];
+            
+            return `
+                <svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg">
+                    <!-- Fondo circular -->
+                    <circle cx="${size/2}" cy="${size/2}" r="${size/2 - 1}" fill="${color.background}" stroke="${color.primary}" stroke-width="2"/>
+                    
+                    <!-- Ícono de documento/CV -->
+                    <g transform="translate(${size * 0.2}, ${size * 0.15})">
+                        <!-- Documento principal -->
+                        <rect x="0" y="0" width="${size * 0.6}" height="${size * 0.7}" fill="${color.primary}" rx="2"/>
+                        
+                        <!-- Líneas de texto -->
+                        <rect x="${size * 0.1}" y="${size * 0.15}" width="${size * 0.4}" height="${size * 0.05}" fill="${color.background}" rx="1"/>
+                        <rect x="${size * 0.1}" y="${size * 0.25}" width="${size * 0.35}" height="${size * 0.05}" fill="${color.background}" rx="1"/>
+                        <rect x="${size * 0.1}" y="${size * 0.35}" width="${size * 0.3}" height="${size * 0.05}" fill="${color.background}" rx="1"/>
+                        
+                        <!-- Indicador de AI/automatización -->
+                        <circle cx="${size * 0.45}" cy="${size * 0.55}" r="${size * 0.08}" fill="${color.secondary}"/>
+                        <text x="${size * 0.45}" y="${size * 0.58}" text-anchor="middle" fill="${color.background}" font-size="${size * 0.08}" font-family="Arial, sans-serif" font-weight="bold">AI</text>
+                    </g>
+                    
+                    ${type === 'active' ? `
+                        <!-- Indicador de actividad -->
+                        <circle cx="${size * 0.8}" cy="${size * 0.2}" r="${size * 0.08}" fill="#FF4444"/>
+                    ` : ''}
+                </svg>
+            `;
+        }
+
+        // Función para convertir SVG a Canvas
+        function svgToCanvas(svgString, size, callback) {
+            const img = new Image();
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            canvas.width = size;
+            canvas.height = size;
+            
+            img.onload = function() {
+                ctx.drawImage(img, 0, 0, size, size);
+                callback(canvas);
+            };
+            
+            const blob = new Blob([svgString], { type: 'image/svg+xml' });
+            const url = URL.createObjectURL(blob);
+            img.src = url;
+        }
+
+        // Función para generar un ícono
+        function generateIcon(size, type, callback) {
+            const svgString = createIconSVG(size, type);
+            svgToCanvas(svgString, size, callback);
+        }
+
+        // Función para generar todos los iconos
+        function generateAllIcons() {
+            const preview = document.getElementById('iconPreview');
+            preview.innerHTML = '';
+            
+            iconSizes.forEach(size => {
+                iconTypes.forEach(type => {
+                    generateIcon(size, type, (canvas) => {
+                        const container = document.createElement('div');
+                        container.className = 'icon-item';
+                        
+                        const title = document.createElement('h3');
+                        title.textContent = `${size}x${size}`;
+                        
+                        const subtitle = document.createElement('p');
+                        subtitle.textContent = type === 'normal' ? 'Normal' : 'Activo';
+                        
+                        container.appendChild(canvas);
+                        container.appendChild(title);
+                        container.appendChild(subtitle);
+                        
+                        preview.appendChild(container);
+                    });
+                });
+            });
+        }
+
+        // Función para descargar todos los iconos
+        async function downloadAllIcons() {
+            const zip = new JSZip();
+            const promises = [];
+            
+            iconSizes.forEach(size => {
+                iconTypes.forEach(type => {
+                    const promise = new Promise((resolve) => {
+                        generateIcon(size, type, (canvas) => {
+                            canvas.toBlob((blob) => {
+                                const filename = type === 'normal' 
+                                    ? `icon${size}.png`
+                                    : `icon${size}-active.png`;
+                                zip.file(filename, blob);
+                                resolve();
+                            }, 'image/png');
+                        });
+                    });
+                    promises.push(promise);
+                });
+            });
+            
+            await Promise.all(promises);
+            
+            const content = await zip.generateAsync({ type: 'blob' });
+            const url = URL.createObjectURL(content);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'resumai-icons.zip';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // Generar iconos al cargar la página
+        window.addEventListener('load', () => {
+            setTimeout(generateAllIcons, 500);
+        });
+    </script>
+</body>
+</html>

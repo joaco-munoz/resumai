@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
@@ -7,8 +6,7 @@ import { toast } from "sonner";
 import { CVData } from "@/types/cv";
 
 const LOCAL_STORAGE_KEY = 'cv-editor-data';
-const LOCAL_STORAGE_DRAFT_KEY = 'cv-editor-draft';
-const LOCAL_STORAGE_TAB_KEY = 'cv-editor-active-tab';
+const SESSION_STORAGE_DRAFT_KEY = 'cv-editor-draft';
 
 export const useCVData = () => {
   const navigate = useNavigate();
@@ -20,7 +18,7 @@ export const useCVData = () => {
   
   const [cvData, setCvData] = useState<CVData>({
     personalInfo: {
-      fullName: userFullName, // Usar solo el nombre del usuario desde su perfil
+      fullName: userFullName,
       email: '',
       phone: '',
       location: '',
@@ -48,20 +46,22 @@ export const useCVData = () => {
 
   const [isLoading, setIsLoading] = useState(false);
   const [currentCvId, setCurrentCvId] = useState<string | null>(null);
+  const [existingCvTitle, setExistingCvTitle] = useState<string | null>(null);
 
-  // Save data to localStorage whenever cvData changes
+  // Save data to storage whenever cvData changes
   useEffect(() => {
     if (currentCvId) {
-      // Persist edits for existing CVs
+      // Persist edits for existing CVs in localStorage
       localStorage.setItem(`${LOCAL_STORAGE_KEY}-${currentCvId}`, JSON.stringify(cvData));
     } else {
-      // Persist edits for a new (unsaved) CV draft
-      localStorage.setItem(LOCAL_STORAGE_DRAFT_KEY, JSON.stringify(cvData));
+      // Persist edits for a new (unsaved) CV draft - only keep in sessionStorage
+      sessionStorage.setItem(SESSION_STORAGE_DRAFT_KEY, JSON.stringify(cvData));
     }
   }, [cvData, currentCvId]);
 
   // Load data from localStorage when component mounts or cvId changes
   useEffect(() => {
+    console.log('useCVData - useEffect triggered with cvId:', cvId, 'user:', !!user);
     if (!user) return;
 
     // 1. If we have a specific CV ID, load that CV directly
@@ -71,20 +71,24 @@ export const useCVData = () => {
       return;
     }
 
-    // 2. If we are creating a new CV, try to restore the local draft first
+    // 2. If we are creating a new CV, try to restore the session draft first
+    console.log('useCVData - Creating new CV or no cvId. cvId:', cvId);
     if (!cvId || cvId === 'new') {
-      const draft = localStorage.getItem(LOCAL_STORAGE_DRAFT_KEY);
+      const draft = sessionStorage.getItem(SESSION_STORAGE_DRAFT_KEY);
       if (draft) {
         try {
           const parsed = JSON.parse(draft);
           setCvData(parsed);
-          console.log('Draft CV loaded from localStorage');
+          console.log('Draft CV loaded from sessionStorage');
         } catch (err) {
-          console.error('Error parsing draft CV from localStorage', err);
+          console.error('Error parsing draft CV from sessionStorage', err);
         }
       }
-      // Only load last CV if we don't have a draft and we're creating a new CV
-      loadLastCV();
+      // Reset currentCvId for new CVs
+      console.log('useCVData - Setting currentCvId to null for new CV, cvId:', cvId);
+      setCurrentCvId(null);
+      setExistingCvTitle(null);
+      setIsLoading(false);
     }
   }, [cvId, user]);
 
@@ -110,6 +114,7 @@ export const useCVData = () => {
       if (data && data.content) {
         console.log('CV loaded successfully:', data);
         setCurrentCvId(data.id);
+        setExistingCvTitle(data.title);
         
         // Check if we have unsaved local changes for this CV
         const localData = localStorage.getItem(`${LOCAL_STORAGE_KEY}-${id}`);
@@ -135,207 +140,9 @@ export const useCVData = () => {
     }
   };
 
-  const loadLastCV = async () => {
-    setIsLoading(true);
-    try {
-      console.log('Loading last saved CV for user:', user?.id);
-      
-      const { data, error } = await supabase
-        .from('cvs')
-        .select('*')
-        .eq('user_id', user?.id)
-        .eq('cv_source', 'editor')
-        .order('last_updated', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      if (error) {
-        console.error('Error loading last CV:', error);
-        toast.error(`Error al cargar el último CV: ${error.message}`);
-        return;
-      }
-
-      if (data && data.content) {
-        console.log('Last CV loaded successfully:', data);
-        
-        // Check if we have local data for this CV
-        const localData = localStorage.getItem(`${LOCAL_STORAGE_KEY}-${data.id}`);
-        if (localData) {
-          try {
-            const parsedData = JSON.parse(localData);
-            setCvData(parsedData);
-            console.log('CV loaded from localStorage:', parsedData);
-          } catch (error) {
-            console.error('Error parsing localStorage data:', error);
-            setCvData(data.content as unknown as CVData);
-          }
-        } else {
-          setCvData(data.content as unknown as CVData);
-        }
-        
-        setCurrentCvId(data.id);
-        navigate(`/app/cv/${data.id}`, { replace: true });
-      } else {
-        console.log('No CVs found, keeping default data');
-        setCurrentCvId(null);
-      }
-    } catch (error) {
-      console.error('Error loading last CV:', error);
-      toast.error("Error al cargar el último CV");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const saveCV = async () => {
-    if (!user) {
-      toast.error("Debes estar autenticado para guardar el CV");
-      return;
-    }
-
-    try {
-      const cvTitle = `CV - ${cvData.personalInfo.fullName}`;
-      
-      // Always update or create a CV with cv_source = 'editor' (General CV)
-      const { data: existingCV, error: searchError } = await supabase
-        .from('cvs')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('cv_source', 'editor')
-        .maybeSingle();
-
-      if (searchError) {
-        console.error('Error searching for existing CV:', searchError);
-      }
-
-      let result;
-
-      if (existingCV) {
-        // Update existing general CV
-        result = await supabase
-          .from('cvs')
-          .update({
-            title: cvTitle,
-            content: cvData as any,
-            status: 'draft',
-            template_name: 'modern',
-            last_updated: new Date().toISOString()
-          })
-          .eq('id', existingCV.id)
-          .select();
-        
-        setCurrentCvId(existingCV.id);
-        // Clear localStorage after successful save
-        localStorage.removeItem(`${LOCAL_STORAGE_KEY}-${existingCV.id}`);
-      } else {
-        // Create new general CV
-        result = await supabase
-          .from('cvs')
-          .insert({
-            user_id: user.id,
-            title: cvTitle,
-            content: cvData as any,
-            status: 'draft',
-            template_name: 'modern',
-            cv_source: 'editor'
-          })
-          .select();
-
-        if (result.data && result.data[0]) {
-          setCurrentCvId(result.data[0].id);
-          // Clear localStorage after successful save
-          localStorage.removeItem(`${LOCAL_STORAGE_KEY}-${result.data[0].id}`);
-          navigate(`/app/cv/${result.data[0].id}`, { replace: true });
-        }
-      }
-
-      if (result.error) {
-        console.error('Error saving CV:', result.error);
-        toast.error(`Error al guardar el CV: ${result.error.message}`);
-        return;
-      }
-      
-      toast.success("CV principal guardado exitosamente");
-      navigate("/app/cvs");
-    } catch (error) {
-      console.error('Error saving CV:', error);
-      toast.error("Error al guardar el CV");
-    }
-  };
-
-  const saveAndAdapt = async () => {
-    if (!user) {
-      toast.error("Debes estar autenticado para guardar el CV");
-      return;
-    }
-
-    try {
-      const cvTitle = `CV - ${cvData.personalInfo.fullName}`;
-      
-      // First save as general CV (same logic as saveCV)
-      const { data: existingCV, error: searchError } = await supabase
-        .from('cvs')
-        .select('id')
-        .eq('user_id', user.id)
-        .eq('cv_source', 'editor')
-        .maybeSingle();
-
-      if (searchError) {
-        console.error('Error searching for existing CV:', searchError);
-      }
-
-      let result;
-
-      if (existingCV) {
-        // Update existing general CV
-        result = await supabase
-          .from('cvs')
-          .update({
-            title: cvTitle,
-            content: cvData as any,
-            status: 'draft',
-            template_name: 'modern',
-            last_updated: new Date().toISOString()
-          })
-          .eq('id', existingCV.id)
-          .select();
-        
-        setCurrentCvId(existingCV.id);
-        // Clear localStorage after successful save
-        localStorage.removeItem(`${LOCAL_STORAGE_KEY}-${existingCV.id}`);
-      } else {
-        // Create new general CV
-        result = await supabase
-          .from('cvs')
-          .insert({
-            user_id: user.id,
-            title: cvTitle,
-            content: cvData as any,
-            status: 'draft',
-            template_name: 'modern',
-            cv_source: 'editor'
-          })
-          .select();
-
-        if (result.data && result.data[0]) {
-          setCurrentCvId(result.data[0].id);
-          // Clear localStorage after successful save
-          localStorage.removeItem(`${LOCAL_STORAGE_KEY}-${result.data[0].id}`);
-        }
-      }
-
-      if (result.error) {
-        console.error('Error saving CV:', result.error);
-        toast.error(`Error al guardar el CV: ${result.error.message}`);
-        return;
-      }
-      
-      toast.success("CV principal guardado exitosamente");
-      navigate("/app/match");
-    } catch (error) {
-      console.error('Error saving CV:', error);
-      toast.error("Error al guardar el CV");
-    }
+  // Function to clear the session draft when discarding
+  const clearDraft = () => {
+    sessionStorage.removeItem(SESSION_STORAGE_DRAFT_KEY);
   };
 
   return {
@@ -343,7 +150,7 @@ export const useCVData = () => {
     setCvData,
     isLoading,
     currentCvId,
-    saveCV,
-    saveAndAdapt
+    existingCvTitle,
+    clearDraft
   };
 };

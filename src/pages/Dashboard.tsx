@@ -1,216 +1,277 @@
 import { useState, useEffect } from "react";
-import { SidebarProvider, SidebarInset, useSidebar } from "@/components/ui/sidebar";
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
-import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
-import { toast } from "sonner";
 import { DashboardStats } from "@/components/dashboard/DashboardStats";
 import { QuickActions } from "@/components/dashboard/QuickActions";
 import { RecentActivity } from "@/components/dashboard/RecentActivity";
-import { OnboardingModal } from "@/components/onboarding/OnboardingModal";
-import { useOnboarding } from "@/hooks/useOnboarding";
-import { useSubscriptionStatus } from "@/hooks/useSubscriptionStatus";
-import { Badge } from "@/components/ui/badge";
-import { Crown, Menu } from "lucide-react";
-import { NPSModal } from "@/components/NPSModal";
-import { useNPS } from "@/hooks/useNPS";
-import { useIsMobile } from "@/hooks/use-mobile";
-import { Button } from "@/components/ui/button";
+import { useKanbanStats, KanbanStatsProvider } from "@/contexts/KanbanStatsContext";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
-const Dashboard = () => {
+// Componente interno que usa el hook useKanbanStats
+function DashboardContent() {
   const { user } = useAuth();
-  const { showOnboarding, isLoading: onboardingLoading, completeOnboarding } = useOnboarding();
-  const { tier, isPremium, isLoading: statusLoading } = useSubscriptionStatus();
-  const [stats, setStats] = useState({
-    cvsCreated: 0,
-    applications: 0,
-    interviews: 0,
-    responseRate: 0
-  });
+  const { stats: kanbanStats } = useKanbanStats();
+  const [cvsCount, setCvsCount] = useState<number>(0);
   const [recentActivities, setRecentActivities] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const { shouldShowNPS, dismissNPS } = useNPS();
-  const isMobile = useIsMobile();
+  const [activitiesLoading, setActivitiesLoading] = useState<boolean>(true);
   
-  // We'll use this in the actual component, not here in the provider
-  const toggleSidebarFn = () => {
-    // This will be implemented in the component after SidebarProvider is rendered
-  };
-
+  // Obtener el número real de CVs creados
   useEffect(() => {
-    if (user) {
-      fetchDashboardData();
-    }
-  }, [user]);
-
-  const fetchDashboardData = async () => {
-    if (!user) return;
+    const fetchCVsCount = async () => {
+      if (!user) return;
+      
+      try {
+        const { count, error } = await supabase
+          .from('cvs')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', user.id)
+          .eq('cv_source', 'editor'); // Solo contar CVs creados por el usuario, no los informes
+        
+        if (error) {
+          console.error('Error fetching CVs count:', error);
+          return;
+        }
+        
+        setCvsCount(count || 0);
+      } catch (error) {
+        console.error('Error fetching CVs count:', error);
+      }
+    };
     
-    setLoading(true);
-    try {
-      // Fetch CVs count
-      const { count: cvsCount } = await supabase
-        .from('cvs')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id);
-
-      // Count applications with status 'applied' (Postulado)
-      const { count: applicationsCount } = await supabase
-        .from('job_applications_tracking')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id)
-        .eq('status', 'applied');
-
-      // Count applications with status 'interviewing' (En entrevista)
-      const { count: interviewsCount } = await supabase
-        .from('job_applications_tracking')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id)
-        .eq('status', 'interviewing');
-
-      setStats({
-        cvsCreated: cvsCount || 0,
-        applications: applicationsCount || 0,
-        interviews: interviewsCount || 0,
-        responseRate: 0
-      });
-
-      // Fetch recent activities
-      const { data: recentCVs } = await supabase
-        .from('cvs')
-        .select('id, title, created_at')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(3);
-
-      const { data: recentApplications } = await supabase
-        .from('job_applications_tracking')
-        .select('id, status, applied_date, position, company')
-        .eq('user_id', user.id)
-        .order('applied_date', { ascending: false })
-        .limit(3);
-
-      const activities = [
-        ...(recentCVs || []).map(cv => ({
-          id: cv.id,
-          type: 'cv_created' as const,
-          title: cv.title,
-          date: new Date(cv.created_at).toLocaleDateString('es-ES'),
-          status: 'Completado'
-        })),
-        ...(recentApplications || []).map(app => ({
-          id: app.id,
-          type: 'application_sent' as const,
-          title: app.position || 'Aplicación',
-          date: new Date(app.applied_date).toLocaleDateString('es-ES'),
-          status: app.status
-        }))
-      ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 5);
-
-      setRecentActivities(activities);
-
-    } catch (error) {
-      console.error('Error fetching dashboard data:', error);
-      toast.error("Error al cargar los datos del dashboard");
-    } finally {
-      setLoading(false);
-    }
+    fetchCVsCount();
+    
+    // Suscribirse a cambios en la tabla de CVs
+    const subscription = supabase
+      .channel('cvs_count_changes')
+      .on('postgres_changes', 
+        { 
+          event: '*', 
+          schema: 'public', 
+          table: 'cvs',
+          filter: `user_id=eq.${user?.id}` 
+        }, 
+        () => {
+          // Actualizar conteo cuando haya cambios
+          fetchCVsCount();
+        }
+      )
+      .subscribe();
+      
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, [user]);
+  
+  // Obtener actividades recientes (CVs creados, postulaciones, entrevistas)
+  useEffect(() => {
+    const fetchRecentActivities = async () => {
+      if (!user) return;
+      
+      setActivitiesLoading(true);
+      
+      try {
+        // 1. Obtener CVs recientes
+        const { data: recentCVs, error: cvsError } = await supabase
+          .from('cvs')
+          .select('id, title, created_at, cv_source')
+          .eq('user_id', user.id)
+          .eq('cv_source', 'editor')
+          .order('created_at', { ascending: false })
+          .limit(3);
+          
+        if (cvsError) {
+          console.error('Error fetching recent CVs:', cvsError);
+        }
+        
+        // 2. Obtener postulaciones recientes
+        const { data: recentApplications, error: applicationsError } = await supabase
+          .from('job_applications_tracking')
+          .select('id, position, company, created_at, status')
+          .eq('user_id', user.id)
+          .eq('status', 'applied')
+          .order('created_at', { ascending: false })
+          .limit(3);
+          
+        if (applicationsError) {
+          console.error('Error fetching recent applications:', applicationsError);
+        }
+        
+        // 3. Obtener entrevistas recientes
+        const { data: recentInterviews, error: interviewsError } = await supabase
+          .from('job_applications_tracking')
+          .select('id, position, company, created_at, status')
+          .eq('user_id', user.id)
+          .eq('status', 'interviewing')
+          .order('created_at', { ascending: false })
+          .limit(3);
+          
+        if (interviewsError) {
+          console.error('Error fetching recent interviews:', interviewsError);
+        }
+        
+        // Formatear los datos para el componente RecentActivity
+        const formattedActivities = [
+          ...(recentCVs || []).map(cv => ({
+            id: cv.id,
+            type: 'cv_created' as const,
+            title: cv.title,
+            date: formatRelativeTime(String(cv.created_at)),
+            status: 'Completado'
+          })),
+          ...(recentApplications || []).map(app => ({
+            id: app.id,
+            type: 'application_sent' as const,
+            title: `${app.position} en ${app.company}`,
+            date: formatRelativeTime(String(app.created_at))
+          })),
+          ...(recentInterviews || []).map(interview => ({
+            id: interview.id,
+            type: 'interview_scheduled' as const,
+            title: `${interview.position} en ${interview.company}`,
+            date: formatRelativeTime(String(interview.created_at)),
+            status: 'En proceso'
+          }))
+        ];
+        
+        // Guardamos el timestamp original para ordenar correctamente
+        const activitiesWithTimestamp = formattedActivities.map(activity => {
+          // Extraer la fecha original del objeto antes de formatearla
+          const sourceObj = 
+            activity.type === 'cv_created' ? recentCVs?.find(cv => cv.id === activity.id) :
+            activity.type === 'application_sent' ? recentApplications?.find(app => app.id === activity.id) :
+            recentInterviews?.find(int => int.id === activity.id);
+          
+          return {
+            ...activity,
+            timestamp: sourceObj ? new Date(String(sourceObj.created_at)).getTime() : 0
+          };
+        });
+        
+        // Ordenar por timestamp (más reciente primero)
+        const sortedActivities = [...activitiesWithTimestamp]
+          .sort((a, b) => b.timestamp - a.timestamp)
+          .slice(0, 5)
+          .map(({ timestamp, ...activity }) => activity); // Eliminar el campo timestamp adicional
+        
+        setRecentActivities(sortedActivities);
+        
+      } catch (error) {
+        console.error('Error fetching recent activities:', error);
+      } finally {
+        setActivitiesLoading(false);
+      }
+    };
+    
+    // Función auxiliar para formatear fechas relativas
+    const formatRelativeTime = (dateString: string) => {
+      const date = new Date(dateString);
+      const now = new Date();
+      const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+      
+      if (diffInSeconds < 60) {
+        return 'Hace unos segundos';
+      } else if (diffInSeconds < 3600) {
+        const minutes = Math.floor(diffInSeconds / 60);
+        return `Hace ${minutes} ${minutes === 1 ? 'minuto' : 'minutos'}`;
+      } else if (diffInSeconds < 86400) {
+        const hours = Math.floor(diffInSeconds / 3600);
+        return `Hace ${hours} ${hours === 1 ? 'hora' : 'horas'}`;
+      } else if (diffInSeconds < 604800) {
+        const days = Math.floor(diffInSeconds / 86400);
+        return `Hace ${days} ${days === 1 ? 'día' : 'días'}`;
+      } else if (diffInSeconds < 2592000) {
+        const weeks = Math.floor(diffInSeconds / 604800);
+        return `Hace ${weeks} ${weeks === 1 ? 'semana' : 'semanas'}`;
+      } else {
+        const months = Math.floor(diffInSeconds / 2592000);
+        return `Hace ${months} ${months === 1 ? 'mes' : 'meses'}`;
+      }
+    };
+    
+    fetchRecentActivities();
+    
+    // Suscribirse a cambios en las tablas relevantes
+    const cvSubscription = supabase
+      .channel('cvs_activity_changes')
+      .on('postgres_changes', 
+        { 
+          event: '*', 
+          schema: 'public', 
+          table: 'cvs',
+          filter: `user_id=eq.${user?.id}` 
+        }, 
+        () => fetchRecentActivities()
+      )
+      .subscribe();
+      
+    const applicationSubscription = supabase
+      .channel('job_applications_activity_changes')
+      .on('postgres_changes', 
+        { 
+          event: '*', 
+          schema: 'public', 
+          table: 'job_applications_tracking',
+          filter: `user_id=eq.${user?.id}` 
+        }, 
+        () => fetchRecentActivities()
+      )
+      .subscribe();
+    
+    return () => {
+      cvSubscription.unsubscribe();
+      applicationSubscription.unsubscribe();
+    };
+  }, [user]);
+  
+  // Combinamos los datos de kanbanStats con cvsCount
+  const dashboardStats = {
+    cvsCreated: cvsCount,
+    applications: kanbanStats.applications,
+    interviews: kanbanStats.interviews
   };
-
-  const handleOnboardingClose = () => {
-    completeOnboarding();
-  };
-
-  if (loading || onboardingLoading || statusLoading) {
-    return (
-      <SidebarProvider>
-        <div className="min-h-screen flex w-full bg-gray-50">
-          <AppSidebar />
-          <SidebarInset>
-            <div className="flex-1 flex items-center justify-center">
-              <div className="text-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-600 mx-auto"></div>
-                <p className="mt-2 text-gray-600">Cargando dashboard...</p>
-              </div>
-            </div>
-          </SidebarInset>
-        </div>
-      </SidebarProvider>
-    );
-  }
 
   return (
-    <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-gray-50">
-        <AppSidebar />
-        <main className="flex-1 overflow-x-hidden">
-          <header className="bg-white border-b px-4 sm:px-6 py-4">
-            <div className="flex items-center justify-between w-full">
-              <div>
-                <div className="flex items-center gap-3">
-                  {isMobile && (
-                    <Button 
-                      variant="ghost" 
-                      size="sm" 
-                      onClick={() => {
-                        const sidebar = document.querySelector('[data-state]');
-                        if (sidebar) {
-                          const isCollapsed = sidebar.getAttribute('data-state') === 'collapsed';
-                          sidebar.setAttribute('data-state', isCollapsed ? 'expanded' : 'collapsed');
-                        }
-                      }} 
-                      className="mr-2 p-1"
-                      aria-label="Toggle menu"
-                    >
-                      <Menu className="h-5 w-5" />
-                    </Button>
-                  )}
-                  <h1 className="text-2xl sm:text-3xl font-bold gradient-text">Dashboard</h1>
-                </div>
-                <p className="text-sm sm:text-base text-gray-600 mt-2">
-                  {isPremium 
-                    ? "Aprovecha todas las funciones premium" 
-                    : "Resumen de tu actividad y progreso"
-                  }
+    <div className="min-h-screen flex w-full">
+      <SidebarInset>
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
+          <div className="max-w-7xl mx-auto">
+              {/* Header */}
+              <div className="mb-8">
+                <h1 className="font-bold text-3xl gradient-text mb-2">
+                  Dashboard
+                </h1>
+                <p className="text-gray-600 dark:text-gray-300">
+                  Bienvenido a tu panel de control. Aquí puedes gestionar tus CVs y ver tu progreso.
                 </p>
               </div>
-              {isPremium && (
-                <Badge 
-                  variant="default"
-                  className="bg-gradient-to-r from-brand-500 to-brand-700 text-white hidden sm:flex"
-                >
-                  <Crown className="h-3 w-3 mr-1" />
-                  Plan Pro
-                </Badge>
-              )}
-            </div>
-          </header>
-          
-          <div className="flex-1 p-4 sm:p-6">
-            <div className="space-y-4 sm:space-y-6">
-              <DashboardStats stats={stats} />
-              
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
-                <QuickActions />
-                <RecentActivity activities={recentActivities} />
-              </div>
-            </div>
+
+              {/* Stats */}
+              <DashboardStats stats={dashboardStats} />
+
+              {/* Quick Actions */}
+              <QuickActions />
+
+              {/* Recent Activity */}
+              <RecentActivity 
+                activities={recentActivities} 
+                loading={activitiesLoading}
+              />
           </div>
-        </main>
-      </div>
+        </div>
+      </SidebarInset>
+    </div>
+  );
+}
 
-      {/* Onboarding Modal */}
-      <OnboardingModal 
-        isOpen={showOnboarding} 
-        onClose={handleOnboardingClose}
-      />
-
-      <NPSModal 
-        isOpen={shouldShowNPS} 
-        onClose={dismissNPS} 
-      />
+// Componente principal que envuelve DashboardContent con los providers necesarios
+export default function Dashboard() {
+  return (
+    <SidebarProvider>
+      <AppSidebar />
+      <KanbanStatsProvider>
+        <DashboardContent />
+      </KanbanStatsProvider>
     </SidebarProvider>
   );
-};
-
-export default Dashboard;
+}
