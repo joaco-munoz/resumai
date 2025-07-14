@@ -54,7 +54,7 @@ export const useCVData = () => {
       // Persist edits for existing CVs
       localStorage.setItem(`${LOCAL_STORAGE_KEY}-${currentCvId}`, JSON.stringify(cvData));
     } else {
-      // Persist edits for a new (unsaved) CV draft
+      // Persist edits for a new (unsaved) CV draft - only keep in memory
       localStorage.setItem(LOCAL_STORAGE_DRAFT_KEY, JSON.stringify(cvData));
     }
   }, [cvData, currentCvId]);
@@ -140,11 +140,17 @@ export const useCVData = () => {
     }
   };
 
+  // Function to clear the local draft when discarding
+  const clearDraft = () => {
+    localStorage.removeItem(LOCAL_STORAGE_DRAFT_KEY);
+  };
+
   return {
     cvData,
     setCvData,
     isLoading,
     currentCvId,
-    existingCvTitle
+    existingCvTitle,
+    clearDraft
   };
 };

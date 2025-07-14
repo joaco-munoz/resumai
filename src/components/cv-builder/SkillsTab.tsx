@@ -44,34 +44,18 @@ export const SkillsTab = ({
   };
 
   const handleSaveCV = () => {
-    // For new CVs, always show naming modal
+    // Always show naming modal for new CVs
     setModalAction('save');
     setShowNamingModal(true);
   };
 
   const handleSaveAndRedirect = () => {
-    // For new CVs, always show naming modal
+    // Always show naming modal for new CVs
     setModalAction('saveAndRedirect');
     setShowNamingModal(true);
   };
 
-  const handleDirectSave = async (action: 'save' | 'saveAndRedirect') => {
-    setIsSaving(true);
-    try {
-      // For existing CVs, use the current CV title or generate a default
-      const cvName = cvData.personalInfo.fullName || generateDefaultName();
-      
-      if (action === 'save') {
-        await saveCV(cvName);
-      } else {
-        await saveAndRedirectToJobMatcher(cvName);
-      }
-    } catch (error) {
-      console.error('Error saving CV:', error);
-    } finally {
-      setIsSaving(false);
-    }
-  };
+  // This function is no longer needed since we always show modal for new CVs
 
   const handleModalSave = async (cvName: string) => {
     setIsSaving(true);
@@ -154,7 +138,7 @@ export const SkillsTab = ({
         </CardContent>
       </Card>
 
-      {/* Always show naming modal for new CVs from editor */}
+      {/* Show naming modal for new CVs */}
       <CVNamingModal
         isOpen={showNamingModal}
         onClose={handleModalClose}

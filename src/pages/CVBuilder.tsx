@@ -33,7 +33,7 @@ import { CVPreview } from "@/components/cv-builder/CVPreview";
 import { SaveAnimationOverlay } from "@/components/SaveAnimationOverlay";
 
 const CVBuilder = () => {
-  const { cvData, setCvData, isLoading, currentCvId, existingCvTitle } = useCVData();
+  const { cvData, setCvData, isLoading, currentCvId, existingCvTitle, clearDraft } = useCVData();
   const { user } = useAuth();
   
   const {
@@ -119,6 +119,11 @@ const CVBuilder = () => {
       
       toast.success(currentCvId ? "CV actualizado exitosamente" : "CV guardado exitosamente");
       
+      // Clear draft if it was a new CV
+      if (!currentCvId) {
+        clearDraft();
+      }
+      
       // Always redirect to CVs list after saving
       navigate("/app/cvs");
     } catch (error) {
@@ -180,6 +185,11 @@ const CVBuilder = () => {
       }
       
       toast.success(currentCvId ? "CV actualizado exitosamente" : "CV guardado exitosamente");
+      
+      // Clear draft if it was a new CV
+      if (!currentCvId) {
+        clearDraft();
+      }
       
       // Redirect to Job Matcher with the CV ID as URL parameter so it gets selected
       navigate(`/app/match?cvId=${savedCvId}`);
