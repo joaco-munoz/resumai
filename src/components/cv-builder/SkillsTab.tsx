@@ -44,25 +44,15 @@ export const SkillsTab = ({
   };
 
   const handleSaveCV = () => {
-    if (isExistingCV) {
-      // For existing CVs, save directly without modal
-      handleDirectSave('save');
-    } else {
-      // For new CVs, show naming modal
-      setModalAction('save');
-      setShowNamingModal(true);
-    }
+    // For new CVs, always show naming modal
+    setModalAction('save');
+    setShowNamingModal(true);
   };
 
   const handleSaveAndRedirect = () => {
-    if (isExistingCV) {
-      // For existing CVs, save directly without modal
-      handleDirectSave('saveAndRedirect');
-    } else {
-      // For new CVs, show naming modal
-      setModalAction('saveAndRedirect');
-      setShowNamingModal(true);
-    }
+    // For new CVs, always show naming modal
+    setModalAction('saveAndRedirect');
+    setShowNamingModal(true);
   };
 
   const handleDirectSave = async (action: 'save' | 'saveAndRedirect') => {
@@ -105,11 +95,9 @@ export const SkillsTab = ({
     }
   };
 
-  // Determine button labels based on whether it's an existing CV
-  const saveButtonLabel = isExistingCV ? "Actualizar CV" : "Guardar CV";
-  const saveAndRedirectLabel = isExistingCV 
-    ? "Actualizar CV e ir al Match de ofertas" 
-    : "Guardar CV e ir al Match de ofertas";
+  // For new CVs from editor, always show "Guardar CV" labels
+  const saveButtonLabel = "Guardar CV";
+  const saveAndRedirectLabel = "Guardar CV e ir al Match de ofertas";
 
   return (
     <>
@@ -166,16 +154,14 @@ export const SkillsTab = ({
         </CardContent>
       </Card>
 
-      {/* Only show naming modal for new CVs */}
-      {!isExistingCV && (
-        <CVNamingModal
-          isOpen={showNamingModal}
-          onClose={handleModalClose}
-          onSave={handleModalSave}
-          defaultName={generateDefaultName()}
-          isSaving={isSaving}
-        />
-      )}
+      {/* Always show naming modal for new CVs from editor */}
+      <CVNamingModal
+        isOpen={showNamingModal}
+        onClose={handleModalClose}
+        onSave={handleModalSave}
+        defaultName={generateDefaultName()}
+        isSaving={isSaving}
+      />
     </>
   );
 };

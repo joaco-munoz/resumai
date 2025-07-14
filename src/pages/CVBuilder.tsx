@@ -28,6 +28,7 @@ import { SummaryTab } from "@/components/cv-builder/SummaryTab";
 import { ExperienceTab } from "@/components/cv-builder/ExperienceTab";
 import { EducationTab } from "@/components/cv-builder/EducationTab";
 import { SkillsTab } from "@/components/cv-builder/SkillsTab";
+import { SkillsTabExisting } from "@/components/cv-builder/SkillsTabExisting";
 import { CVPreview } from "@/components/cv-builder/CVPreview";
 import { SaveAnimationOverlay } from "@/components/SaveAnimationOverlay";
 
@@ -273,15 +274,27 @@ const CVBuilder = () => {
                 </TabsContent>
 
                 <TabsContent value="skills">
-                  <SkillsTab
-                    cvData={cvData}
-                    addSkill={addSkill}
-                    removeSkill={removeSkill}
-                    goToPreviousTab={goToPreviousTab}
-                    saveCV={saveCV}
-                    saveAndRedirectToJobMatcher={saveAndRedirectToJobMatcher}
-                    isExistingCV={isExistingCV}
-                  />
+                  {isExistingCV ? (
+                    <SkillsTabExisting
+                      cvData={cvData}
+                      addSkill={addSkill}
+                      removeSkill={removeSkill}
+                      goToPreviousTab={goToPreviousTab}
+                      saveCV={saveCV}
+                      saveAndRedirectToJobMatcher={saveAndRedirectToJobMatcher}
+                      existingCvTitle={existingCvTitle || "CV"}
+                    />
+                  ) : (
+                    <SkillsTab
+                      cvData={cvData}
+                      addSkill={addSkill}
+                      removeSkill={removeSkill}
+                      goToPreviousTab={goToPreviousTab}
+                      saveCV={saveCV}
+                      saveAndRedirectToJobMatcher={saveAndRedirectToJobMatcher}
+                      isExistingCV={isExistingCV}
+                    />
+                  )}
                 </TabsContent>
               </Tabs>
             </div>
