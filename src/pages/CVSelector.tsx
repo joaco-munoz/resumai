@@ -88,49 +88,11 @@ const CVSelector = () => {
     }
   };
 
-  const handleCreateNew = async () => {
-    try {
-      const newCVData: CVData = {
-        personalInfo: {
-          fullName: user?.user_metadata?.full_name || '',
-          email: '',
-          phone: '',
-          location: '',
-          linkedin: '',
-          website: ''
-        },
-        summary: '',
-        experience: [],
-        education: [],
-        skills: []
-      };
-
-      const { data, error } = await supabase
-        .from('cvs')
-        .insert({
-          user_id: user?.id,
-          title: 'CV sin título',
-          content: newCVData as any,
-          status: 'draft',
-          template_name: 'modern',
-          cv_source: 'editor',
-          is_favorite: false
-        })
-        .select()
-        .single();
-
-      if (error) {
-        console.error('Error creating new CV:', error);
-        toast.error("Error al crear el nuevo CV");
-        return;
-      }
-
-      toast.success("Nuevo CV creado exitosamente");
-      navigate(`/app/cv/${data.id}`);
-    } catch (error) {
-      console.error('Error creating new CV:', error);
-      toast.error("Error al crear el nuevo CV");
-    }
+  const handleCreateNew = () => {
+    console.log('Creating new CV');
+    // Navigate to editor with 'new' to create a blank CV
+    // This matches the behavior in CVsList.tsx
+    navigate("/app/cv/new");
   };
 
   if (loading) {

@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { CVData } from "@/types/cv";
 
 const LOCAL_STORAGE_KEY = 'cv-editor-data';
-const LOCAL_STORAGE_DRAFT_KEY = 'cv-editor-draft';
+const SESSION_STORAGE_DRAFT_KEY = 'cv-editor-draft';
 
 export const useCVData = () => {
   const navigate = useNavigate();
@@ -48,14 +48,14 @@ export const useCVData = () => {
   const [currentCvId, setCurrentCvId] = useState<string | null>(null);
   const [existingCvTitle, setExistingCvTitle] = useState<string | null>(null);
 
-  // Save data to localStorage whenever cvData changes
+  // Save data to storage whenever cvData changes
   useEffect(() => {
     if (currentCvId) {
-      // Persist edits for existing CVs
+      // Persist edits for existing CVs in localStorage
       localStorage.setItem(`${LOCAL_STORAGE_KEY}-${currentCvId}`, JSON.stringify(cvData));
     } else {
-      // Persist edits for a new (unsaved) CV draft - only keep in memory
-      localStorage.setItem(LOCAL_STORAGE_DRAFT_KEY, JSON.stringify(cvData));
+      // Persist edits for a new (unsaved) CV draft - only keep in sessionStorage
+      sessionStorage.setItem(SESSION_STORAGE_DRAFT_KEY, JSON.stringify(cvData));
     }
   }, [cvData, currentCvId]);
 
@@ -71,17 +71,17 @@ export const useCVData = () => {
       return;
     }
 
-    // 2. If we are creating a new CV, try to restore the local draft first
+    // 2. If we are creating a new CV, try to restore the session draft first
     console.log('useCVData - Creating new CV or no cvId. cvId:', cvId);
     if (!cvId || cvId === 'new') {
-      const draft = localStorage.getItem(LOCAL_STORAGE_DRAFT_KEY);
+      const draft = sessionStorage.getItem(SESSION_STORAGE_DRAFT_KEY);
       if (draft) {
         try {
           const parsed = JSON.parse(draft);
           setCvData(parsed);
-          console.log('Draft CV loaded from localStorage');
+          console.log('Draft CV loaded from sessionStorage');
         } catch (err) {
-          console.error('Error parsing draft CV from localStorage', err);
+          console.error('Error parsing draft CV from sessionStorage', err);
         }
       }
       // Reset currentCvId for new CVs
@@ -140,9 +140,9 @@ export const useCVData = () => {
     }
   };
 
-  // Function to clear the local draft when discarding
+  // Function to clear the session draft when discarding
   const clearDraft = () => {
-    localStorage.removeItem(LOCAL_STORAGE_DRAFT_KEY);
+    sessionStorage.removeItem(SESSION_STORAGE_DRAFT_KEY);
   };
 
   return {
