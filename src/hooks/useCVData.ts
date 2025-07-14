@@ -61,6 +61,7 @@ export const useCVData = () => {
 
   // Load data from localStorage when component mounts or cvId changes
   useEffect(() => {
+    console.log('useCVData - useEffect triggered with cvId:', cvId, 'user:', !!user);
     if (!user) return;
 
     // 1. If we have a specific CV ID, load that CV directly
@@ -71,6 +72,7 @@ export const useCVData = () => {
     }
 
     // 2. If we are creating a new CV, try to restore the local draft first
+    console.log('useCVData - Creating new CV or no cvId. cvId:', cvId);
     if (!cvId || cvId === 'new') {
       const draft = localStorage.getItem(LOCAL_STORAGE_DRAFT_KEY);
       if (draft) {
@@ -83,6 +85,7 @@ export const useCVData = () => {
         }
       }
       // Reset currentCvId for new CVs
+      console.log('useCVData - Setting currentCvId to null for new CV, cvId:', cvId);
       setCurrentCvId(null);
       setExistingCvTitle(null);
       setIsLoading(false);

@@ -67,6 +67,7 @@ const CVBuilder = () => {
 
   // Determine if this is an existing CV
   const isExistingCV = !!currentCvId;
+  console.log('CVBuilder - currentCvId:', currentCvId, 'isExistingCV:', isExistingCV);
 
   // Updated save functions that handle redirection properly
   const saveCV = async (cvName: string) => {
