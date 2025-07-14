@@ -155,8 +155,12 @@ async function checkAuthentication() {
   showLoading('Verificando autenticación...');
   
   try {
+    console.log('Verificando autenticación...');
+    
     // Verificar autenticación con el background script
     const response = await chrome.runtime.sendMessage({ action: 'checkAuth' });
+    
+    console.log('Respuesta de autenticación:', response);
     
     if (response.success && response.data.authenticated) {
       console.log('Usuario autenticado:', response.data.user.email);

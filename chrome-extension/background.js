@@ -1,4 +1,3 @@
-
 // Background Service Worker para ResumAI Chrome Extension
 
 // Configuración de Supabase
@@ -143,38 +142,28 @@ async function checkAuthentication() {
     const result = await chrome.storage.local.get(['authToken', 'refreshToken', 'user', 'expiresAt']);
     
     if (!result.authToken || !result.user) {
+      console.log('No hay token o usuario guardado');
       return { authenticated: false };
     }
 
     // Verificar si el token ha expirado
     if (result.expiresAt && Date.now() > result.expiresAt - 60000) { // 1 minuto de margen
       console.log('Token expirado, intentando refrescar...');
-      return await refreshToken(result.refreshToken);
-    }
-
-    // Verificar que el token funciona haciendo una petición simple
-    const testResponse = await fetch(`${SUPABASE_URL}/rest/v1/profiles?id=eq.${result.user.id}&select=id`, {
-      headers: {
-        'Authorization': `Bearer ${result.authToken}`,
-        'apikey': SUPABASE_ANON_KEY,
-        'Content-Type': 'application/json'
-      }
-    });
-
-    if (testResponse.ok) {
-      return { 
-        user: result.user, 
-        authenticated: true,
-        token: result.authToken
-      };
-    } else {
-      // Token inválido, intentar refrescar
       if (result.refreshToken) {
         return await refreshToken(result.refreshToken);
       } else {
+        console.log('No hay refresh token disponible');
         return { authenticated: false };
       }
     }
+
+    console.log('Token válido, usuario autenticado');
+    return { 
+      user: result.user, 
+      authenticated: true,
+      token: result.authToken
+    };
+    
   } catch (error) {
     console.error('Error verificando autenticación:', error);
     return { authenticated: false };
