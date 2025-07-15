@@ -156,13 +156,13 @@ async function checkAuthentication() {
   console.log('🔍 Iniciando verificación de autenticación');
   showLoading('Verificando autenticación...');
   
-  // Configurar timeout de 8 segundos para evitar bucles infinitos
+  // Configurar timeout de 5 segundos para evitar bucles infinitos
   authCheckTimeout = setTimeout(() => {
-    console.log('⚠️ Timeout en verificación de autenticación - asumiendo no autenticado');
+    console.log('⚠️ Timeout en verificación de autenticación - mostrando pantalla de login');
     hideLoading();
     showAuthSection();
     updateConnectionStatus('error', 'Timeout de conexión');
-  }, 8000);
+  }, 5000);
   
   try {
     console.log('📡 Enviando mensaje checkAuth al background script');
@@ -177,16 +177,16 @@ async function checkAuthentication() {
     
     console.log('✅ Respuesta recibida de background script:', response);
     
-    if (response && response.success && response.data && response.data.authenticated) {
-      console.log('🎉 Usuario autenticado:', response.data.user?.email);
-      currentUser = response.data.user;
+    if (response && response.success && response.authenticated) {
+      console.log('🎉 Usuario autenticado:', response.user?.email);
+      currentUser = response.user;
       isAuthenticated = true;
       await loadMainInterface();
     } else {
-      console.log('❌ Usuario no autenticado o respuesta inválida');
+      console.log('❌ Usuario no autenticado');
       isAuthenticated = false;
       showAuthSection();
-      updateConnectionStatus('error', 'No conectado');
+      updateConnectionStatus('disconnected', 'No conectado');
     }
     
   } catch (error) {
@@ -200,6 +200,7 @@ async function checkAuthentication() {
     isAuthenticated = false;
     showAuthSection();
     updateConnectionStatus('error', 'Error de conexión');
+    showToast('Error al verificar la autenticación', 'error');
   } finally {
     hideLoading();
   }
@@ -228,9 +229,9 @@ async function handleLogin() {
       password: password
     });
     
-    if (response && response.success && response.data) {
+    if (response && response.success && response.authenticated) {
       console.log('✅ Autenticación exitosa');
-      currentUser = response.data.user;
+      currentUser = response.user;
       isAuthenticated = true;
       
       // Limpiar formulario
@@ -241,18 +242,7 @@ async function handleLogin() {
       showToast('Sesión iniciada correctamente', 'success');
     } else {
       console.error('❌ Error de autenticación:', response?.error);
-      let errorMessage = 'Error al iniciar sesión';
-      
-      if (response?.error) {
-        if (response.error.includes('Invalid login credentials')) {
-          errorMessage = 'Email o contraseña incorrectos';
-        } else if (response.error.includes('Email not confirmed')) {
-          errorMessage = 'Debes confirmar tu email antes de iniciar sesión';
-        } else {
-          errorMessage = response.error;
-        }
-      }
-      
+      let errorMessage = response?.error || 'Error al iniciar sesión';
       showToast(errorMessage, 'error');
       isAuthenticated = false;
     }

@@ -26,8 +26,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       console.log('🔐 Procesando autenticación...');
       handleAuthentication(request.email, request.password)
         .then(result => {
-          console.log('✅ Autenticación completada:', result.authenticated);
-          sendResponse({ success: true, data: result });
+          console.log('✅ Autenticación completada:', result.success);
+          sendResponse(result);
         })
         .catch(error => {
           console.error('❌ Error en autenticación:', error.message);
@@ -40,11 +40,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       checkAuthentication()
         .then(result => {
           console.log('📊 Estado de auth:', result.authenticated ? 'autenticado' : 'no autenticado');
-          sendResponse({ success: true, data: result });
+          sendResponse(result);
         })
         .catch(error => {
           console.error('❌ Error verificando auth:', error.message);
-          sendResponse({ success: false, error: error.message, data: { authenticated: false } });
+          sendResponse({ success: false, error: error.message, authenticated: false });
         });
       return true;
       
@@ -156,9 +156,18 @@ async function handleAuthentication(email, password) {
     const data = await response.json();
 
     if (!response.ok) {
-      const errorMsg = data.error_description || data.message || 'Error de autenticación';
-      console.error('❌ Error en respuesta de autenticación:', errorMsg);
-      throw new Error(errorMsg);
+      let errorMsg = 'Error de autenticación';
+      if (data.error_description) {
+        if (data.error_description.includes('Invalid login credentials')) {
+          errorMsg = 'Email o contraseña incorrectos';
+        } else if (data.error_description.includes('Email not confirmed')) {
+          errorMsg = 'Debes confirmar tu email antes de iniciar sesión';
+        } else {
+          errorMsg = data.error_description;
+        }
+      }
+      console.error('❌ Error en autenticación:', errorMsg);
+      return { success: false, error: errorMsg };
     }
 
     console.log('✅ Autenticación exitosa con Supabase');
@@ -176,13 +185,14 @@ async function handleAuthentication(email, password) {
     console.log('💾 Datos de autenticación guardados en storage');
 
     return { 
-      user: data.user, 
+      success: true,
       authenticated: true,
+      user: data.user,
       token: data.access_token
     };
   } catch (error) {
     console.error('💥 Error en handleAuthentication:', error);
-    throw error;
+    return { success: false, error: 'Error de conexión. Verifica tu internet.' };
   }
 }
 
@@ -194,7 +204,7 @@ async function checkAuthentication() {
     
     if (!result.authToken || !result.user) {
       console.log('❌ No hay token o usuario guardado');
-      return { authenticated: false };
+      return { success: true, authenticated: false };
     }
 
     // Verificar si el token ha expirado
@@ -204,18 +214,20 @@ async function checkAuthentication() {
     if (result.expiresAt && now > (result.expiresAt - expirationBuffer)) {
       console.log('⏰ Token expirado, intentando refrescar...');
       if (result.refreshToken) {
-        return await refreshToken(result.refreshToken);
+        const refreshResult = await refreshToken(result.refreshToken);
+        return { success: true, ...refreshResult };
       } else {
         console.log('❌ No hay refresh token disponible');
         await chrome.storage.local.clear();
-        return { authenticated: false };
+        return { success: true, authenticated: false };
       }
     }
 
     console.log('✅ Token válido, usuario autenticado:', result.user.email);
     return { 
-      user: result.user, 
+      success: true,
       authenticated: true,
+      user: result.user,
       token: result.authToken
     };
     
@@ -223,7 +235,7 @@ async function checkAuthentication() {
     console.error('💥 Error en checkAuthentication:', error);
     // En caso de error, limpiar storage y devolver no autenticado
     await chrome.storage.local.clear();
-    return { authenticated: false };
+    return { success: true, authenticated: false };
   }
 }
 
@@ -264,8 +276,8 @@ async function refreshToken(refreshToken) {
     });
 
     return { 
-      user: data.user, 
       authenticated: true,
+      user: data.user,
       token: data.access_token
     };
   } catch (error) {
