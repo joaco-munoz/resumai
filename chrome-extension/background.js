@@ -1,7 +1,7 @@
 
 // Background Service Worker para ResumAI Chrome Extension
 
-// Configuración de Supabase
+// Configuración de Supabase - EXACTAMENTE la misma que la app web
 const SUPABASE_URL = "https://jwitsagioonykrabioku.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp3aXRzYWdpb29ueWtyYWJpb2t1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk1NzI3MDUsImV4cCI6MjA2NTE0ODcwNX0.RJsdYdmkCTIigypfPXWhb8xsZXycVbiNytPXUJAkN9M";
 
@@ -135,7 +135,7 @@ chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   }
 });
 
-// Funciones de autenticación y API
+// Funciones de autenticación y API usando EXACTAMENTE la misma configuración que la app web
 
 async function handleAuthentication(email, password) {
   try {
@@ -145,7 +145,8 @@ async function handleAuthentication(email, password) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'apikey': SUPABASE_ANON_KEY
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
       },
       body: JSON.stringify({
         email: email,
@@ -154,6 +155,7 @@ async function handleAuthentication(email, password) {
     });
 
     const data = await response.json();
+    console.log('🔍 Respuesta de Supabase:', { status: response.status, ok: response.ok });
 
     if (!response.ok) {
       let errorMsg = 'Error de autenticación';
@@ -165,6 +167,8 @@ async function handleAuthentication(email, password) {
         } else {
           errorMsg = data.error_description;
         }
+      } else if (data.msg) {
+        errorMsg = data.msg;
       }
       console.error('❌ Error en autenticación:', errorMsg);
       return { success: false, error: errorMsg };
@@ -223,6 +227,22 @@ async function checkAuthentication() {
       }
     }
 
+    // Verificar que el token funciona haciendo una llamada de prueba
+    console.log('🧪 Verificando token con llamada de prueba...');
+    const testResponse = await fetch(`${SUPABASE_URL}/rest/v1/profiles?select=id&limit=1`, {
+      headers: {
+        'Authorization': `Bearer ${result.authToken}`,
+        'apikey': SUPABASE_ANON_KEY,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    if (!testResponse.ok) {
+      console.log('❌ Token no válido, limpiando storage');
+      await chrome.storage.local.clear();
+      return { success: true, authenticated: false };
+    }
+
     console.log('✅ Token válido, usuario autenticado:', result.user.email);
     return { 
       success: true,
@@ -251,7 +271,8 @@ async function refreshToken(refreshToken) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'apikey': SUPABASE_ANON_KEY
+        'apikey': SUPABASE_ANON_KEY,
+        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
       },
       body: JSON.stringify({
         refresh_token: refreshToken
@@ -298,7 +319,8 @@ async function getUserCVs() {
 
     console.log('📄 Obteniendo CVs del usuario:', result.user.email);
 
-    const response = await fetch(`${SUPABASE_URL}/rest/v1/cvs?user_id=eq.${result.user.id}&cv_source=eq.editor&select=id,title,created_at,content,is_favorite&order=is_favorite.desc,created_at.desc`, {
+    // Usar exactamente la misma query que la app web
+    const response = await fetch(`${SUPABASE_URL}/rest/v1/cvs?user_id=eq.${result.user.id}&cv_source=eq.editor&select=id,title,created_at,content,is_favorite,last_updated&order=is_favorite.desc,created_at.desc`, {
       headers: {
         'Authorization': `Bearer ${result.authToken}`,
         'apikey': SUPABASE_ANON_KEY,
@@ -308,7 +330,8 @@ async function getUserCVs() {
 
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.message || 'Error al obtener CVs');
+      console.error('❌ Error response:', errorData);
+      throw new Error(errorData.message || `Error ${response.status}: ${response.statusText}`);
     }
 
     const cvs = await response.json();
@@ -331,6 +354,7 @@ async function getUserProfile() {
 
     console.log('👤 Obteniendo perfil del usuario:', result.user.email);
 
+    // Usar exactamente la misma query que la app web
     const response = await fetch(`${SUPABASE_URL}/rest/v1/profiles?id=eq.${result.user.id}&select=*`, {
       headers: {
         'Authorization': `Bearer ${result.authToken}`,
@@ -341,7 +365,8 @@ async function getUserProfile() {
 
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.message || 'Error al obtener perfil');
+      console.error('❌ Error response:', errorData);
+      throw new Error(errorData.message || `Error ${response.status}: ${response.statusText}`);
     }
 
     const profiles = await response.json();
@@ -364,6 +389,7 @@ async function updateProfile(profileData) {
 
     console.log('💾 Actualizando perfil del usuario:', result.user.email);
 
+    // Usar exactamente la misma query que la app web
     const response = await fetch(`${SUPABASE_URL}/rest/v1/profiles?id=eq.${result.user.id}`, {
       method: 'PATCH',
       headers: {
@@ -380,7 +406,8 @@ async function updateProfile(profileData) {
 
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.message || 'Error al actualizar perfil');
+      console.error('❌ Error response:', errorData);
+      throw new Error(errorData.message || `Error ${response.status}: ${response.statusText}`);
     }
 
     console.log('✅ Perfil actualizado correctamente');
