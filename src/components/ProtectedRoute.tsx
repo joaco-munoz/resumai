@@ -1,37 +1,36 @@
 
 import { useAuth } from "@/contexts/AuthContext";
-import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { toast } from "sonner";
+import { Navigate, useLocation } from "react-router-dom";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
 }
 
-const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
+export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const { user, loading } = useAuth();
-  const navigate = useNavigate();
+  const location = useLocation();
 
-  useEffect(() => {
-    if (!loading && !user) {
-      toast.error("Debes iniciar sesión para acceder a esta página");
-      navigate("/");
-    }
-  }, [user, loading, navigate]);
+  console.log("🛡️ ProtectedRoute - Loading:", loading, "User:", user?.email || "No user");
 
+  // Show loading spinner while checking authentication
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-900">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="flex flex-col items-center space-y-4">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          <p className="text-muted-foreground">Verificando autenticación...</p>
+        </div>
       </div>
     );
   }
 
+  // If not authenticated, redirect to home
   if (!user) {
-    return null;
+    console.log("🔀 No user, redirecting to home from:", location.pathname);
+    return <Navigate to="/" replace />;
   }
 
+  // User is authenticated, render the protected content
+  console.log("✅ User authenticated, rendering protected content");
   return <>{children}</>;
 };
-
-export default ProtectedRoute;
