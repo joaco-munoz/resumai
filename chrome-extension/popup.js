@@ -9,6 +9,7 @@ let userProfile = null;
 let currentTab = null;
 let appStats = { applications: 0, autoFills: 0 };
 let isAuthenticated = false;
+let authCheckTimeout = null;
 
 // Elementos del DOM
 const elements = {
@@ -152,29 +153,53 @@ async function loadStoredData() {
 }
 
 async function checkAuthentication() {
+  console.log('🔍 Iniciando verificación de autenticación');
   showLoading('Verificando autenticación...');
   
+  // Configurar timeout de 8 segundos para evitar bucles infinitos
+  authCheckTimeout = setTimeout(() => {
+    console.log('⚠️ Timeout en verificación de autenticación - asumiendo no autenticado');
+    hideLoading();
+    showAuthSection();
+    updateConnectionStatus('error', 'Timeout de conexión');
+  }, 8000);
+  
   try {
-    console.log('Verificando autenticación...');
+    console.log('📡 Enviando mensaje checkAuth al background script');
     
-    // Verificar autenticación con el background script
     const response = await chrome.runtime.sendMessage({ action: 'checkAuth' });
     
-    console.log('Respuesta de autenticación:', response);
+    // Limpiar timeout ya que obtuvimos respuesta
+    if (authCheckTimeout) {
+      clearTimeout(authCheckTimeout);
+      authCheckTimeout = null;
+    }
     
-    if (response.success && response.data.authenticated) {
-      console.log('Usuario autenticado:', response.data.user.email);
+    console.log('✅ Respuesta recibida de background script:', response);
+    
+    if (response && response.success && response.data && response.data.authenticated) {
+      console.log('🎉 Usuario autenticado:', response.data.user?.email);
       currentUser = response.data.user;
       isAuthenticated = true;
       await loadMainInterface();
     } else {
-      console.log('Usuario no autenticado');
+      console.log('❌ Usuario no autenticado o respuesta inválida');
+      isAuthenticated = false;
       showAuthSection();
+      updateConnectionStatus('error', 'No conectado');
     }
     
   } catch (error) {
-    console.error('Error verificando autenticación:', error);
+    // Limpiar timeout en caso de error
+    if (authCheckTimeout) {
+      clearTimeout(authCheckTimeout);
+      authCheckTimeout = null;
+    }
+    
+    console.error('💥 Error verificando autenticación:', error);
+    isAuthenticated = false;
     showAuthSection();
+    updateConnectionStatus('error', 'Error de conexión');
   } finally {
     hideLoading();
   }
@@ -195,7 +220,7 @@ async function handleLogin() {
   elements.loginSpinner.style.display = 'block';
   
   try {
-    console.log('Intentando autenticar con:', email);
+    console.log('🔐 Intentando autenticar con:', email);
     
     const response = await chrome.runtime.sendMessage({ 
       action: 'authenticate',
@@ -203,8 +228,8 @@ async function handleLogin() {
       password: password
     });
     
-    if (response.success) {
-      console.log('Autenticación exitosa');
+    if (response && response.success && response.data) {
+      console.log('✅ Autenticación exitosa');
       currentUser = response.data.user;
       isAuthenticated = true;
       
@@ -215,21 +240,27 @@ async function handleLogin() {
       await loadMainInterface();
       showToast('Sesión iniciada correctamente', 'success');
     } else {
-      console.error('Error de autenticación:', response.error);
+      console.error('❌ Error de autenticación:', response?.error);
       let errorMessage = 'Error al iniciar sesión';
       
-      if (response.error.includes('Invalid login credentials')) {
-        errorMessage = 'Email o contraseña incorrectos';
-      } else if (response.error.includes('Email not confirmed')) {
-        errorMessage = 'Debes confirmar tu email antes de iniciar sesión';
+      if (response?.error) {
+        if (response.error.includes('Invalid login credentials')) {
+          errorMessage = 'Email o contraseña incorrectos';
+        } else if (response.error.includes('Email not confirmed')) {
+          errorMessage = 'Debes confirmar tu email antes de iniciar sesión';
+        } else {
+          errorMessage = response.error;
+        }
       }
       
       showToast(errorMessage, 'error');
+      isAuthenticated = false;
     }
     
   } catch (error) {
-    console.error('Error en login:', error);
+    console.error('💥 Error en login:', error);
     showToast('Error de conexión. Verifica tu internet.', 'error');
+    isAuthenticated = false;
   } finally {
     elements.loginBtn.disabled = false;
     elements.loginBtnText.style.display = 'block';
@@ -258,6 +289,7 @@ async function handleSignOut() {
 }
 
 async function loadMainInterface() {
+  console.log('🏠 Cargando interfaz principal');
   updateUserInfo();
   updateConnectionStatus('connected', 'Conectado a ResumAI');
   await loadUserCVs();
@@ -283,21 +315,21 @@ function updateConnectionStatus(status, text) {
 
 async function loadUserCVs() {
   try {
-    console.log('Cargando CVs del usuario...');
+    console.log('📄 Cargando CVs del usuario...');
     
     const response = await chrome.runtime.sendMessage({ action: 'getUserCVs' });
     
-    if (response.success) {
-      currentCVs = response.data;
-      console.log('CVs cargados:', currentCVs.length);
+    if (response && response.success) {
+      currentCVs = response.data || [];
+      console.log('✅ CVs cargados:', currentCVs.length);
       updateCVSelector();
     } else {
-      console.error('Error cargando CVs:', response.error);
+      console.error('❌ Error cargando CVs:', response?.error);
       showToast('Error al cargar CVs', 'error');
     }
     
   } catch (error) {
-    console.error('Error cargando CVs:', error);
+    console.error('💥 Error cargando CVs:', error);
     showToast('Error al cargar CVs', 'error');
   }
 }
@@ -351,16 +383,16 @@ async function handleCVSelection() {
 
 async function loadUserProfile() {
   try {
-    console.log('Cargando perfil del usuario...');
+    console.log('👤 Cargando perfil del usuario...');
     
     const response = await chrome.runtime.sendMessage({ action: 'getUserProfile' });
     
-    if (response.success && response.data) {
+    if (response && response.success && response.data) {
       userProfile = response.data;
-      console.log('Perfil cargado:', userProfile);
+      console.log('✅ Perfil cargado:', userProfile);
       updateProfileDisplay();
     } else {
-      console.log('No hay perfil disponible');
+      console.log('ℹ️ No hay perfil disponible, creando perfil básico');
       // Crear perfil básico con datos del usuario
       userProfile = {
         full_name: currentUser?.user_metadata?.full_name || '',
@@ -375,7 +407,7 @@ async function loadUserProfile() {
     }
     
   } catch (error) {
-    console.error('Error cargando perfil:', error);
+    console.error('💥 Error cargando perfil:', error);
   }
 }
 
@@ -451,25 +483,25 @@ async function saveProfile() {
       company: elements.profileCompany.value.trim()
     };
     
-    console.log('Guardando perfil:', profileData);
+    console.log('💾 Guardando perfil:', profileData);
     
     const response = await chrome.runtime.sendMessage({ 
       action: 'updateProfile',
       profileData: profileData
     });
     
-    if (response.success) {
+    if (response && response.success) {
       userProfile = { ...userProfile, ...profileData };
       updateProfileDisplay();
       cancelProfileEdit();
       showToast('Perfil actualizado correctamente', 'success');
     } else {
-      console.error('Error actualizando perfil:', response.error);
+      console.error('❌ Error actualizando perfil:', response?.error);
       showToast('Error al actualizar perfil', 'error');
     }
     
   } catch (error) {
-    console.error('Error guardando perfil:', error);
+    console.error('💥 Error guardando perfil:', error);
     showToast('Error al guardar perfil', 'error');
   } finally {
     elements.saveProfileBtn.disabled = false;
@@ -632,12 +664,14 @@ async function refreshCVs() {
 
 // Funciones de UI
 function showAuthSection() {
+  console.log('🔐 Mostrando sección de autenticación');
   elements.authSection.style.display = 'flex';
   elements.mainSection.style.display = 'none';
   updateConnectionStatus('error', 'No conectado');
 }
 
 function showMainSection() {
+  console.log('🏠 Mostrando sección principal');
   elements.authSection.style.display = 'none';
   elements.mainSection.style.display = 'block';
 }
@@ -668,14 +702,19 @@ function showToast(message, type = 'info') {
 
 // Escuchar mensajes del background script
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  console.log('📨 Mensaje recibido en popup:', request);
+  
   switch (request.action) {
     case 'authenticationChanged':
+      console.log('🔄 Estado de autenticación cambió');
       checkAuthentication();
       break;
     case 'tabUpdated':
+      console.log('🔄 Tab actualizada');
       getCurrentTabInfo().then(() => detectCurrentSite());
       break;
     default:
+      console.log('❓ Acción no reconocida:', request.action);
       break;
   }
   
