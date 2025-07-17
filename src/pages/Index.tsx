@@ -14,6 +14,7 @@ import { toast } from "sonner";
 import { Footer } from "@/components/landing/Footer";
 import { features, faqItems } from "@/components/landing/data";
 
+
 const Index = () => {
   const [email, setEmail] = useState("");
   const navigate = useNavigate();
