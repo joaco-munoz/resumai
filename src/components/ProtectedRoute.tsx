@@ -10,7 +10,7 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
   const { user, loading } = useAuth();
   const location = useLocation();
 
-  console.log("🛡️ ProtectedRoute - Loading:", loading, "User:", user?.email || "No user");
+
 
   // Show loading spinner while checking authentication
   if (loading) {
@@ -26,7 +26,7 @@ export const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
 
   // If not authenticated, redirect to home
   if (!user) {
-    console.log("🔀 No user, redirecting to home from:", location.pathname);
+
     return <Navigate to="/" replace />;
   }
 

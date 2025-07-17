@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
+import Dock from "@/components/ui/Dock";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -84,7 +85,7 @@ const CVSelector = () => {
 
   const handleNext = () => {
     if (selectedCVId) {
-      navigate(`/app/cv/${selectedCVId}`);
+      navigate(`/app/cv-builder/${selectedCVId}`);
     }
   };
 
@@ -92,7 +93,7 @@ const CVSelector = () => {
     console.log('Creating new CV');
     // Navigate to editor with 'new' to create a blank CV
     // This matches the behavior in CVsList.tsx
-    navigate("/app/cv/new");
+    navigate("/app/cv-builder/new");
   };
 
   if (loading) {
@@ -197,6 +198,11 @@ const CVSelector = () => {
           </div>
         </main>
       </div>
+      <Dock 
+        panelHeight={68}
+        baseItemSize={50}
+        magnification={70}
+      />
     </SidebarProvider>
   );
 };

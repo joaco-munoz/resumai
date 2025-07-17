@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
+import Dock from "@/components/ui/Dock";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAdmin } from "@/hooks/useAdmin";
 import { useBusinessMetrics } from "@/hooks/useBusinessMetrics";
@@ -183,6 +184,11 @@ const AdminDashboard = () => {
           </div>
         </main>
       </div>
+      <Dock 
+        panelHeight={68}
+        baseItemSize={50}
+        magnification={70}
+      />
     </SidebarProvider>
   );
 };

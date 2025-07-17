@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
+import Dock from "@/components/ui/Dock";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -322,6 +323,11 @@ const CVBuilder = () => {
           />
         </main>
       </div>
+      <Dock 
+        panelHeight={68}
+        baseItemSize={50}
+        magnification={70}
+      />
     </SidebarProvider>
   );
 };

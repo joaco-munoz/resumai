@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
+import Dock from "@/components/ui/Dock";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
@@ -258,6 +259,11 @@ const Profile = () => {
           </div>
         </main>
       </div>
+      <Dock 
+        panelHeight={68}
+        baseItemSize={50}
+        magnification={70}
+      />
     </SidebarProvider>
   );
 };

@@ -7,6 +7,7 @@ import { RecentActivity } from "@/components/dashboard/RecentActivity";
 import { useKanbanStats, KanbanStatsProvider } from "@/contexts/KanbanStatsContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import Dock from "@/components/ui/Dock";
 
 // Componente interno que usa el hook useKanbanStats
 function DashboardContent() {
@@ -272,6 +273,11 @@ export default function Dashboard() {
       <KanbanStatsProvider>
         <DashboardContent />
       </KanbanStatsProvider>
+      <Dock 
+        panelHeight={68}
+        baseItemSize={50}
+        magnification={70}
+      />
     </SidebarProvider>
   );
 }

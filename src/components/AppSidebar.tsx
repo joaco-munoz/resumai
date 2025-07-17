@@ -204,7 +204,7 @@ export function AppSidebar() {
     if (url === "/app" && currentPath === "/app") {
       return true;
     }
-    if (url === "/app/cv-selector" && currentPath.startsWith("/app/cv/")) {
+    if (url === "/app/cv-selector" && currentPath.startsWith("/app/cv-builder/")) {
       return true;
     }
     if (url !== "/app" && currentPath === url) {
@@ -247,7 +247,7 @@ export function AppSidebar() {
       if (url === "/app" && currentPath === "/app") {
         return true;
       }
-      if (url === "/app/cv-selector" && currentPath.startsWith("/app/cv/")) {
+      if (url === "/app/cv-selector" && currentPath.startsWith("/app/cv-builder/")) {
         return true;
       }
       if (url !== "/app" && currentPath === url) {
