@@ -14,31 +14,79 @@ export const CounterSection = () => {
   });
   const [loading, setLoading] = useState(true);
 
+  const fetchStats = async () => {
+    try {
+      // Get total CVs count
+      const { count: cvsCount } = await supabase
+        .from('cvs')
+        .select('*', { count: 'exact', head: true });
+
+      // Get total users count
+      const { count: usersCount } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true });
+
+      const newStats = {
+        totalCVs: cvsCount || 0,
+        totalUsers: usersCount || 0
+      };
+
+      setStats(newStats);
+      return newStats;
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+      return stats;
+    }
+  };
+
   useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        // Get total CVs count
-        const { count: cvsCount } = await supabase
-          .from('cvs')
-          .select('*', { count: 'exact', head: true });
-
-        // Get total users count
-        const { count: usersCount } = await supabase
-          .from('profiles')
-          .select('*', { count: 'exact', head: true });
-
-        setStats({
-          totalCVs: cvsCount || 0,
-          totalUsers: usersCount || 0
-        });
-      } catch (error) {
-        console.error('Error fetching stats:', error);
-      } finally {
-        setLoading(false);
-      }
+    const initializeStats = async () => {
+      setLoading(true);
+      await fetchStats();
+      setLoading(false);
     };
 
-    fetchStats();
+    initializeStats();
+
+    // Set up real-time subscriptions for CVs
+    const cvsChannel = supabase
+      .channel('cvs-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'cvs'
+        },
+        () => {
+          console.log('CVs table changed, updating stats...');
+          fetchStats();
+        }
+      )
+      .subscribe();
+
+    // Set up real-time subscriptions for profiles
+    const profilesChannel = supabase
+      .channel('profiles-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'profiles'
+        },
+        () => {
+          console.log('Profiles table changed, updating stats...');
+          fetchStats();
+        }
+      )
+      .subscribe();
+
+    // Cleanup subscriptions on unmount
+    return () => {
+      supabase.removeChannel(cvsChannel);
+      supabase.removeChannel(profilesChannel);
+    };
   }, []);
 
   // Animate counters when stats change
