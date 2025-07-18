@@ -16,21 +16,32 @@ export const CounterSection = () => {
 
   const fetchStats = async () => {
     try {
-      // Get total CVs count
-      const { count: cvsCount } = await supabase
+      console.log('Fetching stats...');
+      
+      // Get total CVs count using SELECT COUNT(*)
+      const { data: cvsData, error: cvsError } = await supabase
         .from('cvs')
-        .select('*', { count: 'exact', head: true });
+        .select('id');
 
-      // Get total users count
-      const { count: usersCount } = await supabase
+      if (cvsError) {
+        console.error('Error fetching CVs:', cvsError);
+      }
+
+      // Get total users count using SELECT COUNT(*)
+      const { data: usersData, error: usersError } = await supabase
         .from('profiles')
-        .select('*', { count: 'exact', head: true });
+        .select('id');
+
+      if (usersError) {
+        console.error('Error fetching profiles:', usersError);
+      }
 
       const newStats = {
-        totalCVs: cvsCount || 0,
-        totalUsers: usersCount || 0
+        totalCVs: cvsData?.length || 0,
+        totalUsers: usersData?.length || 0
       };
 
+      console.log('Fetched stats:', newStats);
       setStats(newStats);
       return newStats;
     } catch (error) {
@@ -58,8 +69,8 @@ export const CounterSection = () => {
           schema: 'public',
           table: 'cvs'
         },
-        () => {
-          console.log('CVs table changed, updating stats...');
+        (payload) => {
+          console.log('CVs table changed:', payload);
           fetchStats();
         }
       )
@@ -75,8 +86,8 @@ export const CounterSection = () => {
           schema: 'public',
           table: 'profiles'
         },
-        () => {
-          console.log('Profiles table changed, updating stats...');
+        (payload) => {
+          console.log('Profiles table changed:', payload);
           fetchStats();
         }
       )
