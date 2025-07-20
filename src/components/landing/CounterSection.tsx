@@ -8,111 +8,64 @@ export const CounterSection = () => {
     totalCVs: 0,
     totalUsers: 0
   });
-  const [animatedStats, setAnimatedStats] = useState({
-    totalCVs: 0,
-    totalUsers: 0
-  });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const fetchStats = async () => {
+  const fetchCounts = async () => {
+    console.log('🔍 Fetching counts from Supabase...');
+    
     try {
-      console.log('🔍 Iniciando conteo de CVs y perfiles...');
+      setLoading(true);
       setError(null);
-      
-      // Contar CVs usando count exact
-      const { count: cvsCount, error: cvsError } = await supabase
+
+      // Fetch CVs count
+      console.log('Fetching CVs...');
+      const { data: cvsData, error: cvsError } = await supabase
         .from('cvs')
-        .select('*', { count: 'exact', head: true });
+        .select('id');
 
       if (cvsError) {
-        console.error('❌ Error al contar CVs:', cvsError);
-        throw new Error(`Error contando CVs: ${cvsError.message}`);
+        console.error('Error fetching CVs:', cvsError);
+        throw cvsError;
       }
 
-      // Contar perfiles usando count exact
-      const { count: profilesCount, error: profilesError } = await supabase
+      console.log('CVs data:', cvsData);
+      const cvsCount = cvsData?.length || 0;
+      console.log('CVs count:', cvsCount);
+
+      // Fetch profiles count
+      console.log('Fetching profiles...');
+      const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
-        .select('*', { count: 'exact', head: true });
+        .select('id');
 
       if (profilesError) {
-        console.error('❌ Error al contar perfiles:', profilesError);
-        throw new Error(`Error contando perfiles: ${profilesError.message}`);
+        console.error('Error fetching profiles:', profilesError);
+        throw profilesError;
       }
 
-      const totalCVs = cvsCount || 0;
-      const totalUsers = profilesCount || 0;
+      console.log('Profiles data:', profilesData);
+      const profilesCount = profilesData?.length || 0;
+      console.log('Profiles count:', profilesCount);
 
-      console.log(`✅ CVs encontrados: ${totalCVs}`);
-      console.log(`✅ Perfiles encontrados: ${totalUsers}`);
+      setStats({
+        totalCVs: cvsCount,
+        totalUsers: profilesCount
+      });
 
-      // Verificación adicional - obtener algunos registros para confirmar
-      const { data: sampleCVs } = await supabase
-        .from('cvs')
-        .select('id')
-        .limit(5);
-      
-      const { data: sampleProfiles } = await supabase
-        .from('profiles')
-        .select('id')
-        .limit(5);
+      console.log('Final stats:', { totalCVs: cvsCount, totalUsers: profilesCount });
 
-      console.log('📋 Muestra de CVs:', sampleCVs);
-      console.log('📋 Muestra de perfiles:', sampleProfiles);
-
-      const newStats = {
-        totalCVs,
-        totalUsers
-      };
-
-      console.log('📊 Stats finales:', newStats);
-      setStats(newStats);
-      return newStats;
-    } catch (error) {
-      console.error('💥 Error en fetchStats:', error);
-      setError(error instanceof Error ? error.message : 'Error desconocido');
-      return { totalCVs: 0, totalUsers: 0 };
+    } catch (err) {
+      console.error('Error in fetchCounts:', err);
+      setError(err instanceof Error ? err.message : 'Error desconocido');
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    const initializeStats = async () => {
-      setLoading(true);
-      await fetchStats();
-      setLoading(false);
-    };
-
-    initializeStats();
+    fetchCounts();
   }, []);
-
-  // Animación de contadores cuando cambian las estadísticas
-  useEffect(() => {
-    if (!loading && (stats.totalCVs > 0 || stats.totalUsers > 0)) {
-      const duration = 2000; // 2 segundos
-      const steps = 60;
-      const interval = duration / steps;
-
-      let currentStep = 0;
-      const timer = setInterval(() => {
-        currentStep++;
-        const progress = currentStep / steps;
-        
-        setAnimatedStats({
-          totalCVs: Math.floor(stats.totalCVs * progress),
-          totalUsers: Math.floor(stats.totalUsers * progress)
-        });
-
-        if (currentStep >= steps) {
-          clearInterval(timer);
-          setAnimatedStats(stats);
-        }
-      }, interval);
-
-      return () => clearInterval(timer);
-    } else if (!loading) {
-      setAnimatedStats(stats);
-    }
-  }, [loading, stats]);
 
   if (loading) {
     return (
@@ -150,11 +103,7 @@ export const CounterSection = () => {
             </h2>
             <p className="text-red-200 mb-4">{error}</p>
             <button 
-              onClick={() => {
-                setError(null);
-                setLoading(true);
-                fetchStats().finally(() => setLoading(false));
-              }}
+              onClick={fetchCounts}
               className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg transition-colors"
             >
               Reintentar
@@ -188,7 +137,7 @@ export const CounterSection = () => {
             </div>
             <div className="relative">
               <h3 className="text-5xl md:text-6xl font-bold text-white mb-2 font-mono">
-                {animatedStats.totalCVs.toLocaleString()}
+                {stats.totalCVs}
               </h3>
               <p className="text-blue-200 text-lg font-medium">
                 CVs Creados
@@ -207,7 +156,7 @@ export const CounterSection = () => {
             </div>
             <div className="relative">
               <h3 className="text-5xl md:text-6xl font-bold text-white mb-2 font-mono">
-                {animatedStats.totalUsers.toLocaleString()}
+                {stats.totalUsers}
               </h3>
               <p className="text-cyan-200 text-lg font-medium">
                 Usuarios Registrados
@@ -217,12 +166,10 @@ export const CounterSection = () => {
           </div>
         </div>
 
-        {/* Debug info - solo visible en desarrollo */}
-        {process.env.NODE_ENV === 'development' && (
-          <div className="mt-8 text-center text-white/60 text-sm">
-            <p>Debug: CVs={stats.totalCVs}, Users={stats.totalUsers}</p>
-          </div>
-        )}
+        {/* Debug info */}
+        <div className="mt-8 text-center text-white/60 text-sm">
+          <p>Debug: CVs={stats.totalCVs}, Users={stats.totalUsers}</p>
+        </div>
 
         {/* Decorative elements */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
