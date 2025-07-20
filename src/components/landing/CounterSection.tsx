@@ -13,48 +13,64 @@ export const CounterSection = () => {
     totalUsers: 0
   });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   const fetchStats = async () => {
     try {
-      console.log('Fetching all CVs and profiles...');
+      console.log('🔍 Iniciando conteo de CVs y perfiles...');
+      setError(null);
       
-      // Obtener todos los CVs
-      const { data: cvsData, error: cvsError } = await supabase
+      // Contar CVs usando count exact
+      const { count: cvsCount, error: cvsError } = await supabase
         .from('cvs')
-        .select('id');
+        .select('*', { count: 'exact', head: true });
 
       if (cvsError) {
-        console.error('Error fetching CVs:', cvsError);
-        return { totalCVs: 0, totalUsers: 0 };
+        console.error('❌ Error al contar CVs:', cvsError);
+        throw new Error(`Error contando CVs: ${cvsError.message}`);
       }
 
-      // Obtener todos los perfiles
-      const { data: profilesData, error: profilesError } = await supabase
+      // Contar perfiles usando count exact
+      const { count: profilesCount, error: profilesError } = await supabase
         .from('profiles')
-        .select('id');
+        .select('*', { count: 'exact', head: true });
 
       if (profilesError) {
-        console.error('Error fetching profiles:', profilesError);
-        return { totalCVs: 0, totalUsers: 0 };
+        console.error('❌ Error al contar perfiles:', profilesError);
+        throw new Error(`Error contando perfiles: ${profilesError.message}`);
       }
 
-      const totalCVs = cvsData ? cvsData.length : 0;
-      const totalUsers = profilesData ? profilesData.length : 0;
+      const totalCVs = cvsCount || 0;
+      const totalUsers = profilesCount || 0;
 
-      console.log(`Total CVs found: ${totalCVs}`);
-      console.log(`Total profiles found: ${totalUsers}`);
-      console.log('CVs data sample:', cvsData?.slice(0, 3));
-      console.log('Profiles data sample:', profilesData?.slice(0, 3));
+      console.log(`✅ CVs encontrados: ${totalCVs}`);
+      console.log(`✅ Perfiles encontrados: ${totalUsers}`);
+
+      // Verificación adicional - obtener algunos registros para confirmar
+      const { data: sampleCVs } = await supabase
+        .from('cvs')
+        .select('id')
+        .limit(5);
+      
+      const { data: sampleProfiles } = await supabase
+        .from('profiles')
+        .select('id')
+        .limit(5);
+
+      console.log('📋 Muestra de CVs:', sampleCVs);
+      console.log('📋 Muestra de perfiles:', sampleProfiles);
 
       const newStats = {
         totalCVs,
         totalUsers
       };
 
+      console.log('📊 Stats finales:', newStats);
       setStats(newStats);
       return newStats;
     } catch (error) {
-      console.error('Error in fetchStats:', error);
+      console.error('💥 Error en fetchStats:', error);
+      setError(error instanceof Error ? error.message : 'Error desconocido');
       return { totalCVs: 0, totalUsers: 0 };
     }
   };
@@ -69,10 +85,10 @@ export const CounterSection = () => {
     initializeStats();
   }, []);
 
-  // Animate counters when stats change
+  // Animación de contadores cuando cambian las estadísticas
   useEffect(() => {
     if (!loading && (stats.totalCVs > 0 || stats.totalUsers > 0)) {
-      const duration = 2000; // 2 seconds
+      const duration = 2000; // 2 segundos
       const steps = 60;
       const interval = duration / steps;
 
@@ -102,6 +118,11 @@ export const CounterSection = () => {
     return (
       <section className="py-16 bg-gradient-to-r from-blue-800/50 to-cyan-800/50 backdrop-blur-sm">
         <div className="container mx-auto px-4">
+          <div className="text-center mb-8">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+              Cargando estadísticas...
+            </h2>
+          </div>
           <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
             <div className="text-center animate-pulse">
               <div className="w-16 h-16 bg-blue-200 rounded-full mx-auto mb-4"></div>
@@ -113,6 +134,31 @@ export const CounterSection = () => {
               <div className="h-12 bg-cyan-200 rounded w-24 mx-auto mb-2"></div>
               <div className="h-6 bg-cyan-200 rounded w-32 mx-auto"></div>
             </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (error) {
+    return (
+      <section className="py-16 bg-gradient-to-r from-red-800/50 to-pink-800/50 backdrop-blur-sm">
+        <div className="container mx-auto px-4">
+          <div className="text-center">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+              Error al cargar estadísticas
+            </h2>
+            <p className="text-red-200 mb-4">{error}</p>
+            <button 
+              onClick={() => {
+                setError(null);
+                setLoading(true);
+                fetchStats().finally(() => setLoading(false));
+              }}
+              className="bg-red-600 hover:bg-red-700 text-white px-6 py-2 rounded-lg transition-colors"
+            >
+              Reintentar
+            </button>
           </div>
         </div>
       </section>
@@ -170,6 +216,13 @@ export const CounterSection = () => {
             </div>
           </div>
         </div>
+
+        {/* Debug info - solo visible en desarrollo */}
+        {process.env.NODE_ENV === 'development' && (
+          <div className="mt-8 text-center text-white/60 text-sm">
+            <p>Debug: CVs={stats.totalCVs}, Users={stats.totalUsers}</p>
+          </div>
+        )}
 
         {/* Decorative elements */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
