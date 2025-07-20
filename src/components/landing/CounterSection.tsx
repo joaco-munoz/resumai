@@ -12,58 +12,58 @@ export const CounterSection = () => {
   const [error, setError] = useState<string | null>(null);
 
   const fetchCounts = async () => {
-    console.log('🔍 Fetching counts from Supabase...');
+    console.log('🔍 Starting to fetch counts from Supabase...');
     
     try {
       setLoading(true);
       setError(null);
 
-      // Fetch CVs count
-      console.log('Fetching CVs...');
-      const { data: cvsData, error: cvsError } = await supabase
+      // Fetch CVs count - using count with exact option
+      console.log('📊 Fetching CVs count...');
+      const { count: cvsCount, error: cvsError } = await supabase
         .from('cvs')
-        .select('id');
+        .select('*', { count: 'exact', head: true });
 
       if (cvsError) {
-        console.error('Error fetching CVs:', cvsError);
-        throw cvsError;
+        console.error('❌ Error fetching CVs count:', cvsError);
+        throw new Error(`Error fetching CVs: ${cvsError.message}`);
       }
 
-      console.log('CVs data:', cvsData);
-      const cvsCount = cvsData?.length || 0;
-      console.log('CVs count:', cvsCount);
+      console.log('✅ CVs count result:', cvsCount);
 
-      // Fetch profiles count
-      console.log('Fetching profiles...');
-      const { data: profilesData, error: profilesError } = await supabase
+      // Fetch profiles count - using count with exact option
+      console.log('📊 Fetching profiles count...');
+      const { count: profilesCount, error: profilesError } = await supabase
         .from('profiles')
-        .select('id');
+        .select('*', { count: 'exact', head: true });
 
       if (profilesError) {
-        console.error('Error fetching profiles:', profilesError);
-        throw profilesError;
+        console.error('❌ Error fetching profiles count:', profilesError);
+        throw new Error(`Error fetching profiles: ${profilesError.message}`);
       }
 
-      console.log('Profiles data:', profilesData);
-      const profilesCount = profilesData?.length || 0;
-      console.log('Profiles count:', profilesCount);
+      console.log('✅ Profiles count result:', profilesCount);
 
-      setStats({
-        totalCVs: cvsCount,
-        totalUsers: profilesCount
-      });
+      // Update state with results
+      const finalStats = {
+        totalCVs: cvsCount || 0,
+        totalUsers: profilesCount || 0
+      };
 
-      console.log('Final stats:', { totalCVs: cvsCount, totalUsers: profilesCount });
+      console.log('🎯 Final stats to display:', finalStats);
+      setStats(finalStats);
 
     } catch (err) {
-      console.error('Error in fetchCounts:', err);
-      setError(err instanceof Error ? err.message : 'Error desconocido');
+      console.error('💥 Error in fetchCounts:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Error desconocido al obtener estadísticas';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
+    console.log('🚀 Component mounted, fetching counts...');
     fetchCounts();
   }, []);
 
@@ -166,7 +166,7 @@ export const CounterSection = () => {
           </div>
         </div>
 
-        {/* Debug info */}
+        {/* Debug info for development */}
         <div className="mt-8 text-center text-white/60 text-sm">
           <p>Debug: CVs={stats.totalCVs}, Users={stats.totalUsers}</p>
         </div>
