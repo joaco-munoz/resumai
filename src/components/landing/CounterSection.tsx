@@ -16,37 +16,46 @@ export const CounterSection = () => {
 
   const fetchStats = async () => {
     try {
-      console.log('Fetching stats...');
+      console.log('Fetching all CVs and profiles...');
       
-      // Get total CVs count using SELECT COUNT(*)
+      // Obtener todos los CVs
       const { data: cvsData, error: cvsError } = await supabase
         .from('cvs')
         .select('id');
 
       if (cvsError) {
         console.error('Error fetching CVs:', cvsError);
+        return { totalCVs: 0, totalUsers: 0 };
       }
 
-      // Get total users count using SELECT COUNT(*)
-      const { data: usersData, error: usersError } = await supabase
+      // Obtener todos los perfiles
+      const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
         .select('id');
 
-      if (usersError) {
-        console.error('Error fetching profiles:', usersError);
+      if (profilesError) {
+        console.error('Error fetching profiles:', profilesError);
+        return { totalCVs: 0, totalUsers: 0 };
       }
 
+      const totalCVs = cvsData ? cvsData.length : 0;
+      const totalUsers = profilesData ? profilesData.length : 0;
+
+      console.log(`Total CVs found: ${totalCVs}`);
+      console.log(`Total profiles found: ${totalUsers}`);
+      console.log('CVs data sample:', cvsData?.slice(0, 3));
+      console.log('Profiles data sample:', profilesData?.slice(0, 3));
+
       const newStats = {
-        totalCVs: cvsData?.length || 0,
-        totalUsers: usersData?.length || 0
+        totalCVs,
+        totalUsers
       };
 
-      console.log('Fetched stats:', newStats);
       setStats(newStats);
       return newStats;
     } catch (error) {
-      console.error('Error fetching stats:', error);
-      return stats;
+      console.error('Error in fetchStats:', error);
+      return { totalCVs: 0, totalUsers: 0 };
     }
   };
 
@@ -58,46 +67,6 @@ export const CounterSection = () => {
     };
 
     initializeStats();
-
-    // Set up real-time subscriptions for CVs
-    const cvsChannel = supabase
-      .channel('cvs-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'cvs'
-        },
-        (payload) => {
-          console.log('CVs table changed:', payload);
-          fetchStats();
-        }
-      )
-      .subscribe();
-
-    // Set up real-time subscriptions for profiles
-    const profilesChannel = supabase
-      .channel('profiles-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'profiles'
-        },
-        (payload) => {
-          console.log('Profiles table changed:', payload);
-          fetchStats();
-        }
-      )
-      .subscribe();
-
-    // Cleanup subscriptions on unmount
-    return () => {
-      supabase.removeChannel(cvsChannel);
-      supabase.removeChannel(profilesChannel);
-    };
   }, []);
 
   // Animate counters when stats change
@@ -124,6 +93,8 @@ export const CounterSection = () => {
       }, interval);
 
       return () => clearInterval(timer);
+    } else if (!loading) {
+      setAnimatedStats(stats);
     }
   }, [loading, stats]);
 
