@@ -166,11 +166,6 @@ export const CounterSection = () => {
           </div>
         </div>
 
-        {/* Debug info for development */}
-        <div className="mt-8 text-center text-white/60 text-sm">
-          <p>Debug: CVs={stats.totalCVs}, Users={stats.totalUsers}</p>
-        </div>
-
         {/* Decorative elements */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute top-1/4 left-1/4 w-2 h-2 bg-blue-400 rounded-full opacity-60 animate-ping"></div>
