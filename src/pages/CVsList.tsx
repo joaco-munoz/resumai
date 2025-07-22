@@ -1,210 +1,414 @@
-import { useState, useEffect } from "react";
-import { Plus, FileText, Calendar, Download, Eye, Trash2, Edit } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
+import { SidebarProvider } from "@/components/ui/sidebar";
+import { AppSidebar } from "@/components/AppSidebar";
+import Dock from "@/components/ui/Dock";
+import { toast } from "sonner";
 import { CVPreviewModal } from "@/components/CVPreviewModal";
 import { DeleteConfirmDialog } from "@/components/DeleteConfirmDialog";
-import { toast } from "sonner";
+import { downloadCVAsPDF } from "@/utils/pdfUtils";
+import { downloadCVAsWord } from "@/utils/wordUtils";
+import { JobReportModal } from "@/components/JobReportModal";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { useCVsManager } from "@/hooks/useCVsManager";
+import { useCompanyLogos } from "@/hooks/useCompanyLogos";
+import { UserCVsSection } from "@/components/UserCVsSection";
+import { JobMatcherReportsSection } from "@/components/JobMatcherReportsSection";
+import { isJobReport, extractJobTitle, extractCompanyName } from "@/utils/cvUtils";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { useDownloadManager } from "@/hooks/useDownloadManager";
-import Dock from "@/components/ui/Dock";
-import HeaderBrand from "@/components/HeaderBrand";
+
+interface CV {
+  id: string;
+  title: string;
+  status: string;
+  created_at: string;
+  last_updated: string;
+  ai_score?: number;
+  content?: any;
+  cv_source: string;
+  is_favorite?: boolean;
+}
 
 export default function CVsList() {
-  const [cvs, setCvs] = useState<any[]>([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedCv, setSelectedCv] = useState<any | null>(null);
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [cvToDelete, setCvToDelete] = useState<any | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [userCVsSearchTerm, setUserCVsSearchTerm] = useState("");
+  const [jobMatcherSearchTerm, setJobMatcherSearchTerm] = useState("");
+  const [previewCV, setPreviewCV] = useState<CV | null>(null);
+  const [deleteCV, setDeleteCV] = useState<CV | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [jobReportCV, setJobReportCV] = useState<CV | null>(null);
+  const [renamingCVId, setRenamingCVId] = useState<string | null>(null);
+  const [renamingTitle, setRenamingTitle] = useState<string>("");
+  const [savingRename, setSavingRename] = useState(false);
+
   const navigate = useNavigate();
+  const isMobile = useIsMobile();
   const { user } = useAuth();
-  const { downloadFile } = useDownloadManager();
+  const { downloadCV } = useDownloadManager();
+  
+  // Custom hooks
+  const { userCVs, jobMatcherReports, loading, loadCVs, deleteCV: deleteCVFromDB, renameCV, updateCVLogo, toggleFavoriteCV } = useCVsManager();
+  const {
+    logoEditCvId,
+    logoQuery,
+    logoSuggestions,
+    logoMap,
+    setLogoQuery,
+    initializeLogoMap,
+    updateLogoMap,
+    startLogoEdit,
+    cancelLogoEdit
+  } = useCompanyLogos();
 
-  useEffect(() => {
-    fetchCVs();
-  }, [user]);
-
-  const fetchCVs = async () => {
-    if (!user) return;
-
-    setLoading(true);
-
-    try {
-      const { data, error } = await supabase
-        .from('cvs')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-
-      if (error) {
-        console.error("Error fetching CVs:", error);
-        toast.error("Error al cargar los currículums");
-        return;
-      }
-
-      setCvs(data || []);
-    } finally {
-      setLoading(false);
+  // Initialize logo map when CVs are loaded
+  useState(() => {
+    if (userCVs.length > 0 || jobMatcherReports.length > 0) {
+      const allCVs = [...userCVs, ...jobMatcherReports].filter(Boolean);
+      initializeLogoMap(allCVs);
     }
-  };
+  });
 
-  const handleCreateNew = () => {
-    navigate('/app/cv-builder');
-  };
+  const filteredUserCVs = userCVs.filter(cv => 
+    cv.title.toLowerCase().includes(userCVsSearchTerm.toLowerCase())
+  );
 
-  const handleEdit = (cvId: string) => {
-    navigate(`/app/cv-builder/${cvId}`);
-  };
+  const filteredJobMatcherReports = jobMatcherReports.filter(cv => 
+    cv.title.toLowerCase().includes(jobMatcherSearchTerm.toLowerCase())
+  );
 
-  const handlePreview = (cv: any) => {
-    setSelectedCv(cv);
-    setIsModalOpen(true);
-  };
-
-  const handleDelete = (cv: any) => {
-    setCvToDelete(cv);
-    setIsDeleteModalOpen(true);
-  };
-
-  const confirmDelete = async () => {
-    if (!cvToDelete) return;
-
-    try {
-      const { error } = await supabase
-        .from('cvs')
-        .delete()
-        .eq('id', cvToDelete.id);
-
-      if (error) {
-        console.error("Error deleting CV:", error);
-        toast.error("Error al eliminar el currículum");
-        return;
-      }
-
-      setCvs(cvs.filter(cv => cv.id !== cvToDelete.id));
-      toast.success("Currículum eliminado exitosamente");
-    } finally {
-      setIsDeleteModalOpen(false);
-      setCvToDelete(null);
+  // Event handlers
+  function handleViewCV(cv: CV) {
+    if (isJobReport(cv)) {
+      setJobReportCV(cv);
+    } else {
+      setPreviewCV(cv);
     }
-  };
+  }
 
-  const downloadCV = async (cv: any) => {
-    if (!cv?.cv_json) {
-      toast.error("No se puede descargar este currículum");
+  function handleEditCV(cv: CV) {
+    console.log('Editing CV:', cv);
+    
+    if (isJobReport(cv)) {
+      toast.info("Los informes no se pueden editar");
       return;
     }
     
+    // Navigate to editor with the specific CV ID
+    navigate(`/app/cv-builder/${cv.id}`);
+  }
+
+  function handleCreateNewCV() {
+    console.log('Creating new CV');
+    // Navigate to editor with 'new' to create a blank CV
+    navigate("/app/cv-builder/new");
+  }
+
+  async function handleDownloadCV(cv: CV, format: 'pdf' | 'word' = 'pdf') {
+    if (isJobReport(cv)) {
+      toast.error("Los informes no se pueden descargar");
+      return;
+    }
+    
+    if (!cv.content) {
+      toast.error("No se pudo descargar el CV");
+      return;
+    }
+
+    await downloadCV({ cvData: cv.content, filename: cv.title, format });
+  }
+
+  function handleDeleteCV(cv: CV) {
+    setDeleteCV(cv);
+  }
+
+  async function confirmDeleteCV() {
+    if (!deleteCV) return;
+    
+    setIsDeleting(true);
+    const success = await deleteCVFromDB(deleteCV.id);
+    if (success) {
+      setDeleteCV(null);
+    }
+    setIsDeleting(false);
+  }
+
+  function startRenameCV(cv: CV) {
+    setRenamingCVId(cv.id);
+    setRenamingTitle(cv.title);
+  }
+
+  async function handleRenameSave() {
+    if (!renamingCVId || renamingTitle.trim() === "") {
+      setRenamingCVId(null);
+      return;
+    }
+    setSavingRename(true);
+    const success = await renameCV(renamingCVId, renamingTitle);
+    if (success) {
+      setRenamingCVId(null);
+      // If this CV is linked to a job application, update it there too
+      await updateLinkedJobApplications(renamingCVId, renamingTitle);
+    }
+    setSavingRename(false);
+  }
+
+  function handleRenameCancel() {
+    setRenamingCVId(null);
+  }
+
+  async function handleSelectLogo(cv: CV, logoUrl: string) {
+    updateLogoMap(cv.id, logoUrl);
+    cancelLogoEdit();
+    await updateCVLogo(cv, logoUrl);
+  }
+
+  async function updateLinkedJobApplications(cvId: string, newTitle: string) {
     try {
-      const jsonString = JSON.stringify(cv.cv_json);
-      const blob = new Blob([jsonString], { type: "application/json" });
-      downloadFile(blob, `${cv.title}.json`);
-      toast.success("Descargando currículum...");
+      const jobTitle = extractJobTitle(newTitle);
+      const companyName = extractCompanyName(newTitle);
+
+      if (jobTitle && companyName) {
+        const { error } = await supabase
+          .from('job_applications_tracking')
+          .update({
+            position: jobTitle,
+            company: companyName
+          })
+          .eq('cv_id', cvId)
+          .eq('user_id', user?.id);
+
+        if (error) {
+          console.error('Error updating linked job applications:', error);
+        }
+      }
     } catch (error) {
-      console.error("Error downloading CV:", error);
-      toast.error("Error al descargar el currículum");
+      console.error('Error updating linked job applications:', error);
+    }
+  }
+
+  const handleAddToTracking = async (cv: CV) => {
+    if (!user) {
+      toast.error("Debes estar autenticado para agregar al seguimiento");
+      return;
+    }
+
+    try {
+      // Extract job title and company from CV title or content
+      let jobTitle = cv.title || 'Posición sin especificar';
+      let companyName = 'Empresa sin especificar';
+
+      // If there's a company logo, we can try to extract company name from it
+      const currentLogo = logoMap[cv.id] || cv.content?.companyLogo;
+      if (currentLogo) {
+        // Try to extract company name from logo URL or content
+        const extractedCompanyName = extractCompanyName(cv.title);
+        if (extractedCompanyName) companyName = extractedCompanyName;
+      }
+
+      console.log('Adding CV to tracking:', { jobTitle, companyName, cvTitle: cv.title });
+
+      // Check if entries with same company & position already exist
+      const { data: existingEntries, error: fetchError } = await supabase
+        .from('job_applications_tracking')
+        .select('id, position')
+        .eq('user_id', user.id)
+        .eq('company', companyName)
+        .ilike('position', `${jobTitle}%`);
+
+      if (fetchError) {
+        console.error('Error checking existing entries:', fetchError);
+        toast.error('No se pudo verificar entradas existentes');
+        return;
+      }
+
+      // If there are existing entries, add a numeric suffix to make this one unique
+      let finalJobTitle = jobTitle;
+      if (existingEntries && existingEntries.length > 0) {
+        let maxSuffix = 0;
+        existingEntries.forEach(entry => {
+          const match = entry.position.match(new RegExp(`^${jobTitle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*\\((\\d+)\\)$`));
+          if (match) {
+            const suffix = parseInt(match[1]);
+            if (suffix > maxSuffix) {
+              maxSuffix = suffix;
+            }
+          } else if (entry.position === jobTitle) {
+            if (maxSuffix === 0) maxSuffix = 1;
+          }
+        });
+        
+        finalJobTitle = `${jobTitle} (${maxSuffix + 1})`;
+      }
+
+      const { error } = await supabase
+        .from('job_applications_tracking')
+        .insert({
+          user_id: user.id,
+          position: finalJobTitle,
+          company: companyName,
+          status: 'saved',
+          applied_date: new Date().toISOString().split('T')[0],
+          notes: `CV: ${cv.title}`,
+          cv_id: cv.id
+        });
+
+      if (error) {
+        console.error('Error adding to tracking:', error);
+        toast.error(`Error al agregar al seguimiento: ${error.message}`);
+      } else {
+        toast.success("CV agregado al seguimiento de Kanban");
+      }
+    } catch (error) {
+      console.error('Error adding to tracking:', error);
+      toast.error("Error al agregar al seguimiento");
     }
   };
 
+  const handleToggleFavorite = async (cvId: string) => {
+    await toggleFavoriteCV(cvId);
+  };
+
+  if (loading) {
+    return (
+      <SidebarProvider>
+        <div className="min-h-screen flex w-full">
+          <AppSidebar />
+          <main className="flex-1">
+            <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 sm:p-6 flex items-center justify-center">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                <p className="text-gray-600 dark:text-gray-300">Cargando CVs...</p>
+              </div>
+              
+              <Dock 
+                panelHeight={68}
+                baseItemSize={50}
+                magnification={70}
+              />
+            </div>
+          </main>
+        </div>
+      </SidebarProvider>
+    );
+  }
+
   return (
-    <div className="min-h-screen w-full bg-gray-50">
-      <HeaderBrand />
-      
-      <div className="container mx-auto px-4 py-6">
-        <div className="mb-8">
-          <h1 className="font-bold text-3xl gradient-text mb-2">
-            Mis Currículums
-          </h1>
-          <p className="text-gray-600">
-            Gestiona todos tus currículums desde aquí
-          </p>
-        </div>
+    <SidebarProvider>
+      <div className="min-h-screen flex w-full">
+        <AppSidebar />
+        <main className="flex-1">
+          <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-3 sm:p-6 overflow-x-auto">
+            <div className="max-w-7xl mx-auto">
+              {/* Header */}
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-8">
+                <div className="min-w-0 flex-1 mb-4 sm:mb-0">
+                  <h1 className="font-bold text-2xl sm:text-3xl gradient-text">
+                    Gestión de Currículums
+                  </h1>
+                  <p className="text-gray-600 mt-2 text-sm sm:text-base">
+                    Gestiona tus CVs creados e informes de JobMatcher
+                  </p>
+                </div>
+              </div>
 
-        <div className="flex justify-end mb-4">
-          <Button onClick={handleCreateNew}>
-            <Plus className="h-4 w-4 mr-2" />
-            Crear Nuevo
-          </Button>
-        </div>
+              {/* User CVs Section */}
+              <UserCVsSection
+                userCVs={userCVs}
+                filteredUserCVs={filteredUserCVs}
+                searchTerm={userCVsSearchTerm}
+                isMobile={isMobile}
+                renamingCVId={renamingCVId}
+                renamingTitle={renamingTitle}
+                savingRename={savingRename}
+                logoEditCvId={logoEditCvId}
+                logoQuery={logoQuery}
+                logoSuggestions={logoSuggestions}
+                logoMap={logoMap}
+                onSearchChange={setUserCVsSearchTerm}
+                onCreateNewCV={handleCreateNewCV}
+                onView={handleViewCV}
+                onEdit={handleEditCV}
+                onDownload={handleDownloadCV}
+                onDelete={handleDeleteCV}
+                onStartRename={startRenameCV}
+                onSaveRename={handleRenameSave}
+                onCancelRename={handleRenameCancel}
+                onRenamingTitleChange={setRenamingTitle}
+                onStartLogoEdit={startLogoEdit}
+                onSelectLogo={handleSelectLogo}
+                onLogoQueryChange={setLogoQuery}
+                onAddToTracking={handleAddToTracking}
+                onToggleFavorite={handleToggleFavorite}
+              />
 
-        {loading ? (
-          <div className="flex items-center justify-center min-h-[200px]">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto"></div>
-              <p className="mt-4 text-gray-600">Cargando currículums...</p>
+              {/* JobMatcher Reports Section */}
+              <JobMatcherReportsSection
+                jobMatcherReports={jobMatcherReports}
+                filteredJobMatcherReports={filteredJobMatcherReports}
+                searchTerm={jobMatcherSearchTerm}
+                isMobile={isMobile}
+                renamingCVId={renamingCVId}
+                renamingTitle={renamingTitle}
+                savingRename={savingRename}
+                logoEditCvId={logoEditCvId}
+                logoQuery={logoQuery}
+                logoSuggestions={logoSuggestions}
+                logoMap={logoMap}
+                onSearchChange={setJobMatcherSearchTerm}
+                onGoToJobMatcher={() => navigate("/app/match")}
+                onView={handleViewCV}
+                onEdit={handleEditCV}
+                onDownload={handleDownloadCV}
+                onDelete={handleDeleteCV}
+                onStartRename={startRenameCV}
+                onSaveRename={handleRenameSave}
+                onCancelRename={handleRenameCancel}
+                onRenamingTitleChange={setRenamingTitle}
+                onStartLogoEdit={startLogoEdit}
+                onSelectLogo={handleSelectLogo}
+                onLogoQueryChange={setLogoQuery}
+                onAddToTracking={() => {}} // No needed for job matcher reports
+              />
             </div>
           </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {cvs.map(cv => (
-              <Card key={cv.id}>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <FileText className="h-4 w-4 mr-1" />
-                    {cv.title}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center gap-1 mb-2">
-                    <Calendar className="h-4 w-4 text-gray-500" />
-                    <span className="text-sm text-gray-500">
-                      Creado: {new Date(cv.created_at).toLocaleDateString()}
-                    </span>
-                  </div>
-                  {cv.is_template && (
-                    <Badge variant="secondary">
-                      <FileText className="h-3 w-3 mr-1" />
-                      Plantilla
-                    </Badge>
-                  )}
-                  <div className="flex justify-end gap-2 mt-4">
-                    <Button variant="outline" size="sm" onClick={() => handlePreview(cv)}>
-                      <Eye className="h-4 w-4 mr-2" />
-                      Vista Previa
-                    </Button>
-                    <Button variant="secondary" size="sm" onClick={() => downloadCV(cv)}>
-                      <Download className="h-4 w-4 mr-2" />
-                      Descargar
-                    </Button>
-                    <Button variant="ghost" size="sm" onClick={() => handleEdit(cv.id)}>
-                      <Edit className="h-4 w-4 mr-2" />
-                      Editar
-                    </Button>
-                    <Button variant="destructive" size="sm" onClick={() => handleDelete(cv)}>
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Eliminar
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        )}
+        </main>
 
+        {/* Modals */}
         <CVPreviewModal
-          isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
-          cvData={selectedCv?.cv_json}
+          isOpen={!!previewCV}
+          onClose={() => setPreviewCV(null)}
+          cvData={previewCV?.content || null}
+          cvTitle={previewCV?.title || ""}
+        />
+
+        <JobReportModal
+          isOpen={!!jobReportCV}
+          onClose={() => setJobReportCV(null)}
+          reportData={jobReportCV?.content || null}
+          reportTitle={jobReportCV?.title || ""}
+          reportId={jobReportCV?.id}
+          onApply={() => {
+            toast.info("La funcionalidad de adaptación de CV está temporalmente deshabilitada");
+            setJobReportCV(null);
+          }}
         />
 
         <DeleteConfirmDialog
-          isOpen={isDeleteModalOpen}
-          onClose={() => setIsDeleteModalOpen(false)}
-          onConfirm={confirmDelete}
-          itemType="currículum"
-          itemName={cvToDelete?.title}
+          isOpen={!!deleteCV}
+          onClose={() => setDeleteCV(null)}
+          onConfirm={confirmDeleteCV}
+          title={deleteCV?.title || ""}
+          isDeleting={isDeleting}
+        />
+        
+        <Dock 
+          panelHeight={68}
+          baseItemSize={50}
+          magnification={70}
         />
       </div>
-
-      <Dock 
-        panelHeight={68}
-        baseItemSize={50}
-        magnification={70}
-      />
-    </div>
+    </SidebarProvider>
   );
 }
