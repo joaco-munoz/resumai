@@ -4,8 +4,7 @@ import { useParams } from "react-router-dom";
 import { CVBuilderHeader } from "@/components/cv-builder/CVBuilderHeader";
 import { CVBuilderTabs } from "@/components/cv-builder/CVBuilderTabs";
 import { CVPreview } from "@/components/cv-builder/CVPreview";
-import { useCVBuilder } from "@/hooks/useCVBuilder";
-import { useCVSaving } from "@/hooks/useCVSaving";
+import { useCVData } from "@/hooks/useCVData";
 import { SaveAnimationOverlay } from "@/components/SaveAnimationOverlay";
 import { toast } from "sonner";
 import Dock from "@/components/ui/Dock";
@@ -16,30 +15,20 @@ export default function CVBuilder() {
   const {
     cvData,
     updateCVData,
-    isLoading: isCVLoading,
-    error: cvError
-  } = useCVBuilder(id);
-  
-  const {
     saveCV,
+    isLoading,
     isSaving,
-    showSaveAnimation
-  } = useCVSaving();
+    showSaveAnimation,
+    savingProgress
+  } = useCVData(id);
 
   const [activeTab, setActiveTab] = useState("personal");
-
-  useEffect(() => {
-    if (cvError) {
-      console.error("CV loading error:", cvError);
-      toast.error("Error al cargar el CV");
-    }
-  }, [cvError]);
 
   const handleSave = async () => {
     if (!cvData) return;
     
     try {
-      await saveCV(cvData, id);
+      await saveCV();
       toast.success("CV guardado exitosamente");
     } catch (error) {
       console.error("Error saving CV:", error);
@@ -47,7 +36,7 @@ export default function CVBuilder() {
     }
   };
 
-  if (isCVLoading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen w-full">
         <HeaderBrand />
@@ -87,22 +76,20 @@ export default function CVBuilder() {
   return (
     <div className="min-h-screen w-full bg-gray-50">
       <HeaderBrand />
-      <SaveAnimationOverlay show={showSaveAnimation} />
+      <SaveAnimationOverlay isVisible={showSaveAnimation} progress={savingProgress} />
       
       <div className="container mx-auto px-4 py-6">
         <CVBuilderHeader 
-          cvData={cvData}
-          onSave={handleSave}
-          isSaving={isSaving}
+          currentCvId={id}
         />
         
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
           <div className="space-y-6">
             <CVBuilderTabs
-              cvData={cvData}
-              updateCVData={updateCVData}
               activeTab={activeTab}
               setActiveTab={setActiveTab}
+              completedSections={[]}
+              progress={80}
             />
           </div>
           

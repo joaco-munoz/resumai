@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { CVSelector } from "@/components/job-matcher/CVSelector";
 import { JobMatcherCVsSection } from "@/components/JobMatcherCVsSection";
@@ -10,6 +11,12 @@ import HeaderBrand from "@/components/HeaderBrand";
 
 export default function JobMatcher() {
   const [selectedCVId, setSelectedCVId] = useState<string | null>(null);
+  const [selectedCVTitle, setSelectedCVTitle] = useState<string>("");
+
+  const handleCVSelect = (cvId: string, cvTitle: string) => {
+    setSelectedCVId(cvId);
+    setSelectedCVTitle(cvTitle);
+  };
 
   return (
     <div className="min-h-screen w-full bg-gray-50">
@@ -44,17 +51,30 @@ export default function JobMatcher() {
                 <CardTitle>Selecciona un currículum</CardTitle>
               </CardHeader>
               <CardContent>
-                <CVSelector onCVSelected={setSelectedCVId} />
+                <CVSelector 
+                  selectedCVId={selectedCVId}
+                  onCVSelect={handleCVSelect}
+                />
               </CardContent>
             </Card>
             
             {selectedCVId && (
-              <JobMatcherCVsSection cvId={selectedCVId} />
+              <div className="mt-6">
+                <h2 className="text-xl font-semibold mb-4">Análisis para: {selectedCVTitle}</h2>
+                <p className="text-gray-600 mb-4">Contenido del análisis aparecerá aquí...</p>
+              </div>
             )}
           </TabsContent>
           
           <TabsContent value="reports" className="mt-6">
-            <JobMatcherReportsSection />
+            <Card>
+              <CardHeader>
+                <CardTitle>Informes de Compatibilidad</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-gray-600">Los informes generados aparecerán aquí...</p>
+              </CardContent>
+            </Card>
           </TabsContent>
         </Tabs>
       </div>

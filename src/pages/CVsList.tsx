@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Plus, FileText, Calendar, Download, Eye, Trash2, Edit } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,7 +10,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { CVPreviewModal } from "@/components/CVPreviewModal";
 import { DeleteConfirmDialog } from "@/components/DeleteConfirmDialog";
 import { toast } from "sonner";
-import { useDownloadManager } from "@/hooks/useDownloadManager";
 import Dock from "@/components/ui/Dock";
 import HeaderBrand from "@/components/HeaderBrand";
 
@@ -22,7 +22,6 @@ export default function CVsList() {
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { downloadFile } = useDownloadManager();
 
   useEffect(() => {
     fetchCVs();
@@ -102,7 +101,14 @@ export default function CVsList() {
     try {
       const jsonString = JSON.stringify(cv.cv_json);
       const blob = new Blob([jsonString], { type: "application/json" });
-      downloadFile(blob, `${cv.title}.json`);
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${cv.title}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
       toast.success("Descargando currículum...");
     } catch (error) {
       console.error("Error downloading CV:", error);
@@ -189,14 +195,15 @@ export default function CVsList() {
           isOpen={isModalOpen}
           onClose={() => setIsModalOpen(false)}
           cvData={selectedCv?.cv_json}
+          cvTitle={selectedCv?.title || ""}
         />
 
         <DeleteConfirmDialog
           isOpen={isDeleteModalOpen}
           onClose={() => setIsDeleteModalOpen(false)}
           onConfirm={confirmDelete}
-          itemType="currículum"
-          itemName={cvToDelete?.title}
+          title="Eliminar currículum"
+          description={`¿Estás seguro de que quieres eliminar "${cvToDelete?.title}"? Esta acción no se puede deshacer.`}
         />
       </div>
 
