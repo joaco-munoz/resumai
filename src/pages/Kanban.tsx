@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import { DragDropContext } from 'react-beautiful-dnd';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { SidebarProvider } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/AppSidebar";
+import { AppHeader } from "@/components/AppHeader";
 import Dock from "@/components/ui/Dock";
 import { useAuth } from '@/contexts/AuthContext';
 import { useKanbanStats, KanbanStatsProvider } from '@/contexts/KanbanStatsContext';
@@ -233,8 +232,8 @@ const Kanban = () => {
 // Componente de página que envuelve el Kanban con el KanbanStatsProvider
 export default function KanbanPage() {
   return (
-    <SidebarProvider>
-      <AppSidebar />
+    <>
+      <AppHeader />
       <KanbanStatsProvider>
         <Kanban />
       </KanbanStatsProvider>
@@ -243,6 +242,6 @@ export default function KanbanPage() {
         baseItemSize={50}
         magnification={70}
       />
-    </SidebarProvider>
+    </>
   )
 }

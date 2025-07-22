@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/AppSidebar";
+import { AppHeader } from "@/components/AppHeader";
 import Dock from "@/components/ui/Dock";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -204,25 +203,22 @@ const CVBuilder = () => {
 
   if (isLoading) {
     return (
-      <SidebarProvider>
-        <div className="min-h-screen flex w-full bg-gray-50">
-          <AppSidebar />
-          <main className="flex-1 flex items-center justify-center">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-              <p className="text-gray-600">Cargando CV...</p>
-            </div>
-          </main>
-        </div>
-      </SidebarProvider>
+      <>
+        <AppHeader />
+        <main className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Cargando CV...</p>
+          </div>
+        </main>
+      </>
     );
   }
 
   return (
-    <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-gray-50">
-        <AppSidebar />
-        <main className="flex-1">
+    <>
+      <AppHeader />
+      <main className="min-h-screen bg-gray-50">
           <CVBuilderHeader 
             currentCvId={currentCvId}
           />
@@ -321,14 +317,14 @@ const CVBuilder = () => {
             isVisible={showSaveAnimation}
             progress={savingProgress}
           />
-        </main>
-      </div>
+      </main>
+      
       <Dock 
         panelHeight={68}
         baseItemSize={50}
         magnification={70}
       />
-    </SidebarProvider>
+    </>
   );
 };
 

@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/AppSidebar";
+import { AppHeader } from "@/components/AppHeader";
 import Dock from "@/components/ui/Dock";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
@@ -194,34 +193,36 @@ const Profile = () => {
 
   if (loading) {
     return (
-      <SidebarProvider>
-        <div className="min-h-screen flex w-full bg-gray-50">
-          <AppSidebar />
-          <main className="flex-1 flex items-center justify-center">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-600"></div>
-              <p className="mt-2 text-gray-600">Cargando perfil...</p>
-            </div>
-          </main>
+      <>
+        <AppHeader />
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-600"></div>
+            <p className="mt-2 text-gray-600">Cargando perfil...</p>
+          </div>
+          
+          <Dock 
+            panelHeight={68}
+            baseItemSize={50}
+            magnification={70}
+          />
         </div>
-      </SidebarProvider>
+      </>
     );
   }
 
   return (
-    <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-gray-50">
-        <AppSidebar />
-        <main className="flex-1">
-          <header className="bg-white border-b px-6 py-4">
-            <div className="flex items-center gap-4">
-              <SidebarTrigger />
-              <div>
-                <h1 className="text-3xl font-bold gradient-text">Mi Perfil</h1>
-                <p className="text-gray-600 mt-2">Gestiona tu información personal, suscripción y facturación</p>
-              </div>
+    <>
+      <AppHeader />
+      <main className="min-h-screen bg-gray-50">
+        <header className="bg-white border-b px-6 py-4">
+          <div className="flex items-center gap-4">
+            <div>
+              <h1 className="text-3xl font-bold gradient-text">Mi Perfil</h1>
+              <p className="text-gray-600 mt-2">Gestiona tu información personal, suscripción y facturación</p>
             </div>
-          </header>
+          </div>
+        </header>
 
           <div className="p-6 max-w-6xl mx-auto">
             <Tabs defaultValue="personal" className="space-y-6">
@@ -256,15 +257,15 @@ const Profile = () => {
                 />
               </TabsContent>
             </Tabs>
-          </div>
-        </main>
-      </div>
-      <Dock 
-        panelHeight={68}
-        baseItemSize={50}
-        magnification={70}
-      />
-    </SidebarProvider>
+        </div>
+        
+        <Dock 
+          panelHeight={68}
+          baseItemSize={50}
+          magnification={70}
+        />
+      </main>
+    </>
   );
 };
 

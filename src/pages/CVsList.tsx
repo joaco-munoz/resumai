@@ -1,8 +1,6 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { SidebarProvider } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/AppSidebar";
+import { AppHeader } from "@/components/AppHeader";
 import Dock from "@/components/ui/Dock";
 import { toast } from "sonner";
 import { CVPreviewModal } from "@/components/CVPreviewModal";
@@ -272,34 +270,28 @@ export default function CVsList() {
 
   if (loading) {
     return (
-      <SidebarProvider>
-        <div className="min-h-screen flex w-full">
-          <AppSidebar />
-          <main className="flex-1">
-            <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 sm:p-6 flex items-center justify-center">
-              <div className="text-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-                <p className="text-gray-600 dark:text-gray-300">Cargando CVs...</p>
-              </div>
-              
-              <Dock 
-                panelHeight={68}
-                baseItemSize={50}
-                magnification={70}
-              />
-            </div>
-          </main>
+      <>
+        <AppHeader />
+        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-4 sm:p-6 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600 dark:text-gray-300">Cargando CVs...</p>
+          </div>
+          
+          <Dock 
+            panelHeight={68}
+            baseItemSize={50}
+            magnification={70}
+          />
         </div>
-      </SidebarProvider>
+      </>
     );
   }
 
   return (
-    <SidebarProvider>
-      <div className="min-h-screen flex w-full">
-        <AppSidebar />
-        <main className="flex-1">
-          <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-3 sm:p-6 overflow-x-auto">
+    <>
+      <AppHeader />
+      <main className="min-h-screen bg-gray-50 dark:bg-gray-900 p-3 sm:p-6 overflow-x-auto">
             <div className="max-w-7xl mx-auto">
               {/* Header */}
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-8">
@@ -372,8 +364,6 @@ export default function CVsList() {
                 onAddToTracking={() => {}} // No needed for job matcher reports
               />
             </div>
-          </div>
-        </main>
 
         {/* Modals */}
         <CVPreviewModal
@@ -408,7 +398,7 @@ export default function CVsList() {
           baseItemSize={50}
           magnification={70}
         />
-      </div>
-    </SidebarProvider>
+      </main>
+    </>
   );
 }

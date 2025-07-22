@@ -1,7 +1,6 @@
 
 import { useState } from "react";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/AppSidebar";
+import { AppHeader } from "@/components/AppHeader";
 import Dock from "@/components/ui/Dock";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -31,19 +30,17 @@ const Billing = () => {
   };
 
   return (
-    <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-gray-50 dark:bg-gray-900">
-        <AppSidebar />
-        <main className="flex-1">
-          <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 sm:px-6 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2 sm:gap-4">
-                <SidebarTrigger />
-                <div className="min-w-0 flex-1">
-                  <h1 className="text-xl sm:text-2xl font-bold gradient-text truncate">Facturación</h1>
-                  <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 hidden sm:block">Gestiona tu suscripción y uso</p>
-                </div>
+    <>
+      <AppHeader />
+      <main className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <header className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 px-4 sm:px-6 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2 sm:gap-4">
+              <div className="min-w-0 flex-1">
+                <h1 className="text-xl sm:text-2xl font-bold gradient-text truncate">Facturación</h1>
+                <p className="text-sm sm:text-base text-gray-600 dark:text-gray-300 hidden sm:block">Gestiona tu suscripción y uso</p>
               </div>
+            </div>
               
               <Button 
                 onClick={handleBackToLanding}
@@ -162,14 +159,14 @@ const Billing = () => {
               </div>
             </div>
           </div>
-        </main>
-      </div>
+      </main>
+      
       <Dock 
         panelHeight={68}
         baseItemSize={50}
         magnification={70}
       />
-    </SidebarProvider>
+    </>
   );
 };
 

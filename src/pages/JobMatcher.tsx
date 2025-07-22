@@ -1,8 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { useLocation, useSearchParams } from "react-router-dom";
-import { SidebarProvider } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/AppSidebar";
+import { AppHeader } from "@/components/AppHeader";
 import Dock from "@/components/ui/Dock";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -179,10 +178,9 @@ const JobMatcher = () => {
   };
 
   return (
-    <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-gray-50">
-        <AppSidebar />
-        <main className="flex-1 p-6">
+    <>
+      <AppHeader />
+      <main className="min-h-screen bg-gray-50 p-6">
           <div className="max-w-4xl mx-auto space-y-6">
             <div className="flex items-center justify-between">
               <div>
@@ -280,9 +278,8 @@ const JobMatcher = () => {
               </Card>
             )}
           </div>
-        </main>
-      </div>
-
+      </main>
+      
       <CVNamingModal
         isOpen={showNamingModal}
         onClose={() => setShowNamingModal(false)}
@@ -291,12 +288,13 @@ const JobMatcher = () => {
         isSaving={savingReport}
         isReport={true}
       />
+      
       <Dock 
         panelHeight={68}
         baseItemSize={50}
         magnification={70}
       />
-    </SidebarProvider>
+    </>
   );
 };
 

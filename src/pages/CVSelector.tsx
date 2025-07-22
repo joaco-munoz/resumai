@@ -1,8 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { SidebarProvider } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/AppSidebar";
+import { AppHeader } from "@/components/AppHeader";
 import Dock from "@/components/ui/Dock";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -98,25 +97,22 @@ const CVSelector = () => {
 
   if (loading) {
     return (
-      <SidebarProvider>
-        <div className="min-h-screen flex w-full bg-gray-50">
-          <AppSidebar />
-          <main className="flex-1 flex items-center justify-center">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-              <p className="text-gray-600">Cargando CVs...</p>
-            </div>
-          </main>
-        </div>
-      </SidebarProvider>
+      <>
+        <AppHeader />
+        <main className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <p className="text-gray-600">Cargando CVs...</p>
+          </div>
+        </main>
+      </>
     );
   }
 
   return (
-    <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-gray-50">
-        <AppSidebar />
-        <main className="flex-1 p-6">
+    <>
+      <AppHeader />
+      <main className="min-h-screen bg-gray-50 p-6">
           <div className="mb-6">
             <h1 className="text-2xl font-bold text-gray-900">Seleccionar CV para Editar</h1>
             <p className="text-gray-600 mt-2">Elige el CV que deseas editar o crea uno nuevo</p>
@@ -196,14 +192,14 @@ const CVSelector = () => {
               </Card>
             </div>
           </div>
-        </main>
-      </div>
+      </main>
+      
       <Dock 
         panelHeight={68}
         baseItemSize={50}
         magnification={70}
       />
-    </SidebarProvider>
+    </>
   );
 };
 

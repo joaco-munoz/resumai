@@ -1,7 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/AppSidebar";
+import { AppHeader } from "@/components/AppHeader";
 import Dock from "@/components/ui/Dock";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAdmin } from "@/hooks/useAdmin";
@@ -37,45 +36,36 @@ const AdminDashboard = () => {
 
   if (adminLoading || metricsLoading) {
     return (
-      <SidebarProvider>
-        <div className="min-h-screen flex w-full bg-gray-50">
-          <AppSidebar />
-          <SidebarInset>
-            <div className="flex-1 flex items-center justify-center">
-              <div className="text-center">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-600 mx-auto"></div>
-                <p className="mt-2 text-gray-600">Cargando panel de administración...</p>
-              </div>
-            </div>
-          </SidebarInset>
-        </div>
-      </SidebarProvider>
+      <>
+        <AppHeader />
+        <main className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-brand-600 mx-auto"></div>
+            <p className="mt-2 text-gray-600">Cargando panel de administración...</p>
+          </div>
+        </main>
+      </>
     );
   }
 
   if (!isAdmin) {
     return (
-      <SidebarProvider>
-        <div className="min-h-screen flex w-full bg-gray-50">
-          <AppSidebar />
-          <SidebarInset>
-            <div className="flex-1 flex items-center justify-center">
-              <div className="text-center">
-                <h1 className="text-2xl font-bold text-gray-900">Acceso Denegado</h1>
-                <p className="text-gray-600 mt-2">No tienes permisos de administrador</p>
-              </div>
-            </div>
-          </SidebarInset>
-        </div>
-      </SidebarProvider>
+      <>
+        <AppHeader />
+        <main className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-gray-900">Acceso Denegado</h1>
+            <p className="text-gray-600 mt-2">No tienes permisos de administrador</p>
+          </div>
+        </main>
+      </>
     );
   }
 
   return (
-    <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-gray-50">
-        <AppSidebar />
-        <main className="flex-1">
+    <>
+      <AppHeader />
+      <main className="min-h-screen bg-gray-50">
           <header className="bg-white border-b px-6 py-4">
             <div className="flex items-center justify-between">
               <div>
@@ -182,14 +172,14 @@ const AdminDashboard = () => {
               )}
             </div>
           </div>
-        </main>
-      </div>
+      </main>
+      
       <Dock 
         panelHeight={68}
         baseItemSize={50}
         magnification={70}
       />
-    </SidebarProvider>
+    </>
   );
 };
 
