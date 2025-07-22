@@ -1,335 +1,122 @@
-import { useState, useEffect } from "react";
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/AppSidebar";
-import Dock from "@/components/ui/Dock";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { Download, Plus, Trash2, ArrowRight, Check } from "lucide-react";
-import { toast } from "sonner";
-import { useNavigate, useParams } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
-import AIButton from "@/components/AIButton";
 
-import { CVData } from "@/types/cv";
-import { useCVData } from "@/hooks/useCVData";
-import { useCVBuilder } from "@/hooks/useCVBuilder";
-import { useAIImprovement } from "@/hooks/useAIImprovement";
-import { useCVSaving } from "@/hooks/useCVSaving";
+import { useState, useEffect } from "react";
+import { useParams } from "react-router-dom";
 import { CVBuilderHeader } from "@/components/cv-builder/CVBuilderHeader";
 import { CVBuilderTabs } from "@/components/cv-builder/CVBuilderTabs";
-import { PersonalInfoTab } from "@/components/cv-builder/PersonalInfoTab";
-import { SummaryTab } from "@/components/cv-builder/SummaryTab";
-import { ExperienceTab } from "@/components/cv-builder/ExperienceTab";
-import { EducationTab } from "@/components/cv-builder/EducationTab";
-import { SkillsTab } from "@/components/cv-builder/SkillsTab";
-import { SkillsTabExisting } from "@/components/cv-builder/SkillsTabExisting";
 import { CVPreview } from "@/components/cv-builder/CVPreview";
+import { useCVBuilder } from "@/hooks/useCVBuilder";
+import { useCVSaving } from "@/hooks/useCVSaving";
 import { SaveAnimationOverlay } from "@/components/SaveAnimationOverlay";
+import { toast } from "sonner";
+import Dock from "@/components/ui/Dock";
+import HeaderBrand from "@/components/HeaderBrand";
 
-const CVBuilder = () => {
-  const { cvData, setCvData, isLoading, currentCvId, existingCvTitle, clearDraft } = useCVData();
-  const { user } = useAuth();
+export default function CVBuilder() {
+  const { id } = useParams();
+  const {
+    cvData,
+    updateCVData,
+    isLoading: isCVLoading,
+    error: cvError
+  } = useCVBuilder(id);
   
   const {
-    activeTab,
-    setActiveTab,
-    completedSections,
-    getProgress,
-    goToNextTab,
-    goToPreviousTab,
-    handlePersonalInfoChange,
-    handleSummaryChange,
-    addExperience,
-    updateExperience,
-    removeExperience,
-    addEducation,
-    updateEducation,
-    removeEducation,
-    addSkill,
-    removeSkill
-  } = useCVBuilder(cvData, setCvData);
-
-  const { isImproving, improveWithAI, isPro } = useAIImprovement(cvData, setCvData);
-  
-  const { 
-    savingProgress, 
-    showSaveAnimation, 
-    handleSaveWithAnimation 
+    saveCV,
+    isSaving,
+    showSaveAnimation
   } = useCVSaving();
 
-  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState("personal");
 
-  // Determine if this is an existing CV
-  const isExistingCV = !!currentCvId;
-  console.log('CVBuilder - currentCvId:', currentCvId, 'isExistingCV:', isExistingCV);
-
-  // Updated save functions that handle redirection properly
-  const saveCV = async (cvName: string) => {
-    if (!user) {
-      toast.error("Debes estar autenticado para guardar el CV");
-      return;
+  useEffect(() => {
+    if (cvError) {
+      console.error("CV loading error:", cvError);
+      toast.error("Error al cargar el CV");
     }
+  }, [cvError]);
 
+  const handleSave = async () => {
+    if (!cvData) return;
+    
     try {
-      let result;
-      let finalCvName = cvName;
-
-      if (currentCvId) {
-        // For existing CVs, use the existing title instead of the provided name
-        finalCvName = existingCvTitle || cvName;
-        
-        // Update existing CV
-        result = await supabase
-          .from('cvs')
-          .update({
-            title: finalCvName,
-            content: cvData as any,
-            status: 'draft',
-            template_name: 'modern',
-            last_updated: new Date().toISOString()
-          })
-          .eq('id', currentCvId)
-          .select();
-      } else {
-        // Create new CV
-        result = await supabase
-          .from('cvs')
-          .insert({
-            user_id: user.id,
-            title: finalCvName,
-            content: cvData as any,
-            status: 'draft',
-            template_name: 'modern',
-            cv_source: 'editor'
-          })
-          .select();
-      }
-
-      if (result.error) {
-        console.error('Error saving CV:', result.error);
-        toast.error(`Error al guardar el CV: ${result.error.message}`);
-        return;
-      }
-      
-      toast.success(currentCvId ? "CV actualizado exitosamente" : "CV guardado exitosamente");
-      
-      // Clear draft if it was a new CV
-      if (!currentCvId) {
-        clearDraft();
-      }
-      
-      // Always redirect to CVs list after saving
-      navigate("/app/cvs");
+      await saveCV(cvData, id);
+      toast.success("CV guardado exitosamente");
     } catch (error) {
-      console.error('Error saving CV:', error);
+      console.error("Error saving CV:", error);
       toast.error("Error al guardar el CV");
     }
   };
 
-  const saveAndRedirectToJobMatcher = async (cvName: string) => {
-    if (!user) {
-      toast.error("Debes estar autenticado para guardar el CV");
-      return;
-    }
-
-    try {
-      let result;
-      let finalCvName = cvName;
-      let savedCvId = currentCvId;
-
-      if (currentCvId) {
-        // For existing CVs, use the existing title instead of the provided name
-        finalCvName = existingCvTitle || cvName;
-        
-        // Update existing CV
-        result = await supabase
-          .from('cvs')
-          .update({
-            title: finalCvName,
-            content: cvData as any,
-            status: 'draft',
-            template_name: 'modern',
-            last_updated: new Date().toISOString()
-          })
-          .eq('id', currentCvId)
-          .select();
-      } else {
-        // Create new CV
-        result = await supabase
-          .from('cvs')
-          .insert({
-            user_id: user.id,
-            title: finalCvName,
-            content: cvData as any,
-            status: 'draft',
-            template_name: 'modern',
-            cv_source: 'editor'
-          })
-          .select();
-          
-        if (result.data && result.data[0]) {
-          savedCvId = result.data[0].id;
-        }
-      }
-
-      if (result.error) {
-        console.error('Error saving CV:', result.error);
-        toast.error(`Error al guardar el CV: ${result.error.message}`);
-        return;
-      }
-      
-      toast.success(currentCvId ? "CV actualizado exitosamente" : "CV guardado exitosamente");
-      
-      // Clear draft if it was a new CV
-      if (!currentCvId) {
-        clearDraft();
-      }
-      
-      // Redirect to Job Matcher with the CV ID as URL parameter so it gets selected
-      navigate(`/app/match?cvId=${savedCvId}`);
-    } catch (error) {
-      console.error('Error saving CV:', error);
-      toast.error("Error al guardar el CV");
-    }
-  };
-
-  const progress = showSaveAnimation ? savingProgress : getProgress();
-
-  if (isLoading) {
+  if (isCVLoading) {
     return (
-      <SidebarProvider>
-        <div className="min-h-screen flex w-full bg-gray-50">
-          <AppSidebar />
-          <main className="flex-1 flex items-center justify-center">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-              <p className="text-gray-600">Cargando CV...</p>
-            </div>
-          </main>
+      <div className="min-h-screen w-full">
+        <HeaderBrand />
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600 mx-auto"></div>
+            <p className="mt-4 text-gray-600">Cargando CV...</p>
+          </div>
         </div>
-      </SidebarProvider>
+        <Dock 
+          panelHeight={68}
+          baseItemSize={50}
+          magnification={70}
+        />
+      </div>
+    );
+  }
+
+  if (!cvData) {
+    return (
+      <div className="min-h-screen w-full">
+        <HeaderBrand />
+        <div className="flex items-center justify-center min-h-screen">
+          <div className="text-center">
+            <p className="text-gray-600">No se pudo cargar el CV</p>
+          </div>
+        </div>
+        <Dock 
+          panelHeight={68}
+          baseItemSize={50}
+          magnification={70}
+        />
+      </div>
     );
   }
 
   return (
-    <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-gray-50">
-        <AppSidebar />
-        <main className="flex-1">
-          <CVBuilderHeader 
-            currentCvId={currentCvId}
-          />
-
-          <div className="flex h-[calc(100vh-80px)]">
-            {/* Editor Panel */}
-            <div className="w-2/5 p-6 overflow-y-auto bg-white border-r">
-              <CVBuilderTabs 
-                activeTab={activeTab}
-                setActiveTab={setActiveTab}
-                completedSections={completedSections}
-                progress={progress}
-              />
-
-              <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-6">
-                <TabsContent value="personal">
-                  <PersonalInfoTab
-                    cvData={cvData}
-                    handlePersonalInfoChange={handlePersonalInfoChange}
-                    goToNextTab={goToNextTab}
-                  />
-                </TabsContent>
-
-                <TabsContent value="summary">
-                  <SummaryTab
-                    cvData={cvData}
-                    handleSummaryChange={handleSummaryChange}
-                    improveWithAI={improveWithAI}
-                    isImproving={isImproving}
-                    goToPreviousTab={goToPreviousTab}
-                    goToNextTab={goToNextTab}
-                    isPro={isPro}
-                  />
-                </TabsContent>
-
-                <TabsContent value="experience">
-                  <ExperienceTab
-                    cvData={cvData}
-                    updateExperience={updateExperience}
-                    addExperience={addExperience}
-                    removeExperience={removeExperience}
-                    improveWithAI={improveWithAI}
-                    isImproving={isImproving}
-                    goToPreviousTab={goToPreviousTab}
-                    goToNextTab={goToNextTab}
-                    setCvData={setCvData}
-                    isPro={isPro}
-                  />
-                </TabsContent>
-
-                <TabsContent value="education">
-                  <EducationTab
-                    cvData={cvData}
-                    updateEducation={updateEducation}
-                    addEducation={addEducation}
-                    removeEducation={removeEducation}
-                    goToPreviousTab={goToPreviousTab}
-                    goToNextTab={goToNextTab}
-                    setCvData={setCvData}
-                  />
-                </TabsContent>
-
-                <TabsContent value="skills">
-                  {isExistingCV ? (
-                    <SkillsTabExisting
-                      cvData={cvData}
-                      addSkill={addSkill}
-                      removeSkill={removeSkill}
-                      goToPreviousTab={goToPreviousTab}
-                      saveCV={saveCV}
-                      saveAndRedirectToJobMatcher={saveAndRedirectToJobMatcher}
-                      existingCvTitle={existingCvTitle || "CV"}
-                    />
-                  ) : (
-                    <SkillsTab
-                      cvData={cvData}
-                      addSkill={addSkill}
-                      removeSkill={removeSkill}
-                      goToPreviousTab={goToPreviousTab}
-                      saveCV={saveCV}
-                      saveAndRedirectToJobMatcher={saveAndRedirectToJobMatcher}
-                      isExistingCV={isExistingCV}
-                    />
-                  )}
-                </TabsContent>
-              </Tabs>
-            </div>
-
-            {/* Preview Panel */}
-            <div className="flex-1 p-6 bg-gray-100">
-              <CVPreview cvData={cvData} />
-            </div>
+    <div className="min-h-screen w-full bg-gray-50">
+      <HeaderBrand />
+      <SaveAnimationOverlay show={showSaveAnimation} />
+      
+      <div className="container mx-auto px-4 py-6">
+        <CVBuilderHeader 
+          cvData={cvData}
+          onSave={handleSave}
+          isSaving={isSaving}
+        />
+        
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+          <div className="space-y-6">
+            <CVBuilderTabs
+              cvData={cvData}
+              updateCVData={updateCVData}
+              activeTab={activeTab}
+              setActiveTab={setActiveTab}
+            />
           </div>
-
-          <SaveAnimationOverlay 
-            isVisible={showSaveAnimation}
-            progress={savingProgress}
-          />
-        </main>
+          
+          <div className="lg:sticky lg:top-6">
+            <CVPreview cvData={cvData} />
+          </div>
+        </div>
       </div>
+      
       <Dock 
         panelHeight={68}
         baseItemSize={50}
         magnification={70}
       />
-    </SidebarProvider>
+    </div>
   );
-};
-
-export default CVBuilder;
+}
