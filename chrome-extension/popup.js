@@ -9,6 +9,7 @@ let userProfile = null;
 let currentTab = null;
 let appStats = { applications: 0, autoFills: 0 };
 let isAuthenticated = false;
+let authCheckTimeout = null;
 
 // Elementos del DOM
 const elements = {
@@ -152,29 +153,61 @@ async function loadStoredData() {
 }
 
 async function checkAuthentication() {
+  console.log('🔍 Iniciando verificación de autenticación');
   showLoading('Verificando autenticación...');
   
+  // Configurar timeout de 5 segundos para evitar bucles infinitos
+  authCheckTimeout = setTimeout(() => {
+    console.log('⚠️ Timeout en verificación de autenticación - mostrando pantalla de login');
+    hideLoading();
+    showAuthSection();
+    updateConnectionStatus('error', 'Error de conexión - Timeout');
+  }, 5000);
+  
   try {
-    console.log('Verificando autenticación...');
+    console.log('📡 Enviando mensaje checkAuth al background script');
     
-    // Verificar autenticación con el background script
     const response = await chrome.runtime.sendMessage({ action: 'checkAuth' });
     
-    console.log('Respuesta de autenticación:', response);
+    // Limpiar timeout ya que obtuvimos respuesta
+    if (authCheckTimeout) {
+      clearTimeout(authCheckTimeout);
+      authCheckTimeout = null;
+    }
     
-    if (response.success && response.data.authenticated) {
-      console.log('Usuario autenticado:', response.data.user.email);
-      currentUser = response.data.user;
-      isAuthenticated = true;
-      await loadMainInterface();
+    console.log('✅ Respuesta recibida de background script:', response);
+    
+    if (response && response.success) {
+      if (response.authenticated && response.user) {
+        console.log('🎉 Usuario autenticado:', response.user?.email);
+        currentUser = response.user;
+        isAuthenticated = true;
+        await loadMainInterface();
+      } else {
+        console.log('❌ Usuario no autenticado');
+        isAuthenticated = false;
+        showAuthSection();
+        updateConnectionStatus('disconnected', 'No conectado');
+      }
     } else {
-      console.log('Usuario no autenticado');
+      console.log('❌ Error en respuesta:', response?.error || 'Sin respuesta');
+      isAuthenticated = false;
       showAuthSection();
+      updateConnectionStatus('error', response?.error || 'Error de conexión');
     }
     
   } catch (error) {
-    console.error('Error verificando autenticación:', error);
+    // Limpiar timeout en caso de error
+    if (authCheckTimeout) {
+      clearTimeout(authCheckTimeout);
+      authCheckTimeout = null;
+    }
+    
+    console.error('💥 Error verificando autenticación:', error);
+    isAuthenticated = false;
     showAuthSection();
+    updateConnectionStatus('error', 'Error de conexión');
+    showToast('Error al verificar la autenticación: ' + error.message, 'error');
   } finally {
     hideLoading();
   }
@@ -195,7 +228,7 @@ async function handleLogin() {
   elements.loginSpinner.style.display = 'block';
   
   try {
-    console.log('Intentando autenticar con:', email);
+    console.log('🔐 Intentando autenticar con:', email);
     
     const response = await chrome.runtime.sendMessage({ 
       action: 'authenticate',
@@ -203,9 +236,11 @@ async function handleLogin() {
       password: password
     });
     
-    if (response.success) {
-      console.log('Autenticación exitosa');
-      currentUser = response.data.user;
+    console.log('📨 Respuesta de autenticación:', response);
+    
+    if (response && response.success && response.authenticated) {
+      console.log('✅ Autenticación exitosa');
+      currentUser = response.user;
       isAuthenticated = true;
       
       // Limpiar formulario
@@ -215,21 +250,16 @@ async function handleLogin() {
       await loadMainInterface();
       showToast('Sesión iniciada correctamente', 'success');
     } else {
-      console.error('Error de autenticación:', response.error);
-      let errorMessage = 'Error al iniciar sesión';
-      
-      if (response.error.includes('Invalid login credentials')) {
-        errorMessage = 'Email o contraseña incorrectos';
-      } else if (response.error.includes('Email not confirmed')) {
-        errorMessage = 'Debes confirmar tu email antes de iniciar sesión';
-      }
-      
+      console.error('❌ Error de autenticación:', response?.error);
+      let errorMessage = response?.error || 'Error al iniciar sesión';
       showToast(errorMessage, 'error');
+      isAuthenticated = false;
     }
     
   } catch (error) {
-    console.error('Error en login:', error);
+    console.error('💥 Error en login:', error);
     showToast('Error de conexión. Verifica tu internet.', 'error');
+    isAuthenticated = false;
   } finally {
     elements.loginBtn.disabled = false;
     elements.loginBtnText.style.display = 'block';
@@ -258,6 +288,7 @@ async function handleSignOut() {
 }
 
 async function loadMainInterface() {
+  console.log('🏠 Cargando interfaz principal');
   updateUserInfo();
   updateConnectionStatus('connected', 'Conectado a ResumAI');
   await loadUserCVs();
@@ -283,22 +314,26 @@ function updateConnectionStatus(status, text) {
 
 async function loadUserCVs() {
   try {
-    console.log('Cargando CVs del usuario...');
+    console.log('📄 Cargando CVs del usuario...');
     
     const response = await chrome.runtime.sendMessage({ action: 'getUserCVs' });
     
-    if (response.success) {
-      currentCVs = response.data;
-      console.log('CVs cargados:', currentCVs.length);
+    if (response && response.success) {
+      currentCVs = response.data || [];
+      console.log('✅ CVs cargados:', currentCVs.length);
       updateCVSelector();
     } else {
-      console.error('Error cargando CVs:', response.error);
-      showToast('Error al cargar CVs', 'error');
+      console.error('❌ Error cargando CVs:', response?.error);
+      showToast('Error al cargar CVs: ' + (response?.error || 'Sin detalles'), 'error');
+      currentCVs = [];
+      updateCVSelector();
     }
     
   } catch (error) {
-    console.error('Error cargando CVs:', error);
-    showToast('Error al cargar CVs', 'error');
+    console.error('💥 Error cargando CVs:', error);
+    showToast('Error al cargar CVs: ' + error.message, 'error');
+    currentCVs = [];
+    updateCVSelector();
   }
 }
 
@@ -306,7 +341,7 @@ function updateCVSelector() {
   elements.cvSelect.innerHTML = '<option value="">Seleccionar CV...</option>';
   
   if (currentCVs.length === 0) {
-    elements.cvSelect.innerHTML = '<option value="">No hay CVs disponibles</option>';
+    elements.cvSelect.innerHTML = '<option value="">No hay CVs disponibles - Crea uno en ResumAI</option>';
     return;
   }
   
@@ -341,7 +376,10 @@ async function handleCVSelection() {
   
   if (selectedCV) {
     elements.cvTitle.textContent = selectedCV.title;
-    elements.cvDetails.textContent = `Creado: ${new Date(selectedCV.created_at).toLocaleDateString('es-ES')}`;
+    const createdDate = new Date(selectedCV.created_at).toLocaleDateString('es-ES');
+    const updatedDate = selectedCV.last_updated ? 
+      new Date(selectedCV.last_updated).toLocaleDateString('es-ES') : createdDate;
+    elements.cvDetails.textContent = `Creado: ${createdDate} | Actualizado: ${updatedDate}`;
     elements.cvPreview.style.display = 'block';
     
     // Verificar detección de sitio para habilitar botones
@@ -351,31 +389,37 @@ async function handleCVSelection() {
 
 async function loadUserProfile() {
   try {
-    console.log('Cargando perfil del usuario...');
+    console.log('👤 Cargando perfil del usuario...');
     
     const response = await chrome.runtime.sendMessage({ action: 'getUserProfile' });
     
-    if (response.success && response.data) {
-      userProfile = response.data;
-      console.log('Perfil cargado:', userProfile);
-      updateProfileDisplay();
+    if (response && response.success) {
+      if (response.data) {
+        userProfile = response.data;
+        console.log('✅ Perfil cargado:', userProfile);
+        updateProfileDisplay();
+      } else {
+        console.log('ℹ️ No hay perfil disponible, creando perfil básico');
+        // Crear perfil básico con datos del usuario
+        userProfile = {
+          full_name: currentUser?.user_metadata?.full_name || '',
+          email: currentUser?.email || '',
+          phone: '',
+          city: '',
+          country: '',
+          job_title: '',
+          company: ''
+        };
+        updateProfileDisplay();
+      }
     } else {
-      console.log('No hay perfil disponible');
-      // Crear perfil básico con datos del usuario
-      userProfile = {
-        full_name: currentUser?.user_metadata?.full_name || '',
-        email: currentUser?.email || '',
-        phone: '',
-        city: '',
-        country: '',
-        job_title: '',
-        company: ''
-      };
-      updateProfileDisplay();
+      console.error('❌ Error cargando perfil:', response?.error);
+      showToast('Error al cargar perfil: ' + (response?.error || 'Sin detalles'), 'error');
     }
     
   } catch (error) {
-    console.error('Error cargando perfil:', error);
+    console.error('💥 Error cargando perfil:', error);
+    showToast('Error al cargar perfil: ' + error.message, 'error');
   }
 }
 
@@ -451,26 +495,26 @@ async function saveProfile() {
       company: elements.profileCompany.value.trim()
     };
     
-    console.log('Guardando perfil:', profileData);
+    console.log('💾 Guardando perfil:', profileData);
     
     const response = await chrome.runtime.sendMessage({ 
       action: 'updateProfile',
       profileData: profileData
     });
     
-    if (response.success) {
+    if (response && response.success) {
       userProfile = { ...userProfile, ...profileData };
       updateProfileDisplay();
       cancelProfileEdit();
       showToast('Perfil actualizado correctamente', 'success');
     } else {
-      console.error('Error actualizando perfil:', response.error);
-      showToast('Error al actualizar perfil', 'error');
+      console.error('❌ Error actualizando perfil:', response?.error);
+      showToast('Error al actualizar perfil: ' + (response?.error || 'Sin detalles'), 'error');
     }
     
   } catch (error) {
-    console.error('Error guardando perfil:', error);
-    showToast('Error al guardar perfil', 'error');
+    console.error('💥 Error guardando perfil:', error);
+    showToast('Error al guardar perfil: ' + error.message, 'error');
   } finally {
     elements.saveProfileBtn.disabled = false;
     elements.saveProfileText.style.display = 'block';
@@ -632,12 +676,13 @@ async function refreshCVs() {
 
 // Funciones de UI
 function showAuthSection() {
+  console.log('🔐 Mostrando sección de autenticación');
   elements.authSection.style.display = 'flex';
   elements.mainSection.style.display = 'none';
-  updateConnectionStatus('error', 'No conectado');
 }
 
 function showMainSection() {
+  console.log('🏠 Mostrando sección principal');
   elements.authSection.style.display = 'none';
   elements.mainSection.style.display = 'block';
 }
@@ -658,24 +703,29 @@ function showToast(message, type = 'info') {
   
   elements.toastContainer.appendChild(toast);
   
-  // Auto-remove después de 3 segundos
+  // Auto-remove después de 5 segundos
   setTimeout(() => {
     if (toast.parentNode) {
       toast.parentNode.removeChild(toast);
     }
-  }, 3000);
+  }, 5000);
 }
 
 // Escuchar mensajes del background script
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  console.log('📨 Mensaje recibido en popup:', request);
+  
   switch (request.action) {
     case 'authenticationChanged':
+      console.log('🔄 Estado de autenticación cambió');
       checkAuthentication();
       break;
     case 'tabUpdated':
+      console.log('🔄 Tab actualizada');
       getCurrentTabInfo().then(() => detectCurrentSite());
       break;
     default:
+      console.log('❓ Acción no reconocida:', request.action);
       break;
   }
   

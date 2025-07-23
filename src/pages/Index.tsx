@@ -5,6 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Header } from "@/components/landing/Header";
 import { Hero } from "@/components/landing/Hero";
 import { VideoSection } from "@/components/landing/VideoSection";
+import { CounterSection } from "@/components/landing/CounterSection";
 import { FeaturesSection } from "@/components/landing/FeaturesSection";
 import { StatsSection } from "@/components/landing/StatsSection";
 import { PricingSection } from "@/components/landing/PricingSection";
@@ -13,6 +14,7 @@ import { WaitlistSection } from "@/components/landing/WaitlistSection";
 import { toast } from "sonner";
 import { Footer } from "@/components/landing/Footer";
 import { features, faqItems } from "@/components/landing/data";
+
 
 const Index = () => {
   const [email, setEmail] = useState("");
@@ -83,6 +85,7 @@ const Index = () => {
       <main>
         <Hero ref={heroRef} onSignUpNavigation={handleSignUpNavigation} />
         <VideoSection ref={videoRef} onSignUpNavigation={handleSignUpNavigation} />
+        <CounterSection />
         <FeaturesSection ref={featuresRef} features={features} />
         <StatsSection ref={statsRef} />
         <PricingSection ref={pricingRef} onSignUpNavigation={handleSignUpNavigation} />

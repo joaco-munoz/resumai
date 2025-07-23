@@ -96,7 +96,7 @@ export const SkillsTabExisting = ({
               onClick={handleSaveAndRedirect}
               disabled={isSaving}
             >
-              {isSaving ? "Guardando..." : "Actualizar CV e ir al Match de ofertas"}
+              {isSaving ? "Guardando..." : "Actualizar CV e ir al Match"}
             </Button>
           </div>
         </div>

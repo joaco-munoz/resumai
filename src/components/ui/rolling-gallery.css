@@ -1,0 +1,87 @@
+.gallery-container {
+  position: relative;
+  height: 500px;
+  width: 100%;
+  overflow: hidden;
+  background: transparent;
+}
+
+/* Gradientes laterales eliminados para mostrar el fondo natural */
+
+.gallery-content {
+  display: flex;
+  height: 100%;
+  align-items: center;
+  justify-content: center;
+  perspective: 1000px;
+  transform-style: preserve-3d;
+  background: transparent;
+}
+
+.gallery-track {
+  display: flex;
+  height: auto;
+  min-height: 200px;
+  justify-content: center;
+  align-items: center;
+  transform-style: preserve-3d;
+  width: 100%;
+  background: transparent;
+}
+
+.gallery-item {
+  position: absolute;
+  display: flex;
+  height: fit-content;
+  align-items: center;
+  justify-content: center;
+  padding: 4%;
+  backface-visibility: hidden;
+}
+
+.gallery-card {
+  pointer-events: none;
+  height: 320px;
+  width: 450px;
+  border-radius: 15px;
+  transition: 0.3s ease;
+  display: flex;
+  align-items: stretch;
+  /* Mejoras para resolución */
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.gallery-card > * {
+  width: 100%;
+  height: 100%;
+}
+
+.gallery-item:hover .gallery-card {
+  transform: scale(1.01);
+  transition: 0.1s ease;
+}
+
+/* Estilos removidos para imágenes */
+.gallery-img {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .gallery-item {
+    padding: 3%;
+  }
+  .gallery-card {
+    height: 280px;
+    width: 360px;
+  }
+}
+
+@media (max-width: 640px) {
+  .gallery-card {
+    height: 260px;
+    width: 320px;
+  }
+}

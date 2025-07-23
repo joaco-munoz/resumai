@@ -1,29 +1,28 @@
-
-import { SidebarTrigger } from "@/components/ui/sidebar";
-import { Badge } from "@/components/ui/badge";
+import React from 'react';
+import { Button } from "@/components/ui/button";
+import { ArrowLeft, Save } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface CVBuilderHeaderProps {
-  currentCvId: string | null;
+  currentCvId?: string;
 }
 
-export const CVBuilderHeader = ({ currentCvId }: CVBuilderHeaderProps) => {
+export const CVBuilderHeader: React.FC<CVBuilderHeaderProps> = ({ currentCvId }) => {
+  const navigate = useNavigate();
+
+  const handleBack = () => {
+    navigate('/app/cvs');
+  };
 
   return (
-    <header className="bg-white border-b px-6 py-4">
+    <div className="bg-white border-b border-gray-200 px-6 py-4">
       <div className="flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <SidebarTrigger />
-          <div>
-            <h1 className="text-3xl font-bold gradient-text">
-              {currentCvId ? "Editar CV" : "Editor de CV"}
-            </h1>
-            <p className="text-gray-600 mt-2">
-              {currentCvId ? "Modifica tu CV principal" : "Crea tu CV profesional optimizado para ATS"}
-            </p>
+        <div className="flex items-center space-x-4">
+          <div className="text-lg font-bold text-blue-600">
+            {currentCvId ? 'Editando CV' : 'Creando nuevo CV'}
           </div>
         </div>
-        {/* Botones de descarga eliminados */}
       </div>
-    </header>
+    </div>
   );
 };

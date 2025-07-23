@@ -1,94 +1,103 @@
 
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
+import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { AIUsageProvider } from "@/contexts/AIUsageContext";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
-import { AIUsageProvider } from "@/contexts/AIUsageContext";
-import ProtectedRoute from "@/components/ProtectedRoute";
+import { ProtectedRoute } from "@/components/ProtectedRoute";
 import RedirectHandler from "@/components/RedirectHandler";
 import Index from "./pages/Index";
-import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
-import AdminDashboard from "./pages/AdminDashboard";
 import CVBuilder from "./pages/CVBuilder";
-import CVSelector from "./pages/CVSelector";
 import CVsList from "./pages/CVsList";
+import CVSelector from "./pages/CVSelector";
 import JobMatcher from "./pages/JobMatcher";
+import Kanban from "./pages/Kanban";
 import Profile from "./pages/Profile";
 import Billing from "./pages/Billing";
-import Kanban from "./pages/Kanban";
 import PaymentSuccess from "./pages/PaymentSuccess";
+import AdminDashboard from "./pages/AdminDashboard";
+import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
+const App = () => {
+  console.log("🚀 App component rendered");
+  
+  return (
+    <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <RedirectHandler />
         <AuthProvider>
           <AIUsageProvider>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/app" element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            } />
-            <Route path="/app/admin" element={
-              <ProtectedRoute>
-                <AdminDashboard />
-              </ProtectedRoute>
-            } />
-            <Route path="/app/kanban" element={
-              <ProtectedRoute>
-                <Kanban />
-              </ProtectedRoute>
-            } />
-            <Route path="/app/cvs" element={
-              <ProtectedRoute>
-                <CVsList />
-              </ProtectedRoute>
-            } />
-            <Route path="/app/cv-selector" element={
-              <ProtectedRoute>
-                <CVSelector />
-              </ProtectedRoute>
-            } />
-            <Route path="/app/cv/:id" element={
-              <ProtectedRoute>
-                <CVBuilder />
-              </ProtectedRoute>
-            } />
-            <Route path="/app/match" element={
-              <ProtectedRoute>
-                <JobMatcher />
-              </ProtectedRoute>
-            } />
-            <Route path="/app/profile" element={
-              <ProtectedRoute>
-                <Profile />
-              </ProtectedRoute>
-            } />
-            <Route path="/app/billing" element={
-              <ProtectedRoute>
-                <Billing />
-              </ProtectedRoute>
-            } />
-            <Route path="/payment-success" element={<PaymentSuccess />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+            <TooltipProvider>
+            <Toaster />
+            <Routes>
+              {/* Public routes */}
+              <Route path="/" element={<Index />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/payment-success" element={<PaymentSuccess />} />
+              
+              {/* Protected routes */}
+              <Route path="/app" element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              } />
+              <Route path="/app/cv-builder/:id?" element={
+                <ProtectedRoute>
+                  <CVBuilder />
+                </ProtectedRoute>
+              } />
+              <Route path="/app/cv-selector" element={
+                <ProtectedRoute>
+                  <CVSelector />
+                </ProtectedRoute>
+              } />
+              <Route path="/app/cvs" element={
+                <ProtectedRoute>
+                  <CVsList />
+                </ProtectedRoute>
+              } />
+              <Route path="/app/match" element={
+                <ProtectedRoute>
+                  <JobMatcher />
+                </ProtectedRoute>
+              } />
+              <Route path="/app/kanban" element={
+                <ProtectedRoute>
+                  <Kanban />
+                </ProtectedRoute>
+              } />
+              <Route path="/app/profile" element={
+                <ProtectedRoute>
+                  <Profile />
+                </ProtectedRoute>
+              } />
+              <Route path="/app/billing" element={
+                <ProtectedRoute>
+                  <Billing />
+                </ProtectedRoute>
+              } />
+              <Route path="/app/admin" element={
+                <ProtectedRoute>
+                  <AdminDashboard />
+                </ProtectedRoute>
+              } />
+              
+              {/* Redirect handler for auth callbacks */}
+              <Route path="/redirect" element={<RedirectHandler />} />
+              
+              {/* 404 page */}
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </TooltipProvider>
           </AIUsageProvider>
         </AuthProvider>
       </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
-);
+    </QueryClientProvider>
+  );
+};
 
 export default App;

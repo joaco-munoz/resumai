@@ -3,7 +3,7 @@ import { forwardRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Sparkles } from "lucide-react";
-import { DashboardPreviewSection } from "./DashboardPreviewSection";
+import RollingGallery from "@/components/ui/rolling-gallery";
 
 interface HeroProps {
   onSignUpNavigation: () => void;
@@ -39,8 +39,8 @@ export const Hero = forwardRef<HTMLDivElement, HeroProps>(({ onSignUpNavigation 
         </div>
 
         {/* Dashboard Preview */}
-        <div className="max-w-full sm:max-w-5xl mx-auto mb-8 sm:mb-12 overflow-hidden rounded-lg shadow-2xl">
-          <DashboardPreviewSection onSignUpNavigation={onSignUpNavigation} />
+        <div className="max-w-full sm:max-w-5xl mx-auto mb-8 sm:mb-12">
+          <RollingGallery autoplay={true} pauseOnHover={true} />
         </div>
       </div>
     </section>

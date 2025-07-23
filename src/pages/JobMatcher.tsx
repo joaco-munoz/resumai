@@ -1,8 +1,8 @@
 
 import { useState, useEffect } from "react";
 import { useLocation, useSearchParams } from "react-router-dom";
-import { SidebarProvider } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/AppSidebar";
+import { AppHeader } from "@/components/AppHeader";
+import Dock from "@/components/ui/Dock";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -17,7 +17,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { CVNamingModal } from "@/components/cv-builder/CVNamingModal";
 import { useFeatureLimits } from "@/hooks/useFeatureLimits";
-import { AIUsageIndicator } from "@/components/AIUsageIndicator";
 
 interface MatchResult {
   matched_keywords: string[];
@@ -179,10 +178,9 @@ const JobMatcher = () => {
   };
 
   return (
-    <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-gray-50">
-        <AppSidebar />
-        <main className="flex-1 p-6">
+    <>
+      <AppHeader />
+      <main className="min-h-screen bg-gray-50 p-6">
           <div className="max-w-4xl mx-auto space-y-6">
             <div className="flex items-center justify-between">
               <div>
@@ -193,6 +191,8 @@ const JobMatcher = () => {
               </div>
               
               {/* Usage indicator for non-pro users */}
+              {/* TODO: Restore AIUsageIndicator when AIUsageContext is properly configured */}
+              {/*
               {!isPro && (
                 <div className="flex-shrink-0">
                   <AIUsageIndicator
@@ -203,6 +203,7 @@ const JobMatcher = () => {
                   />
                 </div>
               )}
+              */}
             </div>
 
             {/* CV Selector */}
@@ -277,9 +278,8 @@ const JobMatcher = () => {
               </Card>
             )}
           </div>
-        </main>
-      </div>
-
+      </main>
+      
       <CVNamingModal
         isOpen={showNamingModal}
         onClose={() => setShowNamingModal(false)}
@@ -288,7 +288,13 @@ const JobMatcher = () => {
         isSaving={savingReport}
         isReport={true}
       />
-    </SidebarProvider>
+      
+      <Dock 
+        panelHeight={68}
+        baseItemSize={50}
+        magnification={70}
+      />
+    </>
   );
 };
 

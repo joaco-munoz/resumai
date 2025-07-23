@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
-import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar";
-import { AppSidebar } from "@/components/AppSidebar";
+import { AppHeader } from "@/components/AppHeader";
 import { DashboardStats } from "@/components/dashboard/DashboardStats";
 import { QuickActions } from "@/components/dashboard/QuickActions";
 import { RecentActivity } from "@/components/dashboard/RecentActivity";
 import { useKanbanStats, KanbanStatsProvider } from "@/contexts/KanbanStatsContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import Dock from "@/components/ui/Dock";
 
 // Componente interno que usa el hook useKanbanStats
 function DashboardContent() {
@@ -232,34 +232,30 @@ function DashboardContent() {
   };
 
   return (
-    <div className="min-h-screen flex w-full">
-      <SidebarInset>
-        <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
-          <div className="max-w-7xl mx-auto">
-              {/* Header */}
-              <div className="mb-8">
-                <h1 className="font-bold text-3xl gradient-text mb-2">
-                  Dashboard
-                </h1>
-                <p className="text-gray-600 dark:text-gray-300">
-                  Bienvenido a tu panel de control. Aquí puedes gestionar tus CVs y ver tu progreso.
-                </p>
-              </div>
-
-              {/* Stats */}
-              <DashboardStats stats={dashboardStats} />
-
-              {/* Quick Actions */}
-              <QuickActions />
-
-              {/* Recent Activity */}
-              <RecentActivity 
-                activities={recentActivities} 
-                loading={activitiesLoading}
-              />
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
+      <div className="max-w-7xl mx-auto">
+          {/* Header */}
+          <div className="mb-8">
+            <h1 className="font-bold text-3xl gradient-text mb-2">
+              Dashboard
+            </h1>
+            <p className="text-gray-600 dark:text-gray-300">
+              Bienvenido a tu panel de control. Aquí puedes gestionar tus CVs y ver tu progreso.
+            </p>
           </div>
-        </div>
-      </SidebarInset>
+
+          {/* Stats */}
+          <DashboardStats stats={dashboardStats} />
+
+          {/* Quick Actions */}
+          <QuickActions />
+
+          {/* Recent Activity */}
+          <RecentActivity 
+            activities={recentActivities} 
+            loading={activitiesLoading}
+          />
+      </div>
     </div>
   );
 }
@@ -267,11 +263,16 @@ function DashboardContent() {
 // Componente principal que envuelve DashboardContent con los providers necesarios
 export default function Dashboard() {
   return (
-    <SidebarProvider>
-      <AppSidebar />
+    <>
+      <AppHeader />
       <KanbanStatsProvider>
         <DashboardContent />
       </KanbanStatsProvider>
-    </SidebarProvider>
+      <Dock 
+        panelHeight={68}
+        baseItemSize={50}
+        magnification={70}
+      />
+    </>
   );
 }
