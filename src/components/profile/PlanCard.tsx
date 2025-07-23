@@ -141,7 +141,7 @@ export const PlanCard = ({ currentPlan, isUpgrading, onUpgrade, onPlanChange }: 
             {currentPlan === 'free' ? (
               <div className={`${isMobile ? 'w-full' : 'text-right'}`}>
                 <div className="text-xl sm:text-2xl font-bold text-brand-600 dark:text-brand-400 mb-1">
-                  $6.990 <span className="text-sm font-normal text-gray-500 dark:text-gray-400">CLP/mes</span>
+                  $1.000 <span className="text-sm font-normal text-gray-500 dark:text-gray-400">CLP/mes</span>
                 </div>
                 <Button 
                   onClick={handleCreateSubscription}
@@ -181,7 +181,7 @@ export const PlanCard = ({ currentPlan, isUpgrading, onUpgrade, onPlanChange }: 
           <CardContent>
             <div className="flex items-center justify-between text-sm">
               <span className="text-gray-600 dark:text-gray-300">Suscripción activa con Flow.cl</span>
-              <span className="font-semibold text-brand-600 dark:text-brand-400">$6.990 CLP/mes</span>
+              <span className="font-semibold text-brand-600 dark:text-brand-400">$1.000 CLP por 50 créditos</span>
             </div>
           </CardContent>
         )}
@@ -231,7 +231,7 @@ export const PlanCard = ({ currentPlan, isUpgrading, onUpgrade, onPlanChange }: 
                   <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-gray-100">Plan Pro</h3>
                   <Badge className="bg-brand-100 text-brand-700 dark:bg-brand-800 dark:text-brand-200">Recomendado</Badge>
                 </div>
-                <div className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">$6.990<span className="text-sm font-normal text-gray-500 dark:text-gray-400"> CLP/mes</span></div>
+                <div className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">$1.000<span className="text-sm font-normal text-gray-500 dark:text-gray-400"> CLP/mes</span></div>
                 <ul className="space-y-2 text-sm">
                   <li className="flex items-center gap-2">
                     <CheckCircle className="h-4 w-4 text-success-500 shrink-0" />

@@ -2,7 +2,7 @@
 import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 
-const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+const deepseekApiKey = Deno.env.get('DEEPSEEK_API_KEY');
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -74,16 +74,16 @@ ${context ? `CONTEXTO ADICIONAL: ${context}` : ''}
 
 Devuelve únicamente el bullet point mejorado comenzando con "• " y sin explicaciones adicionales.`;
 
-    console.log('Calling OpenAI API for bullet point improvement...');
+    console.log('Calling Deepseek API for bullet point improvement...');
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const response = await fetch('https://api.deepseek.com/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
+        'Authorization': `Bearer ${deepseekApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o',
+        model: 'deepseek-chat',
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
@@ -95,9 +95,9 @@ Devuelve únicamente el bullet point mejorado comenzando con "• " y sin explic
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error('OpenAI API error:', response.status, errorText);
+      console.error('Deepseek API error:', response.status, errorText);
       return new Response(
-        JSON.stringify({ error: `Error de OpenAI API: ${response.status}` }),
+        JSON.stringify({ error: `Error de Deepseek API: ${response.status}` }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
@@ -105,9 +105,9 @@ Devuelve únicamente el bullet point mejorado comenzando con "• " y sin explic
     const data = await response.json();
     
     if (!data.choices || !data.choices[0] || !data.choices[0].message) {
-      console.error('Invalid OpenAI response structure:', data);
+      console.error('Invalid Deepseek response structure:', data);
       return new Response(
-        JSON.stringify({ error: 'Respuesta inválida de OpenAI' }),
+        JSON.stringify({ error: 'Respuesta inválida de Deepseek' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }

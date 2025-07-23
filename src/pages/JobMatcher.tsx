@@ -16,7 +16,8 @@ import { CVSelector } from "@/components/job-matcher/CVSelector";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { CVNamingModal } from "@/components/cv-builder/CVNamingModal";
-import { useFeatureLimits } from "@/hooks/useFeatureLimits";
+import { useCredits } from "@/hooks/useCredits";
+import { CreditsIndicator } from "@/components/CreditsIndicator";
 
 interface MatchResult {
   matched_keywords: string[];
@@ -39,8 +40,8 @@ const JobMatcher = () => {
   const [selectedCVId, setSelectedCVId] = useState<string | null>(null);
   const [selectedCVTitle, setSelectedCVTitle] = useState<string>("");
 
-  // Feature limits hook
-  const { canUseFeature, incrementUsage, isPro, usage, limits } = useFeatureLimits();
+  // Credits hook
+  const { canUseCredits, useCredits: consumeCredits, isPro } = useCredits();
 
   // Effect to handle CV selection from URL parameter
   useEffect(() => {
@@ -67,8 +68,8 @@ const JobMatcher = () => {
       return;
     }
 
-    // Check if user can use this feature
-    if (!canUseFeature('job_matcher_advanced')) {
+    // Check if user has enough credits (1 credit per analysis)
+    if (!canUseCredits(1)) {
       return; // Error already shown by the hook
     }
 
@@ -91,6 +92,14 @@ const JobMatcher = () => {
 
       if (!cvData || !cvData.content) {
         toast.error("CV no encontrado o contenido inválido");
+        return;
+      }
+
+      // Prepare the data for the API
+      // Use 1 credit for the analysis
+      const creditsUsed = await consumeCredits(1);
+      if (!creditsUsed) {
+        toast.error("Error al usar créditos");
         return;
       }
 
@@ -118,9 +127,6 @@ const JobMatcher = () => {
       const result = await response.json();
       setAnalysisResult(result);
       setShowResult(true);
-
-      // Increment usage after successful analysis
-      await incrementUsage('job_matcher_advanced');
     } catch (error) {
       console.error('Error during analysis:', error);
       toast.error("Error al analizar la compatibilidad");
@@ -191,19 +197,9 @@ const JobMatcher = () => {
               </div>
               
               {/* Usage indicator for non-pro users */}
-              {/* TODO: Restore AIUsageIndicator when AIUsageContext is properly configured */}
-              {/*
-              {!isPro && (
-                <div className="flex-shrink-0">
-                  <AIUsageIndicator
-                    current={usage.job_matcher_advanced}
-                    limit={limits.job_matcher_advanced}
-                    type="job_matcher_advanced"
-                    isPro={isPro}
-                  />
-                </div>
-              )}
-              */}
+              <div className="flex-shrink-0">
+                <CreditsIndicator />
+              </div>
             </div>
 
             {/* CV Selector */}
@@ -228,7 +224,7 @@ const JobMatcher = () => {
             {/* Analysis Section */}
             <Button 
               onClick={analyzeMatch} 
-              disabled={isAnalyzing || !canUseFeature('job_matcher_advanced')} 
+              disabled={isAnalyzing || (!isPro && !canUseCredits(1))} 
               className="w-full"
             >
               {isAnalyzing ? "Analizando..." : "Analizar Compatibilidad"}

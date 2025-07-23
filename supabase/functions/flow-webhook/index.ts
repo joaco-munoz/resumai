@@ -9,7 +9,7 @@ const corsHeaders = {
 
 const logStep = (step: string, details?: any) => {
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
-  console.log(`[FLOW-WEBHOOK] ${step}${detailsStr}`);
+  console.log(`[FLOW-CREDITS-WEBHOOK] ${step}${detailsStr}`);
 };
 
 serve(async (req) => {
@@ -24,7 +24,7 @@ serve(async (req) => {
   );
 
   try {
-    logStep("🔔 WEBHOOK Flow recibido", {
+    logStep("🔔 WEBHOOK Flow créditos recibido", {
       method: req.method,
       url: req.url,
       headers: Object.fromEntries(req.headers.entries())
@@ -91,55 +91,52 @@ serve(async (req) => {
     const status = paymentData.status;
     const commerceOrder = paymentData.commerceOrder;
 
-    // Buscar la suscripción en la base de datos por token para obtener el user_id completo
-    const { data: subscriptionRow } = await supabaseClient
-      .from("subscriptions")
-      .select("user_id")
-      .eq("stripe_subscription_id", token)
+    // Buscar la compra de créditos en la base de datos por token para obtener el user_id
+    const { data: creditPurchase } = await supabaseClient
+      .from("credit_purchases")
+      .select("user_id, credits, id")
+      .eq("flow_token", token)
       .eq("provider", "flow")
+      .eq("status", "pending")
       .single();
 
-    const userId = subscriptionRow?.user_id || null;
+    const userId = creditPurchase?.user_id || null;
+    const creditsToAdd = creditPurchase?.credits || 0;
+    const purchaseId = creditPurchase?.id || null;
 
-    if (status === 2 && userId) { // Status 2 = Pagado
-      logStep("✅ Pago confirmado", { userId, commerceOrder });
+    if (status === 2 && userId && purchaseId) { // Status 2 = Pagado
+      logStep("✅ Pago de créditos confirmado", { userId, commerceOrder, creditsToAdd });
 
-      // Actualizar suscripción
-      const { error: updateError } = await supabaseClient
-        .from("subscriptions")
+      // Actualizar estado de la compra
+      const { error: updatePurchaseError } = await supabaseClient
+        .from("credit_purchases")
         .update({
-          status: "active",
-          current_period_start: new Date().toISOString(),
-          current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+          status: "completed",
+          payment_date: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         })
-        .eq("user_id", userId)
-        .eq("provider", "flow");
+        .eq("id", purchaseId);
 
-      if (updateError) {
-        logStep("❌ Error actualizando suscripción", updateError);
+      if (updatePurchaseError) {
+        logStep("❌ Error actualizando compra", updatePurchaseError);
       } else {
-        logStep("✅ Suscripción actualizada");
+        logStep("✅ Compra actualizada a completada");
       }
 
-      // Actualizar perfil del usuario
-      const { error: profileError } = await supabaseClient
-        .from("profiles")
-        .update({
-          subscription_tier: "pro",
-          is_premium: true,
-          premium_expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", userId);
+      // Agregar créditos al usuario usando la función de base de datos
+      const { error: creditsError } = await supabaseClient
+        .rpc('add_credits_to_user', {
+          p_user_id: userId,
+          p_credits: creditsToAdd
+        });
 
-      if (profileError) {
-        logStep("❌ Error actualizando perfil", profileError);
+      if (creditsError) {
+        logStep("❌ Error agregando créditos", creditsError);
       } else {
-        logStep("✅ Perfil actualizado a Pro");
+        logStep("✅ Créditos agregados exitosamente", { userId, creditsToAdd });
       }
     } else {
-      logStep("⚠️ Pago no completado o userId no encontrado", { status, userId, commerceOrder });
+      logStep("⚠️ Pago no completado o compra no encontrada", { status, userId, commerceOrder, purchaseId });
     }
 
     logStep("🎉 Webhook procesado exitosamente");

@@ -6,7 +6,7 @@ const corsHeaders = {
 };
 const logStep = (step, details)=>{
   const detailsStr = details ? ` - ${JSON.stringify(details)}` : '';
-  console.log(`[FLOW-SUBSCRIPTION] ${step}${detailsStr}`);
+  console.log(`[FLOW-CREDITS] ${step}${detailsStr}`);
 };
 // Función para generar firma HMAC-SHA256
 const generateSignature = async (params, secretKey)=>{
@@ -34,7 +34,7 @@ serve(async (req)=>{
     }
   });
   try {
-    logStep("🚀 Iniciando creación de suscripción Flow");
+    logStep("🚀 Iniciando compra de créditos Flow");
     const authHeader = req.headers.get("Authorization");
     if (!authHeader) throw new Error("No authorization header provided");
     const token = authHeader.replace("Bearer ", "");
@@ -67,20 +67,20 @@ serve(async (req)=>{
     // Usar los primeros 8 caracteres del user ID + timestamp corto
     const shortUserId = user.id.substring(0, 8);
     const shortTimestamp = Date.now().toString().slice(-8); // Últimos 8 dígitos
-    const commerceOrder = `resumai-${shortUserId}-${shortTimestamp}`; // ~28 caracteres
+    const commerceOrder = `credits-${shortUserId}-${shortTimestamp}`; // ~30 caracteres
     // Parámetros para crear el pago según documentación de Flow
     const paymentParams = {
       apiKey: flowApiKey,
       commerceOrder: commerceOrder,
-      subject: "Suscripción Pro ResumAI - Plan Mensual",
+      subject: "ResumAI - 50 Créditos",
       currency: "CLP",
-      amount: 6990,
+      amount: 1000,
       email: user.email || "",
-      paymentMethod: 1,
+      paymentMethod: 9, // Todos los medios de pago
       urlConfirmation: `${Deno.env.get("SUPABASE_URL")}/functions/v1/flow-webhook`,
       urlReturn: `${Deno.env.get("APP_BASE_URL") || Deno.env.get("SUPABASE_URL")}/payment-success`,
       merchantId: flowApiKey,
-      timeout: 300 // 5 minutos
+      timeout: 600 // 10 minutos
     };
     // Crear string de parámetros ordenados para firma
     const paramString = Object.keys(paymentParams).sort().map((key)=>`${key}=${paymentParams[key]}`).join('&');
@@ -124,45 +124,27 @@ serve(async (req)=>{
       throw new Error(`Invalid JSON response from Flow: ${responseText}`);
     }
     logStep("✅ Respuesta de Flow", flowData);
-    // Verificar si ya existe una suscripción para este usuario
-    const { data: existingSubscription } = await supabaseClient.from("subscriptions").select("id").eq("user_id", user.id).single();
-    if (existingSubscription) {
-      // Actualizar suscripción existente
-      const { error: updateError } = await supabaseClient.from("subscriptions").update({
-        tier: "pro",
-        status: "pending",
-        price_per_month: 6990,
-        currency: "CLP",
-        provider: "flow",
-        stripe_subscription_id: flowData.token || flowData.flowOrder || commerceOrder,
-        current_period_start: new Date().toISOString(),
-        current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-        updated_at: new Date().toISOString()
-      }).eq("user_id", user.id);
-      if (updateError) {
-        logStep("❌ Error actualizando suscripción", updateError);
-        throw new Error(`Database error: ${updateError.message}`);
-      }
-    } else {
-      // Crear nueva suscripción
-      const { error: insertError } = await supabaseClient.from("subscriptions").insert({
+    // Crear registro de compra de créditos pendiente
+    const { error: insertError } = await supabaseClient
+      .from("credit_purchases")
+      .insert({
         user_id: user.id,
-        tier: "pro",
-        status: "pending",
-        price_per_month: 6990,
+        amount: 1000,
+        credits: 50,
         currency: "CLP",
         provider: "flow",
-        stripe_subscription_id: flowData.token || flowData.flowOrder || commerceOrder,
-        current_period_start: new Date().toISOString(),
-        current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-        updated_at: new Date().toISOString()
+        flow_token: flowData.token,
+        flow_order: flowData.flowOrder,
+        commerce_order: commerceOrder,
+        status: "pending",
+        created_at: new Date().toISOString()
       });
-      if (insertError) {
-        logStep("❌ Error creando suscripción", insertError);
-        throw new Error(`Database error: ${insertError.message}`);
-      }
+    
+    if (insertError) {
+      logStep("❌ Error creando registro de compra", insertError);
+      throw new Error(`Database error: ${insertError.message}`);
     }
-    logStep("🎉 Suscripción creada exitosamente");
+    logStep("🎉 Compra de créditos iniciada exitosamente");
     return new Response(JSON.stringify({
       success: true,
       paymentUrl: flowData.url + "?token=" + flowData.token,
@@ -178,7 +160,7 @@ serve(async (req)=>{
     });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    logStep("💥 ERROR en create-flow-subscription", {
+    logStep("💥 ERROR en create-flow-credits", {
       message: errorMessage
     });
     return new Response(JSON.stringify({

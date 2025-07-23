@@ -3,7 +3,7 @@ import "https://deno.land/x/xhr@0.1.0/mod.ts";
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0';
 
-const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+const deepseekApiKey = Deno.env.get('DEEPSEEK_API_KEY');
 const supabaseUrl = Deno.env.get('SUPABASE_URL');
 const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
@@ -97,17 +97,17 @@ HABILIDADES:
 ${cvData.skills?.join(', ') || 'No especificadas'}
     `.trim();
 
-    console.log('Calling OpenAI API for job compatibility analysis...');
+    console.log('Calling Deepseek API for job compatibility analysis...');
 
     // Call OpenAI API with improved prompt
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const response = await fetch('https://api.deepseek.com/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
+        'Authorization': `Bearer ${deepseekApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o',
+        model: 'deepseek-chat',
         messages: [
           {
             role: 'system',
@@ -185,7 +185,7 @@ Proporciona el análisis en formato JSON válido siguiendo la estructura especif
 
     if (!response.ok) {
       const errorData = await response.text();
-      console.error('OpenAI API error:', response.status, errorData);
+      console.error('Deepseek API error:', response.status, errorData);
       return new Response(
         JSON.stringify({ error: 'Error al procesar el análisis con IA' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }

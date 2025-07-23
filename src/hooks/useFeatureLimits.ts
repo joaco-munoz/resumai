@@ -26,8 +26,8 @@ export const useFeatureLimits = () => {
   const [limits, setLimits] = useState<FeatureLimits>({
     cv_creation: 1,
     pdf_export: 1,
-    ai_improvements: 5,
-    job_matcher_advanced: 3,
+    ai_improvements: 10,
+    job_matcher_advanced: 6,
     unlimited_features: false
   });
   const [usage, setUsage] = useState<UsageStats>({
@@ -80,8 +80,8 @@ export const useFeatureLimits = () => {
         setLimits({
           cv_creation: 1,
           pdf_export: 1,
-          ai_improvements: 5,
-          job_matcher_advanced: 3,
+          ai_improvements: 10,
+          job_matcher_advanced: 6,
           unlimited_features: false
         });
       }

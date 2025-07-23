@@ -136,7 +136,7 @@ export const FlowSubscription = ({ currentPlan, onPlanChange }: FlowSubscription
             {currentPlan === 'free' ? (
               <div className={`${isMobile ? 'w-full' : 'text-right'}`}>
                 <div className="text-xl sm:text-2xl font-bold text-brand-600 dark:text-brand-400 mb-1">
-                  $6.990 <span className="text-sm font-normal text-gray-500 dark:text-gray-400">CLP/mes</span>
+                  $1.000 <span className="text-sm font-normal text-gray-500 dark:text-gray-400">CLP por 50 créditos</span>
                 </div>
                 <Button 
                   onClick={handleCreateSubscription}
@@ -185,7 +185,7 @@ export const FlowSubscription = ({ currentPlan, onPlanChange }: FlowSubscription
           <CardContent>
             <div className="flex items-center justify-between text-sm">
               <span className="text-gray-600 dark:text-gray-300">Suscripción activa con Flow.cl</span>
-              <span className="font-semibold text-brand-600 dark:text-brand-400">$6.990 CLP/mes</span>
+              <span className="font-semibold text-brand-600 dark:text-brand-400">$1.000 CLP por 50 créditos</span>
             </div>
           </CardContent>
         )}
@@ -205,13 +205,13 @@ export const FlowSubscription = ({ currentPlan, onPlanChange }: FlowSubscription
               <div className="w-5 h-5 flex-shrink-0 rounded-full border border-white flex items-center justify-center bg-blue-700">
                 <div className="w-2.5 h-2.5 rounded-full bg-white"></div>
               </div>
-              <span className="text-white text-sm md:text-base font-medium">5 mejoras inteligentes al mes a tu CV</span>
+              <span className="text-white text-sm md:text-base font-medium">10 mejoras inteligentes al mes a tu CV</span>
             </div>
             <div className="flex items-center gap-3">
               <div className="w-5 h-5 flex-shrink-0 rounded-full border border-white flex items-center justify-center bg-blue-700">
                 <div className="w-2.5 h-2.5 rounded-full bg-white"></div>
               </div>
-              <span className="text-white text-sm md:text-base font-medium">3 match de ofertas laborales al mes con adaptación incluida</span>
+              <span className="text-white text-sm md:text-base font-medium">6 match de ofertas laborales al mes con adaptación incluida</span>
             </div>
             <div className="flex items-center gap-3">
               <div className="w-5 h-5 flex-shrink-0 rounded-full border border-white flex items-center justify-center bg-blue-700">
@@ -229,7 +229,7 @@ export const FlowSubscription = ({ currentPlan, onPlanChange }: FlowSubscription
           </div>
           <CardHeader className="text-center pb-2">
             <CardTitle className="text-xl font-semibold text-white">Pro</CardTitle>
-            <div className="text-3xl font-bold text-white mt-4">$6.990<span className="text-lg font-normal text-blue-100"> CLP/mes</span></div>
+            <div className="text-3xl font-bold text-white mt-4">$1.000<span className="text-lg font-normal text-blue-100"> CLP por 50 créditos</span></div>
             <CardDescription className="text-blue-100 text-base mt-1">CVs sin límites, inscríbete hoy</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4 pt-2">
