@@ -233,7 +233,7 @@ function DashboardContent() {
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 p-6">
-      <div className="max-w-7xl mx-auto">
+      <div className="space-y-6">
           {/* Header */}
           <div className="mb-8">
             <h1 className="font-bold text-3xl gradient-text mb-2">

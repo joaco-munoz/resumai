@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { AppHeader } from "@/components/AppHeader";
 import Dock from "@/components/ui/Dock";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -14,6 +15,8 @@ import { useSubscriptionStatus } from "@/hooks/useSubscriptionStatus";
 const Profile = () => {
   const { user } = useAuth();
   const { tier, isPremium, refreshStatus } = useSubscriptionStatus();
+  const [searchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState(searchParams.get("tab") || "personal");
   const [profileData, setProfileData] = useState({
     fullName: '',
     email: '',
@@ -224,8 +227,8 @@ const Profile = () => {
           </div>
         </header>
 
-          <div className="p-6 max-w-6xl mx-auto">
-            <Tabs defaultValue="personal" className="space-y-6">
+          <div className="p-6">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
               <TabsList className="grid w-full grid-cols-2">
                 <TabsTrigger value="personal">Información Personal</TabsTrigger>
                 <TabsTrigger value="billing">Facturación y Suscripción</TabsTrigger>

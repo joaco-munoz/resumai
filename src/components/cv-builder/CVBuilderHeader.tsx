@@ -18,7 +18,7 @@ export const CVBuilderHeader: React.FC<CVBuilderHeaderProps> = ({ currentCvId })
     <div className="bg-white border-b border-gray-200 px-6 py-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
-          <div className="text-lg font-bold text-blue-600">
+          <div className="text-3xl font-bold text-blue-600">
             {currentCvId ? 'Editando CV' : 'Creando nuevo CV'}
           </div>
         </div>

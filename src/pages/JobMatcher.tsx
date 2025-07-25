@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useLocation, useSearchParams } from "react-router-dom";
 import { AppHeader } from "@/components/AppHeader";
@@ -187,93 +186,96 @@ const JobMatcher = () => {
     <>
       <AppHeader />
       <main className="min-h-screen bg-gray-50 p-6">
-          <div className="max-w-4xl mx-auto space-y-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">Job Matcher</h1>
-                <p className="text-gray-600 mt-2">
-                  Analiza qué tan compatible es tu CV con ofertas de trabajo específicas
-                </p>
-              </div>
-              
-              {/* Usage indicator for non-pro users */}
-              <div className="flex-shrink-0">
-                <CreditsIndicator />
-              </div>
+        <div className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-blue-600">Job Matcher</h1>
+              <p className="text-gray-600 mt-2">
+                Analiza qué tan compatible es tu CV con ofertas de trabajo específicas
+              </p>
             </div>
-
-            {/* CV Selector */}
-            <CVSelector
-              selectedCVId={selectedCVId}
-              onCVSelect={handleCVSelect}
-              className="mb-6"
-            />
-
-            {/* Job Description Input */}
-            <div className="space-y-2">
-              <Label htmlFor="job-description">Descripción del puesto</Label>
-              <Textarea
-                id="job-description"
-                placeholder="Pega la descripción del puesto aquí..."
-                value={jobDescription}
-                onChange={(e) => setJobDescription(e.target.value)}
-                rows={4}
-              />
+            
+            {/* Usage indicator for non-pro users */}
+            <div className="flex-shrink-0 mr-48">
+              <CreditsIndicator />
             </div>
-
-            {/* Analysis Section */}
-            <Button 
-              onClick={analyzeMatch} 
-              disabled={isAnalyzing || (!isPro && !canUseCredits(1))} 
-              className="w-full"
-            >
-              {isAnalyzing ? "Analizando..." : "Analizar Compatibilidad"}
-            </Button>
-
-            {/* Result Section */}
-            {showResult && analysisResult && (
-              <Card className="mt-6">
-                <CardHeader>
-                  <CardTitle>Resultado del Análisis</CardTitle>
-                  <CardDescription>
-                    Informe generado con el CV: {selectedCVTitle}
-                  </CardDescription>
-                  <CardDescription>
-                    Porcentaje de compatibilidad: {Math.round(analysisResult.score)}%
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <h3 className="text-lg font-semibold">Coincidencias</h3>
-                    {analysisResult.matched_keywords.length > 0 ? (
-                      <div className="flex flex-wrap gap-2">
-                        {analysisResult.matched_keywords.map((keyword) => (
-                          <Badge key={keyword} variant="outline">{keyword}</Badge>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-gray-500">No se encontraron coincidencias.</p>
-                    )}
-                  </div>
-                  <div>
-                    <h3 className="text-lg font-semibold">Áreas de Mejora</h3>
-                    {analysisResult.missing_keywords.length > 0 ? (
-                      <div className="flex flex-wrap gap-2">
-                        {analysisResult.missing_keywords.map((keyword) => (
-                          <Badge key={keyword} variant="destructive">{keyword}</Badge>
-                        ))}
-                      </div>
-                    ) : (
-                      <p className="text-gray-500">No hay áreas de mejora.</p>
-                    )}
-                  </div>
-                  <Button variant="secondary" onClick={() => setShowNamingModal(true)}>
-                    Guardar Informe
-                  </Button>
-                </CardContent>
-              </Card>
-            )}
           </div>
+
+          <Card>
+            <CardContent className="p-6 space-y-6">
+              {/* CV Selector */}
+              <CVSelector
+                selectedCVId={selectedCVId}
+                onCVSelect={handleCVSelect}
+              />
+
+              {/* Job Description Input */}
+              <div className="space-y-2">
+                <Label htmlFor="job-description">Descripción del puesto</Label>
+                <Textarea
+                  id="job-description"
+                  placeholder="Pega la descripción del puesto aquí..."
+                  value={jobDescription}
+                  onChange={(e) => setJobDescription(e.target.value)}
+                  rows={8}
+                />
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Analysis Section */}
+          <Button 
+            onClick={analyzeMatch} 
+            disabled={isAnalyzing || (!isPro && !canUseCredits(1))} 
+            className="w-full"
+          >
+            {isAnalyzing ? "Analizando..." : "Analizar Compatibilidad"}
+          </Button>
+
+          {/* Result Section */}
+          {showResult && analysisResult && (
+            <Card className="mt-6">
+              <CardHeader>
+                <CardTitle>Resultado del Análisis</CardTitle>
+                <CardDescription>
+                  Informe generado con el CV: {selectedCVTitle}
+                </CardDescription>
+                <CardDescription>
+                  Porcentaje de compatibilidad: {Math.round(analysisResult.score)}%
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <h3 className="text-lg font-semibold">Coincidencias</h3>
+                  {analysisResult.matched_keywords.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                      {analysisResult.matched_keywords.map((keyword) => (
+                        <Badge key={keyword} variant="outline">{keyword}</Badge>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-gray-500">No se encontraron coincidencias.</p>
+                  )}
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold">Áreas de Mejora</h3>
+                  {analysisResult.missing_keywords.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                      {analysisResult.missing_keywords.map((keyword) => (
+                        <Badge key={keyword} variant="destructive">{keyword}</Badge>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-gray-500">No hay áreas de mejora.</p>
+                  )}
+                </div>
+                <Button variant="secondary" onClick={() => setShowNamingModal(true)}>
+                  Guardar Informe
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+        </div>
       </main>
       
       <CVNamingModal

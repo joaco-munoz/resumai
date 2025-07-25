@@ -17,6 +17,7 @@ import { isJobReport, extractJobTitle, extractCompanyName } from "@/utils/cvUtil
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useDownloadManager } from "@/hooks/useDownloadManager";
+import { Card, CardContent } from "@/components/ui/card";
 
 interface CV {
   id: string;
@@ -292,9 +293,9 @@ export default function CVsList() {
     <>
       <AppHeader />
       <main className="min-h-screen bg-gray-50 dark:bg-gray-900 p-3 sm:p-6 overflow-x-auto">
-            <div className="max-w-7xl mx-auto">
+            <div className="space-y-6">
               {/* Header */}
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 sm:mb-8">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
                 <div className="min-w-0 flex-1 mb-4 sm:mb-0">
                   <h1 className="font-bold text-2xl sm:text-3xl gradient-text">
                     Gestión de Currículums
@@ -305,64 +306,72 @@ export default function CVsList() {
                 </div>
               </div>
 
-              {/* User CVs Section */}
-              <UserCVsSection
-                userCVs={userCVs}
-                filteredUserCVs={filteredUserCVs}
-                searchTerm={userCVsSearchTerm}
-                isMobile={isMobile}
-                renamingCVId={renamingCVId}
-                renamingTitle={renamingTitle}
-                savingRename={savingRename}
-                logoEditCvId={logoEditCvId}
-                logoQuery={logoQuery}
-                logoSuggestions={logoSuggestions}
-                logoMap={logoMap}
-                onSearchChange={setUserCVsSearchTerm}
-                onCreateNewCV={handleCreateNewCV}
-                onView={handleViewCV}
-                onEdit={handleEditCV}
-                onDownload={handleDownloadCV}
-                onDelete={handleDeleteCV}
-                onStartRename={startRenameCV}
-                onSaveRename={handleRenameSave}
-                onCancelRename={handleRenameCancel}
-                onRenamingTitleChange={setRenamingTitle}
-                onStartLogoEdit={startLogoEdit}
-                onSelectLogo={handleSelectLogo}
-                onLogoQueryChange={setLogoQuery}
-                onAddToTracking={handleAddToTracking}
-                onToggleFavorite={handleToggleFavorite}
-              />
+              <Card>
+                <CardContent className="p-6 space-y-6">
+                  {/* User CVs Section */}
+                  <UserCVsSection
+                    userCVs={userCVs}
+                    filteredUserCVs={filteredUserCVs}
+                    searchTerm={userCVsSearchTerm}
+                    isMobile={isMobile}
+                    renamingCVId={renamingCVId}
+                    renamingTitle={renamingTitle}
+                    savingRename={savingRename}
+                    logoEditCvId={logoEditCvId}
+                    logoQuery={logoQuery}
+                    logoSuggestions={logoSuggestions}
+                    logoMap={logoMap}
+                    onSearchChange={setUserCVsSearchTerm}
+                    onCreateNewCV={handleCreateNewCV}
+                    onView={handleViewCV}
+                    onEdit={handleEditCV}
+                    onDownload={handleDownloadCV}
+                    onDelete={handleDeleteCV}
+                    onStartRename={startRenameCV}
+                    onSaveRename={handleRenameSave}
+                    onCancelRename={handleRenameCancel}
+                    onRenamingTitleChange={setRenamingTitle}
+                    onStartLogoEdit={startLogoEdit}
+                    onSelectLogo={handleSelectLogo}
+                    onLogoQueryChange={setLogoQuery}
+                    onAddToTracking={handleAddToTracking}
+                    onToggleFavorite={handleToggleFavorite}
+                  />
+                </CardContent>
+              </Card>
 
-              {/* JobMatcher Reports Section */}
-              <JobMatcherReportsSection
-                jobMatcherReports={jobMatcherReports}
-                filteredJobMatcherReports={filteredJobMatcherReports}
-                searchTerm={jobMatcherSearchTerm}
-                isMobile={isMobile}
-                renamingCVId={renamingCVId}
-                renamingTitle={renamingTitle}
-                savingRename={savingRename}
-                logoEditCvId={logoEditCvId}
-                logoQuery={logoQuery}
-                logoSuggestions={logoSuggestions}
-                logoMap={logoMap}
-                onSearchChange={setJobMatcherSearchTerm}
-                onGoToJobMatcher={() => navigate("/app/match")}
-                onView={handleViewCV}
-                onEdit={handleEditCV}
-                onDownload={handleDownloadCV}
-                onDelete={handleDeleteCV}
-                onStartRename={startRenameCV}
-                onSaveRename={handleRenameSave}
-                onCancelRename={handleRenameCancel}
-                onRenamingTitleChange={setRenamingTitle}
-                onStartLogoEdit={startLogoEdit}
-                onSelectLogo={handleSelectLogo}
-                onLogoQueryChange={setLogoQuery}
-                onAddToTracking={() => {}} // No needed for job matcher reports
-              />
+              <Card>
+                <CardContent className="p-6 space-y-6">
+                  {/* JobMatcher Reports Section */}
+                  <JobMatcherReportsSection
+                    jobMatcherReports={jobMatcherReports}
+                    filteredJobMatcherReports={filteredJobMatcherReports}
+                    searchTerm={jobMatcherSearchTerm}
+                    isMobile={isMobile}
+                    renamingCVId={renamingCVId}
+                    renamingTitle={renamingTitle}
+                    savingRename={savingRename}
+                    logoEditCvId={logoEditCvId}
+                    logoQuery={logoQuery}
+                    logoSuggestions={logoSuggestions}
+                    logoMap={logoMap}
+                    onSearchChange={setJobMatcherSearchTerm}
+                    onGoToJobMatcher={() => navigate("/app/match")}
+                    onView={handleViewCV}
+                    onEdit={handleEditCV}
+                    onDownload={handleDownloadCV}
+                    onDelete={handleDeleteCV}
+                    onStartRename={startRenameCV}
+                    onSaveRename={handleRenameSave}
+                    onCancelRename={handleRenameCancel}
+                    onRenamingTitleChange={setRenamingTitle}
+                    onStartLogoEdit={startLogoEdit}
+                    onSelectLogo={handleSelectLogo}
+                    onLogoQueryChange={setLogoQuery}
+                    onAddToTracking={() => {}} // No needed for job matcher reports
+                  />
+                </CardContent>
+              </Card>
             </div>
 
         {/* Modals */}

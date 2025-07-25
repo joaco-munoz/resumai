@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Coins, Crown, Plus } from "lucide-react";
 import { useCredits } from "@/hooks/useCredits";
+import { useNavigate } from "react-router-dom";
 
 interface CreditsIndicatorProps {
   className?: string;
@@ -9,16 +10,8 @@ interface CreditsIndicatorProps {
 }
 
 export const CreditsIndicator = ({ className = "", showPurchaseButton = true }: CreditsIndicatorProps) => {
-  const { credits, isPro, isLoading, createFlowPayment } = useCredits();
-
-  const handlePurchaseCredits = async () => {
-    const result = await createFlowPayment();
-    if (result.success && result.paymentUrl) {
-      window.location.href = result.paymentUrl;
-    } else {
-      console.error('Error creating payment:', result.error);
-    }
-  };
+  const { credits, isPro, isLoading } = useCredits();
+  const navigate = useNavigate();
 
   if (isLoading) {
     return (
@@ -59,7 +52,7 @@ export const CreditsIndicator = ({ className = "", showPurchaseButton = true }: 
         <Button
           size="sm"
           variant="outline"
-          onClick={handlePurchaseCredits}
+          onClick={() => navigate('/app/profile?tab=billing')}
           className="text-xs px-2 py-1 h-7"
         >
           <Plus className="h-3 w-3 mr-1" />
