@@ -40,13 +40,15 @@ verification checks, remaining risks, and the required manual actions.
 - **Fixed the broken Job Matcher** (was calling a nonexistent Next.js
   `/api/match`) to invoke the real `analyze-job-compatibility` function; usage is
   now counted server-side.
-- Env-driven Supabase config (frontend + extension); single package manager
+- Env-driven Supabase config (frontend); single package manager
   (npm); fixed `index.html` social/favicon paths; fixed a dev-server portability
   bug (`host: "::"` → `host: true`); Tailwind content globs corrected.
 
 ### Removed
-- Committed **Chrome extension private signing key** (`chrome-extension.pem`) and
-  packaged `.crx`; the competing `bun.lockb`; a duplicate migration file.
+- The entire **experimental Chrome extension** (`chrome-extension/`), which never
+  reached a final version, together with its committed **private signing key**
+  (`chrome-extension.pem`) and packaged `.crx`; the competing `bun.lockb`; a
+  duplicate migration file.
 
 ### Fixed (security)
 - **IDOR** in `analyze-job-compatibility` (user now derived from the verified
@@ -87,7 +89,7 @@ verification checks, remaining risks, and the required manual actions.
 
 | Risk | Severity | Impact | Mitigation | Blocks publish? |
 | ---- | -------- | ------ | ---------- | --------------- |
-| Chrome signing key in git history | **High** | The removed `chrome-extension.pem` is still reachable in history (commit `54a8409`); it can sign look-alike extensions | Rotate/regenerate the key; purge history with `git filter-repo`/BFG before publishing | **No** for the web app; **Yes** before distributing the extension |
+| Committed private key in git history | **High** | The removed `chrome-extension.pem` is still reachable in history (commit `54a8409`) | Revoke/rotate the key; purge it from history with `git filter-repo`/BFG (a rewrite requiring a force-push) | **No** — the extension and key are gone from the tree; purging history is security hygiene |
 | Reconciliation migration / seed unvalidated | Medium | SQL couldn't be run here; a subtle error could break `db reset` on a real project | Written idempotently; run `npm run db:reset` on a local Supabase and adjust if needed | No (validate before relying on it) |
 | Job Matcher / AI end-to-end unverified against a live provider | Medium | Code paths are unit-tested with mocks, but not exercised against a real Supabase + provider | Validate with `AI_PROVIDER=mock` locally, then a real key | No |
 | Flow webhook doesn't verify inbound HMAC signature | Medium | Spoofed callbacks; mitigated by the getStatus re-query | Add inbound HMAC verification (left as a documented TODO to avoid breaking payments untested) | No (payments optional) |
@@ -97,10 +99,10 @@ verification checks, remaining risks, and the required manual actions.
 
 ## Manual actions required (owner)
 
-1. **Rotate the Chrome extension signing key** and treat the old
-   `chrome-extension.pem` as compromised. Regenerate a new key; if you distribute
-   the extension, purge the old key from git history (`git filter-repo` / BFG) —
-   this rewrites history and needs a coordinated force-push.
+1. **Revoke/rotate the committed private key** and treat the old
+   `chrome-extension.pem` as compromised. The extension itself has been removed,
+   but the key remains in git history — purge it (`git filter-repo` / BFG); this
+   rewrites history and needs a coordinated force-push.
 2. **Set production secrets** (never commit them): Vercel env
    `VITE_SUPABASE_URL` / `VITE_SUPABASE_ANON_KEY`; edge-function secrets
    (`AI_PROVIDER`, `AI_API_KEY`, and Flow keys if used) via
@@ -129,8 +131,7 @@ provider-agnostic with a cost-free mock path, and `lint`/`typecheck`/`test`/
 `build` all pass with CI wired up and complete documentation.
 
 The remaining items before a fully clean public launch are **operational**, not
-code blockers: rotate the Chrome key and (if distributing the extension) purge it
-from history, and validate the reconciliation migration/seed against a real
-Supabase instance. None of these block publishing the **web application**; the
-git-history purge is the one item to complete **before** distributing the
-**browser extension**.
+code blockers: revoke/rotate the private key that was committed in the past and
+purge it from git history, and validate the reconciliation migration/seed against
+a real Supabase instance. The experimental Chrome extension has been removed
+entirely. None of these block publishing the **web application**.

@@ -45,7 +45,6 @@ body:
         - Database / migrations
         - Edge functions
         - Payments (Flow)
-        - Chrome extension
         - Other
     validations:
       required: true

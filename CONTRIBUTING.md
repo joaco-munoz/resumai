@@ -8,8 +8,8 @@ need to make a solid contribution. By participating you agree to our
 
 - **Never commit secrets or real personal data.** No API keys, service-role
   keys, `.env` files, private keys, real resumes, real emails or names. Use the
-  placeholders in `.env.example`. `.env`, `*.pem`, `*.key` and `*.crx` are
-  git-ignored — keep it that way.
+  placeholders in `.env.example`. `.env`, `*.pem` and `*.key` are git-ignored —
+  keep it that way.
 - **Don't declare something works unless you ran it.** State what you tested.
 - Prefer small, focused PRs over large sweeping ones.
 

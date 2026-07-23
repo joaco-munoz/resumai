@@ -49,12 +49,12 @@ mind when you deploy:
   isolated per-user by Row Level Security. If you send content to a real AI
   provider, that content leaves your infrastructure — use the `mock` provider to
   avoid this entirely.
-- **Chrome extension signing key.** A previous version of this repository
-  committed a Chrome extension private key (`chrome-extension.pem`). It has been
-  removed, but **it exists in git history and must be treated as compromised**:
-  regenerate the extension signing key before publishing an extension, and
-  consider purging it from history (`git filter-repo` / BFG) — a history rewrite
-  requires a force-push and coordination with any forks.
+- **A private key was committed in the past.** An earlier version of this
+  repository committed a private key (`chrome-extension.pem`, since removed along
+  with the code that used it). It **still exists in git history and must be
+  treated as compromised**: revoke/regenerate it, and consider purging it from
+  history (`git filter-repo` / BFG) — a history rewrite requires a force-push and
+  coordination with any forks.
 - **Quotas & cost.** AI edge functions enforce per-user monthly quotas
   server-side, but you are responsible for monitoring provider spend on your own
   account.

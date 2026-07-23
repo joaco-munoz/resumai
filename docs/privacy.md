@@ -114,10 +114,10 @@ holds. You are responsible for:
 - **Protecting secrets.** Never prefix a server secret with `VITE_` (that inlines
   it into the public bundle). Keep provider keys, the service-role key, and any
   Flow credentials as edge-function secrets only.
-- **Rotating exposed credentials.** A previously committed Chrome extension
-  private key (`chrome-extension.pem`) was removed from the repository but
-  remains in git history and must be treated as compromised — regenerate it
-  before publishing an extension. See [SECURITY.md](../SECURITY.md).
+- **Rotating exposed credentials.** A private key (`chrome-extension.pem`) was
+  committed in the past and has been removed from the repository, but it remains
+  in git history and must be treated as compromised — revoke/regenerate it and
+  consider purging history. See [SECURITY.md](../SECURITY.md).
 - **Handling deletion and data requests** manually until self-serve deletion
   exists.
 - **Your own legal and regulatory obligations** (privacy notices, consent,

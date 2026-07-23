@@ -4,6 +4,12 @@
 > It records the original state and the reasoning behind the changes proposed in the
 > prioritized plan at the end. See `OPEN_SOURCE_RELEASE_REPORT.md` for what was
 > actually changed.
+>
+> **Note:** the experimental Chrome extension referenced below (as a component and
+> in findings S-01/S-06) was **subsequently removed from the project entirely**, as
+> it never reached a finished state. Its mentions remain here only as a historical
+> record. The one still-relevant item is that its private key was committed and
+> remains in **git history** — it must be revoked/rotated and ideally purged.
 
 **Audit date:** 2026-07-23
 **Auditor role:** Staff engineer / OSS maintainer / security & DX review

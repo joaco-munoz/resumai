@@ -46,8 +46,9 @@ and the project aims to follow [Semantic Versioning](https://semver.org/spec/v2.
 - Removed a duplicate migration file and resolved all ESLint errors.
 
 ### Removed
-- Committed Chrome extension private signing key (`chrome-extension.pem`) and the
-  packaged `.crx`. **The key must be treated as compromised and rotated** — see
-  [SECURITY.md](./SECURITY.md).
+- The experimental **Chrome extension** (`chrome-extension/`), which never
+  reached a finished state, along with its committed private signing key
+  (`chrome-extension.pem`) and packaged `.crx`. **The key remains in git history
+  and must be treated as compromised and rotated** — see [SECURITY.md](./SECURITY.md).
 
 [Unreleased]: https://github.com/joaco-munoz/resumai/commits/main

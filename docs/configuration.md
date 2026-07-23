@@ -198,6 +198,6 @@ variables.
   set them only via `supabase secrets set` or the dashboard.
 - The Supabase anon key is public by design and safe in the client bundle;
   security comes from RLS, which is enabled on all tables.
-- Rotate any credential that was ever committed. A previously committed Chrome
-  extension private key (`chrome-extension.pem`) was removed and must be rotated
-  manually.
+- Rotate any credential that was ever committed. A private key
+  (`chrome-extension.pem`) was committed in the past and removed; it remains in
+  git history and must be revoked/rotated manually.

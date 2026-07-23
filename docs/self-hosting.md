@@ -228,9 +228,9 @@ npm run build       # production build to dist/
 - **Data sent to the AI provider:** with a real provider, CV text (summary,
   bullet points, or the full CV for job matching) is sent to that provider for
   processing. The `mock` provider sends nothing.
-- **Rotate any credential that was ever committed.** A previously committed
-  Chrome extension private key (`chrome-extension.pem`) was removed from the
-  repo and must be rotated manually.
+- **Rotate any credential that was ever committed.** A private key
+  (`chrome-extension.pem`) was committed in the past and removed; it remains in
+  git history and must be revoked/rotated manually.
 - **Account/CV deletion** cascades at the database level (CVs and related rows
   are removed when the user is deleted). There is no in-app "delete account"
   button yet; deletion is performed via Supabase Auth admin.

@@ -64,7 +64,6 @@ Job seekers increasingly rely on AI to polish resumes, but most tools are closed
 ### Experimental / partial
 - 💳 **Subscriptions (Flow.cl)** — a Pro tier via the Chilean processor Flow. Optional; requires a Flow merchant account.
 - 📊 **Admin metrics** — an admin dashboard backed by business-metrics functions.
-- 🧩 **Chrome extension** — autofills job-application forms on some Chilean job boards (`chrome-extension/`). Requires you to fill in your own Supabase config.
 
 ### Planned / not yet implemented
 - 🟡 **MercadoPago** subscriptions — referenced in the UI but the backend function is not implemented yet.

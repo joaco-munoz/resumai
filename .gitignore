@@ -13,10 +13,9 @@ node_modules
 !.env.example
 *.local
 
-# Private keys / certificates (e.g. Chrome extension signing key)
+# Private keys / certificates — never commit these
 *.pem
 *.key
-*.crx
 *.p12
 *.pfx
 

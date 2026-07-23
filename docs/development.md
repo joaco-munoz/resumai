@@ -119,9 +119,8 @@ version, just sign up through the app UI. See [docs/database.md](./database.md).
   `printWidth: 100`, `tabWidth: 2` (see [`.prettierrc.json`](../.prettierrc.json)).
   Run `npm run format` before committing.
 - **ESLint scope.** The browser ESLint config lints `src/`. Deno edge functions
-  (`supabase/functions/**`) and `chrome-extension/**` run in different runtimes
-  and are **ignored** by the browser config — they are linted separately with
-  their own tooling.
+  (`supabase/functions/**`) run in a different runtime and are **ignored** by the
+  browser config — they are linted separately with their own tooling.
 - **Separation of concerns.** Keep UI (`components/`), domain logic
   (`hooks/`, `utils/`) and infrastructure (`integrations/`,
   `supabase/functions/`) reasonably separated.

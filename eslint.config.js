@@ -6,10 +6,9 @@ import tseslint from "typescript-eslint";
 
 export default tseslint.config(
   {
-    // Deno Edge Functions and the Chrome extension run in different runtimes
-    // with their own tooling (Deno lint / no build step) and are linted
-    // separately; the browser ESLint config produces false positives on them.
-    ignores: ["dist", "node_modules", "supabase/functions/**", "chrome-extension/**"],
+    // Deno Edge Functions run in a different runtime with their own tooling
+    // (Deno lint); the browser ESLint config produces false positives on them.
+    ignores: ["dist", "node_modules", "supabase/functions/**"],
   },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
