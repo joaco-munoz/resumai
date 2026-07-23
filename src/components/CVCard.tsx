@@ -133,7 +133,7 @@ export const CVCard = ({
                     className="w-12 h-12 rounded object-contain bg-gray-50 dark:bg-gray-700 p-1 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
                     onClick={(e) => {
                       e.stopPropagation();
-                      isUserCV && onStartLogoEdit(cv.id);
+                      if (isUserCV) onStartLogoEdit(cv.id);
                     }}
                   />
                   <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 rounded transition-all duration-200 flex items-center justify-center">
@@ -147,7 +147,7 @@ export const CVCard = ({
                   className="w-12 h-12 p-0"
                   onClick={(e) => {
                     e.stopPropagation();
-                    isUserCV && onStartLogoEdit(cv.id);
+                    if (isUserCV) onStartLogoEdit(cv.id);
                   }}
                 >
                   <Building2 className="h-5 w-5" />

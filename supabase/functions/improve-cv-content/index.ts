@@ -1,119 +1,44 @@
+import { serve } from 'https://deno.land/std@0.190.0/http/server.ts';
+import { resolveAIConfig, createChatCompletion, AIError } from '../_shared/ai.ts';
+import { getAllowedOrigins, corsHeaders, jsonResponse } from '../_shared/cors.ts';
+import { getAuthedUser, enforceQuota, recordUsage, HttpError } from '../_shared/auth.ts';
 
-import "https://deno.land/x/xhr@0.1.0/mod.ts";
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+const env = Deno.env.toObject();
 
-const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
-
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-};
-
-serve(async (req) => {
-  // Handle CORS preflight requests
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { headers: corsHeaders });
-  }
-
-  try {
-    const { content, context } = await req.json();
-
-    if (!content) {
-      return new Response(
-        JSON.stringify({ error: 'content es requerido' }),
-        { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    const systemPrompt = `Eres un consultor líder en recursos humanos con certificación ATS avanzada y más de 15 años de experiencia especializada en la optimización de resúmenes profesionales para CVs de alto impacto.
+const SYSTEM_PROMPT = `Eres un consultor líder en recursos humanos con certificación ATS avanzada y más de 15 años de experiencia especializada en la optimización de resúmenes profesionales para CVs de alto impacto.
 
 MISIÓN: Redactar resúmenes profesionales que superen filtros ATS automatizados y generen interés genuino en reclutadores humanos, respetando la identidad y trayectoria real del candidato, sin inferir ni asumir información no entregada.
 
 PRINCIPIOS ÉTICOS FUNDAMENTALES:
-
-Veracidad absoluta: Utiliza exclusivamente la información proporcionada explícitamente por el candidato.
-
-Integridad profesional: No infieras, completes ni inventes años de experiencia, logros, cargos ni habilidades no mencionadas de forma directa.
-
-Respeto a la identidad profesional: Mantén el nivel de experiencia, sector y perfil entregado.
-
-Neutralidad y transparencia: Utiliza lenguaje inclusivo, profesional y basado en hechos verificables.
-
-Restricción total de supuestos: Si falta información clave (por ejemplo, años de experiencia), no la agregues ni la estimes.
-
-ESTÁNDARES ATS DE EXCELENCIA:
+- Veracidad absoluta: usa exclusivamente la información proporcionada explícitamente.
+- No infieras ni inventes años de experiencia, logros, cargos ni habilidades no mencionadas.
+- Mantén el nivel de experiencia, sector y perfil entregado.
+- Lenguaje inclusivo, profesional y basado en hechos verificables.
 
 ESTRUCTURA ÓPTIMA:
-
-Extensión: 3 a 4 líneas máximo (80-120 palabras)
-
-Formato: Párrafo continuo y profesional
-
-Keywords: 8-12% de densidad de terminología técnica real provista
-
-ELEMENTOS PERMITIDOS (solo si están presentes en el input):
-
-Años exactos de experiencia declarada
-
-Habilidades técnicas o herramientas mencionadas
-
-Logros cuantificables expresados en el contenido original
-
-Sectores o industrias mencionadas
-
-Roles, cargos y nivel de responsabilidad si fueron proporcionados
-
-OPTIMIZACIÓN ATS:
-
-Uso natural de keywords reales entregadas
-
-Verbos de acción claros y profesionales
-
-Sintaxis limpia compatible con parsing automatizado
-
-CRITERIOS DE CALIDAD:
-
-Claridad y precisión profesional
-
-Alineación con los objetivos del perfil entregado
-
-Nada genérico o inventado
-
-Tono sobrio y convincente, sin exageraciones
-
-PALABRAS PROHIBIDAS (clichés y suposiciones):
-
-No uses "5+ años de experiencia" a menos que esté textual
-
-No incluyas soft skills no mencionadas explícitamente
-
-Prohibido cualquier dato inferido a partir del rol, sector o tono
-
-METODOLOGÍA DE MEJORA (estrictamente limitada):
-
-Analiza únicamente el contenido entregado
-
-Identifica competencias y logros expresos
-
-Refuerza lo ya mencionado con lenguaje claro y profesional
-
-Integra solo keywords y términos presentes en el input
-
-No completar lagunas ni asumir contexto no declarado
+- Extensión: 3 a 4 líneas máximo (80-120 palabras), párrafo continuo.
+- Densidad de keywords técnicas reales del 8-12%.
+- Verbos de acción claros; sintaxis compatible con parsing automatizado.
 
 FORMATO DE RESPUESTA:
+- Devuelve únicamente el resumen mejorado, sin explicaciones ni markdown.
+- Párrafo continuo en español profesional, máximo 4 líneas.
+- Si la información es insuficiente, responde igualmente de forma profesional sin agregar datos nuevos.`;
 
-Devuelve únicamente el resumen mejorado
+serve(async (req) => {
+  const cors = corsHeaders(req.headers.get('Origin'), getAllowedOrigins(env));
+  if (req.method === 'OPTIONS') return new Response(null, { headers: cors });
 
-No agregues explicaciones, comentarios ni markdown
+  try {
+    const ctx = await getAuthedUser(req, env);
+    await enforceQuota(ctx, 'ai_improvements');
 
-Párrafo continuo en español profesional
+    const { content, context } = await req.json();
+    if (!content || typeof content !== 'string') {
+      return jsonResponse({ error: 'content es requerido' }, 400, cors);
+    }
 
-Máximo 4 líneas
-
-Si la información entregada es insuficiente, responde igualmente con un texto profesional y claro, pero sin agregar nada nuevo`;
-
-    const userPrompt = `Optimiza este resumen profesional aplicando los más altos estándares ATS y principios éticos de reclutamiento. No agregues información que no esté explícitamente mencionada. No inventes años de experiencia, herramientas, logros ni industrias si no han sido proporcionadas.
+    const userPrompt = `Optimiza este resumen profesional aplicando los más altos estándares ATS y principios éticos de reclutamiento. No agregues información que no esté explícitamente mencionada.
 
 RESUMEN ACTUAL:
 "${content}"
@@ -122,59 +47,20 @@ ${context ? `CONTEXTO PROFESIONAL ADICIONAL: ${context}` : ''}
 
 Devuelve únicamente el resumen profesional mejorado, sin explicaciones adicionales.`;
 
-    console.log('Calling OpenAI API for content improvement...');
-
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${openAIApiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt }
-        ],
-        temperature: 0.7,
-        max_tokens: 350,
-      }),
+    const config = resolveAIConfig(env);
+    const improvedContent = await createChatCompletion(config, {
+      system: SYSTEM_PROMPT,
+      user: userPrompt,
+      maxTokens: 350,
+      mock: `[Demo] ${content} — optimizado para ATS con verbos de acción y palabras clave del sector.`,
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('OpenAI API error:', response.status, errorText);
-      return new Response(
-        JSON.stringify({ error: `Error de OpenAI API: ${response.status}` }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    const data = await response.json();
-    
-    if (!data.choices || !data.choices[0] || !data.choices[0].message) {
-      console.error('Invalid OpenAI response structure:', data);
-      return new Response(
-        JSON.stringify({ error: 'Respuesta inválida de OpenAI' }),
-        { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      );
-    }
-
-    const improvedContent = data.choices[0].message.content.trim();
-
-    console.log('Content improved successfully');
-
-    return new Response(JSON.stringify({ improvedContent }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    await recordUsage(ctx, 'ai_improvements');
+    return jsonResponse({ improvedContent }, 200, cors);
   } catch (error) {
-    console.error('Error in improve-cv-content function:', error);
-    return new Response(JSON.stringify({ 
-      error: error.message,
-      details: 'Error al mejorar el contenido'
-    }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-    });
+    if (error instanceof HttpError) return jsonResponse({ error: error.message }, error.status, cors);
+    if (error instanceof AIError) return jsonResponse({ error: error.message }, error.status, cors);
+    console.error('Error in improve-cv-content:', error instanceof Error ? error.message : error);
+    return jsonResponse({ error: 'No se pudo mejorar el contenido' }, 500, cors);
   }
 });

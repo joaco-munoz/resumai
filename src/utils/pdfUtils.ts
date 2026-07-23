@@ -142,7 +142,7 @@ export const downloadCVAsPDF = (cvData: CVData, filename: string, shouldAddWater
           const descLines = exp.description.split('\n').filter((line: string) => line.trim());
           
           descLines.forEach((line: string) => {
-            const cleanLine = line.trim().replace(/^[•\-\*]\s*/, '');
+            const cleanLine = line.trim().replace(/^[•\-*]\s*/, '');
             if (!cleanLine) return;
             
             checkNewPage(5);

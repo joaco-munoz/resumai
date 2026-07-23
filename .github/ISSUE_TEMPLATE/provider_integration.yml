@@ -1,0 +1,43 @@
+name: "🔌 AI provider integration request"
+description: Request or propose support for an AI provider.
+labels: ["provider-integration", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Many providers already work today via `AI_PROVIDER=openai-compatible`
+        (set `AI_BASE_URL`, `AI_MODEL`, `AI_API_KEY`). See
+        [docs/ai-providers.md](../../docs/ai-providers.md). Use this for a
+        first-class preset or a provider that isn't OpenAI-compatible.
+  - type: input
+    attributes:
+      label: Provider name
+      placeholder: "e.g. Anthropic, Google Gemini, Groq, Ollama"
+    validations:
+      required: true
+  - type: dropdown
+    attributes:
+      label: API compatibility
+      options:
+        - OpenAI-compatible /chat/completions
+        - Different API (needs an adapter)
+        - Not sure
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: Base URL
+      placeholder: "https://api.example.com/v1"
+  - type: input
+    attributes:
+      label: Recommended model(s)
+      placeholder: "e.g. model-name"
+  - type: textarea
+    attributes:
+      label: Notes
+      description: Auth style, pricing, rate limits, JSON-mode support, docs links.
+  - type: checkboxes
+    attributes:
+      label: Contribution
+      options:
+        - label: I'm willing to open a PR for this (see CONTRIBUTING.md → "Adding a new AI provider").
