@@ -1,0 +1,36 @@
+name: "✨ Feature request"
+description: Suggest a concrete, actionable capability.
+labels: ["enhancement", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        For open-ended ideas, consider a
+        [Discussion](https://github.com/joaco-munoz/resumai/discussions) under **Ideas** first.
+  - type: checkboxes
+    attributes:
+      label: Pre-flight
+      options:
+        - label: I searched existing issues/discussions and this is not a duplicate.
+          required: true
+        - label: I checked the ROADMAP to see if it's already planned.
+          required: true
+  - type: textarea
+    attributes:
+      label: Problem
+      description: What problem does this solve? Who is it for?
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Proposed solution
+      description: Describe the feature and how it would behave.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Alternatives considered
+  - type: textarea
+    attributes:
+      label: Additional context
+      description: Mockups, links, or examples. No real personal data.

@@ -1,0 +1,74 @@
+name: "🐛 Bug report"
+description: Report something that is broken or behaves incorrectly.
+labels: ["bug", "triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a bug! Please **do not include secrets or real personal data**
+        (API keys, service-role keys, real resumes, real emails). Redact logs first.
+  - type: checkboxes
+    attributes:
+      label: Pre-flight
+      options:
+        - label: I searched existing issues and this is not a duplicate.
+          required: true
+        - label: I checked the README and docs/troubleshooting.md.
+          required: true
+        - label: My report contains no secrets or real personal data.
+          required: true
+  - type: textarea
+    attributes:
+      label: What happened?
+      description: A clear description of the bug and what you expected instead.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Go to '...'
+        2. Click '...'
+        3. See error
+    validations:
+      required: true
+  - type: dropdown
+    attributes:
+      label: Area
+      options:
+        - CV builder
+        - AI improvement
+        - Job matcher
+        - Kanban / applications
+        - Export (PDF/Word)
+        - Auth
+        - Database / migrations
+        - Edge functions
+        - Payments (Flow)
+        - Chrome extension
+        - Other
+    validations:
+      required: true
+  - type: dropdown
+    attributes:
+      label: AI provider in use
+      options:
+        - mock
+        - openai
+        - deepseek
+        - openai-compatible
+        - not applicable
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: Environment
+      description: OS, browser, Node version, and whether Supabase is local or remote.
+      placeholder: "macOS 14, Chrome 126, Node 22, local Supabase"
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Relevant logs (redacted)
+      description: Console/network/edge-function logs. Remove tokens and PII.
+      render: shell

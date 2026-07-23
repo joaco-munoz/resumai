@@ -1,0 +1,30 @@
+name: "📚 Documentation issue"
+description: Report something missing, wrong, or unclear in the docs.
+labels: ["documentation", "triage"]
+body:
+  - type: input
+    attributes:
+      label: Which page/section?
+      description: File path or URL (e.g. README.md, docs/self-hosting.md).
+    validations:
+      required: true
+  - type: dropdown
+    attributes:
+      label: Type of problem
+      options:
+        - Incorrect / outdated information
+        - Missing information
+        - Unclear / confusing
+        - Broken link or image
+        - Typo / formatting
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Details
+      description: What's wrong, and what would be correct or clearer?
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Suggested wording (optional)
