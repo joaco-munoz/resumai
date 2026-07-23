@@ -5,7 +5,7 @@ console.log('🧪 Iniciando pruebas de ResumAI Chrome Extension');
 
 // Configuración de pruebas
 const TEST_CONFIG = {
-  supabaseUrl: 'https://jwitsagioonykrabioku.supabase.co',
+  supabaseUrl: 'https://YOUR-PROJECT-REF.supabase.co',
   testToken: null, // Se debe configurar manualmente
   testSites: [
     'https://trabajando.cl',
@@ -150,7 +150,7 @@ class ResumAIExtensionTester {
       const response = await fetch(`${TEST_CONFIG.supabaseUrl}/auth/v1/user`, {
         headers: {
           'Authorization': `Bearer ${TEST_CONFIG.testToken}`,
-          'apikey': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp3aXRzYWdpb29ueWtyYWJpb2t1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk1NzI3MDUsImV4cCI6MjA2NTE0ODcwNX0.RJsdYdmkCTIigypfPXWhb8xsZXycVbiNytPXUJAkN9M'
+          'apikey': 'YOUR_SUPABASE_ANON_KEY'
         }
       });
       

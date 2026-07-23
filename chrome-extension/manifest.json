@@ -16,7 +16,7 @@
     "https://www.laborum.com/*",
     "https://getonboard.com/*",
     "https://www.getonboard.com/*",
-    "https://jwitsagioonykrabioku.supabase.co/*"
+    "https://YOUR-PROJECT-REF.supabase.co/*"
   ],
   "background": {
     "service_worker": "background.js"

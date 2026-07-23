@@ -1,9 +1,10 @@
 
 // Background Service Worker para ResumAI Chrome Extension
 
-// Configuración de Supabase - EXACTAMENTE la misma que la app web
-const SUPABASE_URL = "https://jwitsagioonykrabioku.supabase.co";
-const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp3aXRzYWdpb29ueWtyYWJpb2t1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk1NzI3MDUsImV4cCI6MjA2NTE0ODcwNX0.RJsdYdmkCTIigypfPXWhb8xsZXycVbiNytPXUJAkN9M";
+// Supabase configuration — REPLACE with your own project values (same as
+// chrome-extension/config.js). The anon key is a public, RLS-protected key.
+const SUPABASE_URL = "https://YOUR-PROJECT-REF.supabase.co";
+const SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
 
 // Sitios web compatibles
 const SUPPORTED_SITES = [
