@@ -131,7 +131,7 @@ export const downloadCVAsWord = (cvData: CVData, filename: string, shouldAddWate
                   .split('\n')
                   .filter((line: string) => line.trim())
                   .map((line: string) => {
-                    const cleanLine = line.trim().replace(/^[•\-\*]\s*/, '');
+                    const cleanLine = line.trim().replace(/^[•\-*]\s*/, '');
                     if (!cleanLine) return null;
                     
                     return new Paragraph({

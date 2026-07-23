@@ -24,22 +24,20 @@ serve(async (req) => {
   );
 
   try {
-    logStep("🔔 WEBHOOK Flow recibido", {
-      method: req.method,
-      url: req.url,
-      headers: Object.fromEntries(req.headers.entries())
-    });
+    logStep("🔔 WEBHOOK Flow recibido", { method: req.method });
 
     const formData = await req.formData();
     const token = formData.get("token")?.toString();
-    const signature = formData.get("s")?.toString();
 
     if (!token) {
       logStep("❌ Token faltante");
       return new Response("Missing token", { status: 400 });
     }
 
-    logStep(" Webhook data received", { token, signature });
+    // Note: do not log the raw token/signature or request headers — they are
+    // sensitive. The payment is authenticated by re-querying Flow's getStatus
+    // API below with our own HMAC signature.
+    logStep("Webhook received a payment notification");
 
     const flowSecretKey = Deno.env.get("FLOW_SECRET_KEY");
     const flowApiKey = Deno.env.get("FLOW_API_KEY");
@@ -86,10 +84,9 @@ serve(async (req) => {
     }
 
     const paymentData = await flowResponse.json();
-    logStep("💳 Datos del pago", paymentData);
-
     const status = paymentData.status;
     const commerceOrder = paymentData.commerceOrder;
+    logStep("💳 Estado del pago", { status, commerceOrder });
 
     // Buscar la suscripción en la base de datos por token para obtener el user_id completo
     const { data: subscriptionRow } = await supabaseClient

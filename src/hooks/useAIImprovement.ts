@@ -8,7 +8,7 @@ import { useAIUsage } from '@/contexts/AIUsageContext';
 
 export const useAIImprovement = (cvData: CVData, setCvData: (data: CVData | ((prev: CVData) => CVData)) => void) => {
   const [isImproving, setIsImproving] = useState<string | null>(null);
-  const { canUseFeature, incrementUsage, isPro } = useFeatureLimits();
+  const { canUseFeature, isPro } = useFeatureLimits();
   const { refreshUsage } = useAIUsage();
 
   const improveWithAI = async (section: string) => {
@@ -26,14 +26,10 @@ export const useAIImprovement = (cvData: CVData, setCvData: (data: CVData | ((pr
       } else if (section.startsWith('experience-')) {
         await improveBulletPoint(section);
       }
-      
-      // Incrementar el uso después de una mejora exitosa
-      const success = await incrementUsage('ai_improvements');
-      
-      // Si se incrementó el uso correctamente, actualizar inmediatamente
-      if (success) {
-        await refreshUsage();
-      }
+
+      // Usage is enforced and counted server-side; refresh local counters so the
+      // UI reflects the new value.
+      await refreshUsage();
     } catch (error) {
       console.error('Error improving with AI:', error);
       toast.error("Error al mejorar con IA. Verifica tu conexión.");

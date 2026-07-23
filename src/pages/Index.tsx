@@ -67,11 +67,12 @@ const Index = () => {
       case "preguntas-frecuentes":
         faqRef.current?.scrollIntoView({ behavior: "smooth" });
         break;
-      default:
+      default: {
         const element = document.getElementById(id);
         if (element) {
           element.scrollIntoView({ behavior: "smooth" });
         }
+      }
     }
   };
 

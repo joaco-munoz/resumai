@@ -1,6 +1,24 @@
+# Supabase project configuration.
+# `project_id` is the local project name; a fork should run `supabase link` with
+# its own project ref rather than relying on this value.
+project_id = "resumai"
 
-project_id = "jwitsagioonykrabioku"
+# --- AI functions -----------------------------------------------------------
+# Require a valid JWT at the gateway. The functions additionally verify that the
+# JWT belongs to a real user (getAuthedUser) and enforce per-user quotas, so the
+# public anon key alone cannot invoke them.
+[functions.improve-cv-content]
+verify_jwt = true
 
+[functions.improve-bullet-point]
+verify_jwt = true
+
+[functions.analyze-job-compatibility]
+verify_jwt = true
+
+# --- Payment functions ------------------------------------------------------
+# The Flow webhook is called by Flow's servers (no user JWT), so JWT
+# verification is disabled; it authenticates by re-querying Flow's getStatus API.
 [functions.flow-webhook]
 verify_jwt = false
 

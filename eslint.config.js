@@ -5,7 +5,12 @@ import reactRefresh from "eslint-plugin-react-refresh";
 import tseslint from "typescript-eslint";
 
 export default tseslint.config(
-  { ignores: ["dist"] },
+  {
+    // Deno Edge Functions and the Chrome extension run in different runtimes
+    // with their own tooling (Deno lint / no build step) and are linted
+    // separately; the browser ESLint config produces false positives on them.
+    ignores: ["dist", "node_modules", "supabase/functions/**", "chrome-extension/**"],
+  },
   {
     extends: [js.configs.recommended, ...tseslint.configs.recommended],
     files: ["**/*.{ts,tsx}"],
@@ -24,6 +29,15 @@ export default tseslint.config(
         { allowConstantExport: true },
       ],
       "@typescript-eslint/no-unused-vars": "off",
+      // `any` is surfaced as a warning during the open-source migration rather
+      // than a hard error (much of it is generated types / shadcn boilerplate).
+      // New code should prefer precise types — see CONTRIBUTING.md.
+      "@typescript-eslint/no-explicit-any": "warn",
     },
-  }
+  },
+  {
+    // Config files may use Node globals.
+    files: ["*.config.{js,ts}", "vite.config.ts", "tailwind.config.ts"],
+    languageOptions: { globals: globals.node },
+  },
 );

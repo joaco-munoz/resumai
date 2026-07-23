@@ -1,11 +1,15 @@
-// Configuración centralizada para ResumAI Chrome Extension
-// Este archivo contiene todas las configuraciones necesarias
-
+// Centralized configuration for the ResumAI Chrome extension.
+//
+// The extension has no build step, so configuration lives here. Replace the
+// placeholders below with your own Supabase project values before loading the
+// extension. The anon key is a public (publishable) key protected by Row Level
+// Security — it is safe to ship in the extension, but do NOT paste a service
+// role key here.
 const RESUMAI_CONFIG = {
-  // Configuración de Supabase
+  // Supabase configuration — REPLACE with your own project values.
   supabase: {
-    url: 'https://jwitsagioonykrabioku.supabase.co',
-    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imp3aXRzYWdpb29ueWtyYWJpb2t1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDk1NzI3MDUsImV4cCI6MjA2NTE0ODcwNX0.RJsdYdmkCTIigypfPXWhb8xsZXycVbiNytPXUJAkN9M',
+    url: 'https://YOUR-PROJECT-REF.supabase.co',
+    anonKey: 'YOUR_SUPABASE_ANON_KEY',
     endpoints: {
       auth: '/auth/v1/user',
       profiles: '/rest/v1/profiles',

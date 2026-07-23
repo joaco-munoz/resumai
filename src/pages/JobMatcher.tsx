@@ -19,9 +19,11 @@ import { CVNamingModal } from "@/components/cv-builder/CVNamingModal";
 import { useFeatureLimits } from "@/hooks/useFeatureLimits";
 
 interface MatchResult {
-  matched_keywords: string[];
-  missing_keywords: string[];
   score: number;
+  strengths: string[];
+  missingKeywords: string[];
+  suggestedBullets: string[];
+  improvements: string[];
 }
 
 const JobMatcher = () => {
@@ -39,8 +41,8 @@ const JobMatcher = () => {
   const [selectedCVId, setSelectedCVId] = useState<string | null>(null);
   const [selectedCVTitle, setSelectedCVTitle] = useState<string>("");
 
-  // Feature limits hook
-  const { canUseFeature, incrementUsage, isPro, usage, limits } = useFeatureLimits();
+  // Feature limits hook (usage is enforced and counted server-side)
+  const { canUseFeature, isPro, usage, limits, refreshLimits } = useFeatureLimits();
 
   // Effect to handle CV selection from URL parameter
   useEffect(() => {
@@ -76,51 +78,24 @@ const JobMatcher = () => {
     setShowResult(false);
 
     try {
-      // Fetch the selected CV content
-      const { data: cvData, error: cvError } = await supabase
-        .from('cvs')
-        .select('content')
-        .eq('id', selectedCVId)
-        .single();
-
-      if (cvError) {
-        console.error('Error fetching CV data:', cvError);
-        toast.error("Error al cargar el CV seleccionado");
-        return;
-      }
-
-      if (!cvData || !cvData.content) {
-        toast.error("CV no encontrado o contenido inválido");
-        return;
-      }
-
-      // Prepare the data for the API
-      const requestBody = {
-        cv_data: cvData.content,
-        job_description: jobDescription,
-      };
-
-      // Call the API endpoint
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/match`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestBody),
+      // The edge function reads the CV under the caller's own RLS context and
+      // derives the user from the verified JWT — the CV id is validated
+      // server-side, and usage is enforced/counted on the server.
+      const { data, error } = await supabase.functions.invoke('analyze-job-compatibility', {
+        body: { jobDescription, cvId: selectedCVId },
       });
 
-      if (!response.ok) {
-        console.error('API request failed:', response.status, response.statusText);
+      if (error) {
+        console.error('Analysis request failed:', error);
         toast.error("Error al analizar la compatibilidad");
         return;
       }
 
-      const result = await response.json();
-      setAnalysisResult(result);
+      setAnalysisResult(data as MatchResult);
       setShowResult(true);
 
-      // Increment usage after successful analysis
-      await incrementUsage('job_matcher_advanced');
+      // Usage is counted server-side; refresh the local counters for the UI.
+      await refreshLimits();
     } catch (error) {
       console.error('Error during analysis:', error);
       toast.error("Error al analizar la compatibilidad");
@@ -248,27 +223,39 @@ const JobMatcher = () => {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div>
-                    <h3 className="text-lg font-semibold">Coincidencias</h3>
-                    {analysisResult.matched_keywords.length > 0 ? (
-                      <div className="flex flex-wrap gap-2">
-                        {analysisResult.matched_keywords.map((keyword) => (
-                          <Badge key={keyword} variant="outline">{keyword}</Badge>
+                    <h3 className="text-lg font-semibold">Fortalezas</h3>
+                    {analysisResult.strengths.length > 0 ? (
+                      <ul className="list-disc list-inside text-gray-700 space-y-1">
+                        {analysisResult.strengths.map((item) => (
+                          <li key={item}>{item}</li>
                         ))}
-                      </div>
+                      </ul>
                     ) : (
-                      <p className="text-gray-500">No se encontraron coincidencias.</p>
+                      <p className="text-gray-500">Sin fortalezas destacadas.</p>
                     )}
                   </div>
                   <div>
-                    <h3 className="text-lg font-semibold">Áreas de Mejora</h3>
-                    {analysisResult.missing_keywords.length > 0 ? (
+                    <h3 className="text-lg font-semibold">Palabras clave faltantes</h3>
+                    {analysisResult.missingKeywords.length > 0 ? (
                       <div className="flex flex-wrap gap-2">
-                        {analysisResult.missing_keywords.map((keyword) => (
+                        {analysisResult.missingKeywords.map((keyword) => (
                           <Badge key={keyword} variant="destructive">{keyword}</Badge>
                         ))}
                       </div>
                     ) : (
-                      <p className="text-gray-500">No hay áreas de mejora.</p>
+                      <p className="text-gray-500">No hay palabras clave faltantes.</p>
+                    )}
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold">Recomendaciones</h3>
+                    {analysisResult.improvements.length > 0 ? (
+                      <ul className="list-disc list-inside text-gray-700 space-y-1">
+                        {analysisResult.improvements.map((item) => (
+                          <li key={item}>{item}</li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-gray-500">Sin recomendaciones.</p>
                     )}
                   </div>
                   <Button variant="secondary" onClick={() => setShowNamingModal(true)}>

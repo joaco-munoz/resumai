@@ -194,7 +194,7 @@ export default function CVsList() {
 
     try {
       // Extract job title and company from CV title or content
-      let jobTitle = cv.title || 'Posición sin especificar';
+      const jobTitle = cv.title || 'Posición sin especificar';
       let companyName = 'Empresa sin especificar';
 
       // If there's a company logo, we can try to extract company name from it
